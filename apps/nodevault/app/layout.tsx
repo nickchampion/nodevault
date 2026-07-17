@@ -19,13 +19,32 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 }
 
+// Applies the stored/system theme before paint, matching @heroui/react's useTheme
+// (same localStorage key and class/data-theme target) so there's no light->dark flash.
+const themeScript = `
+(function () {
+  try {
+    var stored = localStorage.getItem('heroui-theme');
+    var resolved = stored === 'light' || stored === 'dark'
+      ? stored
+      : (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    document.documentElement.classList.add(resolved);
+    document.documentElement.setAttribute('data-theme', resolved);
+  } catch (error) {}
+})();
+`
+
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html
       lang="en"
-      className="dark"
+      suppressHydrationWarning
     >
-      <body className="bg-slate-950 min-h-screen flex flex-col antialiased text-slate-300">
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+
+      <body className="bg-white dark:bg-slate-950 min-h-screen flex flex-col antialiased text-slate-600 dark:text-slate-300">
         <AppHeader />
 
         <main className="flex-1">

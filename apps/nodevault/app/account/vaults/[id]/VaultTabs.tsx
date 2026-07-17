@@ -76,7 +76,7 @@ const UploadFileForm = ({ vaultId, onUploaded }: { vaultId: number, onUploaded: 
 
   return (
     <form
-      className="pb-4 mb-2 border-b border-slate-800"
+      className="pb-4 mb-2 border-b border-slate-200 dark:border-slate-800"
       onSubmit={submit}
     >
       <div className="flex items-center gap-3">
@@ -97,7 +97,7 @@ const UploadFileForm = ({ vaultId, onUploaded }: { vaultId: number, onUploaded: 
           Choose file
         </Button>
 
-        <span className="text-sm text-slate-400 flex-1 truncate">
+        <span className="text-sm text-slate-500 dark:text-slate-400 flex-1 truncate">
           {file ? file.name : 'No file selected'}
         </span>
 
@@ -111,7 +111,7 @@ const UploadFileForm = ({ vaultId, onUploaded }: { vaultId: number, onUploaded: 
       </div>
 
       {error && (
-        <p className="text-sm text-red-400 mt-2">
+        <p className="text-sm text-red-600 dark:text-red-400 mt-2">
           {error}
         </p>
       )}
@@ -129,7 +129,7 @@ const AddUrlForm = () => {
 
   return (
     <form
-      className="flex items-start gap-3 pb-4 mb-2 border-b border-slate-800"
+      className="flex items-start gap-3 pb-4 mb-2 border-b border-slate-200 dark:border-slate-800"
       noValidate
       onSubmit={submit}
     >

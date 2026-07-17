@@ -1,50 +1,63 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
   Alert, Button, Description, FieldError, Input, Label, Spinner, TextField,
 } from '@heroui/react'
-import { registerRequestSchema } from '@platform/components.contracts'
-import { UserPlus } from 'lucide-react'
+import { updateProfileRequestSchema } from '@platform/components.contracts'
+import { Save } from 'lucide-react'
 import type { FormEvent } from 'react'
-import type { RegisterRequest } from '@platform/components.contracts'
+import type { UpdateProfileRequest } from '@platform/components.contracts'
+import type { AuthSession } from '../../../lib/auth'
 import { api } from '../../../lib/api'
 import { getSession, isSessionValid, useAuth } from '../../../lib/auth'
 import { zodValidate } from '../../../lib/validation'
 import { PhoneInput } from '../../../components/form/PhoneInput'
 import type { FormErrors } from '../../../lib/validation'
 
-const validateRegisterForm = zodValidate(registerRequestSchema)
+const validateEditProfileForm = zodValidate(updateProfileRequestSchema)
 
-const defaultState = (): RegisterRequest => ({
-  firstName: '',
-  lastName: '',
-  email: '',
-  phone: undefined,
-})
+export const EditProfileForm = () => {
+  const router = useRouter()
+  const { session } = useAuth()
 
-export const RegisterForm = () => {
+  // authenticated-only page
+  useEffect(() => {
+    if (!isSessionValid(getSession())) {
+      router.replace('/auth/login')
+    }
+  }, [router])
+
+  if (!session) return null
+
+  // remounts with fresh defaults if the signed-in user changes
+  return (
+    <EditProfileFields
+      key={session.user.id}
+      session={session}
+    />
+  )
+}
+
+const EditProfileFields = ({ session }: { session: AuthSession }) => {
   const router = useRouter()
   const { signIn } = useAuth()
 
-  const [state, setState] = useState<RegisterRequest>(defaultState())
+  const [state, setState] = useState<UpdateProfileRequest>(() => ({
+    firstName: session.user.firstName,
+    lastName: session.user.lastName,
+    email: session.user.email,
+    phone: session.user.phone ?? undefined,
+  }))
   const [errors, setErrors] = useState<FormErrors>({})
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  // guest-only page
-  useEffect(() => {
-    if (isSessionValid(getSession())) {
-      router.replace('/account')
-    }
-  }, [router])
-
   const submit = async (event: FormEvent) => {
     event.preventDefault()
 
-    const validationErrors = validateRegisterForm(state)
+    const validationErrors = validateEditProfileForm(state)
 
     setErrors(validationErrors)
 
@@ -54,9 +67,9 @@ export const RegisterForm = () => {
     setError(null)
 
     try {
-      const response = await api.auth.register.mutate({ ...state })
+      const user = await api.account.updateProfile.mutate({ ...state })
 
-      signIn(response)
+      signIn({ ...session, user })
       router.replace('/account')
     } catch (error_) {
       setError((error_ as Error).message || 'Something went wrong. Please try again.')
@@ -151,8 +164,8 @@ export const RegisterForm = () => {
         isPending={pending}
         fullWidth
       >
-        {pending ? <Spinner size="sm" /> : <UserPlus className="size-4" />}
-        Create account
+        {pending ? <Spinner size="sm" /> : <Save className="size-4" />}
+        Save changes
       </Button>
 
       {error && (
@@ -160,24 +173,12 @@ export const RegisterForm = () => {
           <Alert.Indicator />
 
           <Alert.Content>
-            <Alert.Title>Registration failed</Alert.Title>
+            <Alert.Title>Update failed</Alert.Title>
 
             <Alert.Description>{error}</Alert.Description>
           </Alert.Content>
         </Alert>
       )}
-
-      <p className="text-sm text-slate-500 dark:text-slate-400 text-center pt-2">
-        Already have an account?
-        {' '}
-
-        <Link
-          href="/auth/login"
-          className="text-sky-600 dark:text-sky-400 font-semibold hover:underline"
-        >
-          Sign in
-        </Link>
-      </p>
     </form>
   )
 }

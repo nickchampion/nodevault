@@ -1,5 +1,7 @@
 import { router } from '@platform/components.api'
-import { authRouter, commsRouter, filesRouter, systemRouter, vaultsRouter } from './routes/index.js'
+import {
+  accountRouter, authRouter, commsRouter, filesRouter, systemRouter, vaultsRouter,
+} from './routes/index.js'
 
 /**
  * The application router: one router per routes/ subdirectory, merged here under its
@@ -10,6 +12,7 @@ import { authRouter, commsRouter, filesRouter, systemRouter, vaultsRouter } from
  * `context.event.payload`.
  */
 export const appRouter = router({
+  account: accountRouter,
   auth: authRouter,
   comms: commsRouter,
   files: filesRouter,

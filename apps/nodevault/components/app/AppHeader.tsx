@@ -3,16 +3,19 @@
 import Link from 'next/link'
 import { Button, Drawer, useOverlayState } from '@heroui/react'
 import { Mail, Menu } from 'lucide-react'
+import { useAuth } from '../../lib/auth'
 import { Container } from '../ui/Container'
 import { LinkButton } from '../ui/LinkButton'
 import { AccountMenu } from './AccountMenu'
 import { AppLogo } from './AppLogo'
+import { ThemeSwitch } from './ThemeSwitch'
 
 export const AppHeader = () => {
   const menu = useOverlayState({ defaultOpen: false })
+  const { isAuthenticated } = useAuth()
 
   return (
-    <header className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800">
+    <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm border-b border-slate-200 dark:border-slate-800">
       <Container className="flex items-center justify-between gap-4 h-16">
         <Link
           href="/"
@@ -20,21 +23,25 @@ export const AppHeader = () => {
         >
           <AppLogo className="size-8" />
 
-          <span className="font-semibold text-sm tracking-tight text-white">
+          <span className="font-semibold text-sm tracking-tight text-slate-900 dark:text-white">
             Node
-            <span className="text-sky-400">Vault</span>
+            <span className="text-sky-600 dark:text-sky-400">Vault</span>
           </span>
         </Link>
 
         <div className="flex items-center gap-2 shrink-0">
-          <LinkButton
-            href="/contact"
-            size="sm"
-            className="hidden sm:inline-flex"
-          >
-            <Mail className="size-4" />
-            Get in touch
-          </LinkButton>
+          {!isAuthenticated && (
+            <LinkButton
+              href="/contact"
+              size="sm"
+              className="hidden sm:inline-flex"
+            >
+              <Mail className="size-4" />
+              Get in touch
+            </LinkButton>
+          )}
+
+          <ThemeSwitch />
 
           <AccountMenu />
 
@@ -60,7 +67,7 @@ export const AppHeader = () => {
 
                         <span className="font-semibold text-sm tracking-tight">
                           Node
-                          <span className="text-sky-400">Vault</span>
+                          <span className="text-sky-600 dark:text-sky-400">Vault</span>
                         </span>
                       </span>
                     </Drawer.Heading>
@@ -68,17 +75,19 @@ export const AppHeader = () => {
 
                   <Drawer.Body />
 
-                  <Drawer.Footer>
-                    <LinkButton
-                      href="/contact"
-                      variant="outline"
-                      fullWidth
-                      onClick={menu.close}
-                    >
-                      <Mail className="size-4" />
-                      Get in touch
-                    </LinkButton>
-                  </Drawer.Footer>
+                  {!isAuthenticated && (
+                    <Drawer.Footer>
+                      <LinkButton
+                        href="/contact"
+                        variant="outline"
+                        fullWidth
+                        onClick={menu.close}
+                      >
+                        <Mail className="size-4" />
+                        Get in touch
+                      </LinkButton>
+                    </Drawer.Footer>
+                  )}
                 </Drawer.Dialog>
               </Drawer.Content>
             </Drawer.Backdrop>

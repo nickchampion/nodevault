@@ -68,10 +68,10 @@ export const VaultView = ({ vaultId }: { vaultId: number }) => {
         <div className="space-y-6">
           <Link
             href="/account"
-            className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-sky-400 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
           >
             <ArrowLeft className="size-4" />
-            Back to your account
+            Back to account home
           </Link>
 
           {loading && (
@@ -95,45 +95,45 @@ export const VaultView = ({ vaultId }: { vaultId: number }) => {
           {vault && (
             <>
               <dl className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4">
-                  <dt className="text-sm font-semibold text-slate-400 mb-1">
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-4">
+                  <dt className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
                     Name
                   </dt>
 
-                  <dd className="text-slate-100 font-medium truncate">
+                  <dd className="text-slate-900 dark:text-slate-100 font-medium truncate">
                     {vault.name}
                   </dd>
                 </div>
 
-                <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4">
-                  <dt className="text-sm font-semibold text-slate-400 mb-1">
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-4">
+                  <dt className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
                     Created
                   </dt>
 
-                  <dd className="text-slate-100 font-medium flex items-center gap-1.5">
-                    <CalendarDays className="size-4 text-slate-400" />
+                  <dd className="text-slate-900 dark:text-slate-100 font-medium flex items-center gap-1.5">
+                    <CalendarDays className="size-4 text-slate-500 dark:text-slate-400" />
                     {formatLocalDate(vault.createdAtUTC, 'dd MMM yyyy')}
                   </dd>
                 </div>
 
-                <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4">
-                  <dt className="text-sm font-semibold text-slate-400 mb-1">
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-4">
+                  <dt className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
                     Files
                   </dt>
 
-                  <dd className="text-slate-100 font-medium flex items-center gap-1.5">
-                    <FileText className="size-4 text-slate-400" />
+                  <dd className="text-slate-900 dark:text-slate-100 font-medium flex items-center gap-1.5">
+                    <FileText className="size-4 text-slate-500 dark:text-slate-400" />
                     {vault.documentCount}
                   </dd>
                 </div>
 
-                <div className="rounded-lg border border-slate-800 bg-slate-900/50 p-4">
-                  <dt className="text-sm font-semibold text-slate-400 mb-1">
+                <div className="rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-4">
+                  <dt className="text-sm font-semibold text-slate-500 dark:text-slate-400 mb-1">
                     URLs
                   </dt>
 
-                  <dd className="text-slate-100 font-medium flex items-center gap-1.5">
-                    <Link2 className="size-4 text-slate-400" />
+                  <dd className="text-slate-900 dark:text-slate-100 font-medium flex items-center gap-1.5">
+                    <Link2 className="size-4 text-slate-500 dark:text-slate-400" />
                     {vault.urlCount}
                   </dd>
                 </div>

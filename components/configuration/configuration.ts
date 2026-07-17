@@ -84,8 +84,8 @@ export const server = {
   cloudflare: {
     accountId: '6588d1ee1643e6a11baba75c0cbea29e',
     apiKey: {
-      default: 'zshhB3CwntGNBdMigHIC3eleLw33laknTfZ0+3aS8jEwciTVZDNaaJCd90mWCbkbs6LpcPXVNPDokgSoz5ou',
-      prod: 'C5hRCGX0iUDF6fbZLUCcCZlEgPmyjM+VSJXwe8PsdYEHF2/leyn+6RgfE7ht1SMtfY2uW83/tXj2rdfNmMSK',
+      default: 'GDxYovRqsnLeockFR/PFfkN7caPSw0G5ylsgdntvb/CmsK53eHUQCCb5pdtrHbgV8MhCd8s4b5POa3mUL97C',
+      prod: 'eyDwkGdWc4tiApsrihMqEwquZV7HDTQe2/tIgE6C/xdihqf2+TNnlNOdQjiQW0NM/FzSL5pfTthqXnyrarKU',
       encrypted: true,
     },
     r2: {
@@ -96,10 +96,9 @@ export const server = {
     },
   },
   gemini: {
-    // placeholders — encrypt a real Gemini API key for each environment (decrypts to null until then)
     apiKey: {
-      default: 'REPLACE_ME_ENCRYPTED',
-      prod: 'REPLACE_ME_ENCRYPTED',
+      default: '8npeuu4m/z2ftg+m5czAt9DOCYbecxNf2kmpc4YnaZlBIcMpM2/0RqSFOC7iYNND2iiTykykkj3FQCo//0z7',
+      prod: 'RrfURIcSa7NE7fPYNgISDkpNVsgaaMRcd3MPFqL2KkHckC0yQbX+BXqCR9yXwYRbGp4OeauZ5g80SaMNaAdG',
       encrypted: true,
     },
   },

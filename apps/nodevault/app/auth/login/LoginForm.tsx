@@ -101,7 +101,7 @@ export const LoginForm = () => {
               color="accent"
             />
 
-            <p className="text-slate-400">
+            <p className="text-slate-500 dark:text-slate-400">
               Signing you in…
             </p>
           </div>
@@ -116,15 +116,15 @@ export const LoginForm = () => {
         <Card.Content>
           <div className="flex flex-col items-center gap-4 py-8 text-center">
             <div className="flex items-center justify-center size-14 rounded-full bg-sky-500/10">
-              <MailCheck className="size-7 text-sky-400" />
+              <MailCheck className="size-7 text-sky-600 dark:text-sky-400" />
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-white">
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
                 Check your email
               </h3>
 
-              <p className="text-slate-400 mt-1">
+              <p className="text-slate-500 dark:text-slate-400 mt-1">
                 If an account exists for
                 {' '}
                 {email}
@@ -190,13 +190,13 @@ export const LoginForm = () => {
           </Alert>
         )}
 
-        <p className="text-sm text-slate-400 text-center pt-2">
+        <p className="text-sm text-slate-500 dark:text-slate-400 text-center pt-2">
           New here?
           {' '}
 
           <Link
             href="/auth/register"
-            className="text-sky-400 font-semibold hover:underline"
+            className="text-sky-600 dark:text-sky-400 font-semibold hover:underline"
           >
             Create an account
           </Link>

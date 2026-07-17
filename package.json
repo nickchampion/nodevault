@@ -13,6 +13,7 @@
     "clean": "rm -rf apps/nodevault/.next apps/nodevault/.open-next apps/api/.output",
     "api": "reset && tsx watch --inspect=9228 ./apps/api/index.ts",
     "api:build": "nx reset && reset && nx build @platform/apps.api",
+    "api:fly": "pnpm run api:build && cd apps/api && flyctl deploy -a nodevault",
     "app": "pnpm run clean && nx reset && reset && nx serve @platform/apps.nodevault",
     "app:build": "nx build @platform/apps.nodevault",
     "app:cf": "./.platform/cloudflare/local.sh",

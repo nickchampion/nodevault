@@ -71,24 +71,24 @@ export default function HomePage() {
   return (
     <div>
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-sky-950/60 via-slate-950 to-slate-950 py-20 sm:py-28">
+      <section className="relative overflow-hidden bg-gradient-to-br from-sky-100/60 via-white to-white dark:from-sky-950/60 dark:via-slate-950 dark:to-slate-950 py-20 sm:py-28">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(14,165,233,0.15),_transparent_60%)]" />
 
         <Container className="relative">
           <div className="max-w-3xl">
-            <p className="text-sky-400 font-semibold text-sm tracking-wide uppercase mb-4">
+            <p className="text-sky-600 dark:text-sky-400 font-semibold text-sm tracking-wide uppercase mb-4">
               A library that answers back
             </p>
 
-            <h1 className="text-5xl sm:text-6xl font-bold text-white tracking-tight leading-tight mb-6">
+            <h1 className="text-5xl sm:text-6xl font-bold text-slate-900 dark:text-white tracking-tight leading-tight mb-6">
               Save anything. Ask everything.
             </h1>
 
-            <p className="text-xl sm:text-2xl text-slate-300 font-medium mb-4">
+            <p className="text-xl sm:text-2xl text-slate-600 dark:text-slate-300 font-medium mb-4">
               NodeVault turns your documents and web pages into a private library you can question
             </p>
 
-            <p className="text-lg text-slate-400 leading-relaxed max-w-2xl mb-10">
+            <p className="text-lg text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl mb-10">
               Upload PDFs, Word documents, text files — or just paste a link. NodeVault reads and
               understands the content, so you can find things by describing them, ask questions and
               get answers with sources, and stay on top of the topics you care about.
@@ -120,11 +120,11 @@ export default function HomePage() {
       <section className="py-16 sm:py-20">
         <Container>
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
               What is NodeVault?
             </h2>
 
-            <p className="text-slate-300 text-lg leading-relaxed">
+            <p className="text-slate-600 dark:text-slate-300 text-lg leading-relaxed">
               NodeVault is a private library that actually understands what&apos;s in it. Every
               document or link you add is read and organised by meaning — not just filed away.
               That means you can find things by describing them in your own words, ask questions
@@ -137,10 +137,10 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section className="py-16 sm:py-20 bg-slate-900/40">
+      <section className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-900/40">
         <Container>
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-white mb-2">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
               One place to save, find, and understand your content
             </h2>
           </div>
@@ -149,18 +149,18 @@ export default function HomePage() {
             {features.map(feature => (
               <div
                 key={feature.title}
-                className="bg-slate-900 rounded-xl p-6 border border-slate-800 flex gap-4"
+                className="bg-slate-50 dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 flex gap-4"
               >
                 <div className="flex items-center justify-center size-10 rounded-lg bg-sky-500/10 shrink-0">
-                  <feature.icon className="size-5 text-sky-400" />
+                  <feature.icon className="size-5 text-sky-600 dark:text-sky-400" />
                 </div>
 
                 <div>
-                  <h3 className="font-semibold text-white text-sm mb-1">
+                  <h3 className="font-semibold text-slate-900 dark:text-white text-sm mb-1">
                     {feature.title}
                   </h3>
 
-                  <p className="text-sm text-slate-400 leading-snug">
+                  <p className="text-sm text-slate-500 dark:text-slate-400 leading-snug">
                     {feature.description}
                   </p>
                 </div>
@@ -174,7 +174,7 @@ export default function HomePage() {
       <section className="py-16 sm:py-20">
         <Container>
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-white mb-2">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
               How it works
             </h2>
           </div>
@@ -183,18 +183,18 @@ export default function HomePage() {
             {steps.map((step, index) => (
               <div
                 key={step.title}
-                className="bg-slate-900 rounded-xl p-6 border border-slate-800 flex gap-5"
+                className="bg-slate-50 dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 flex gap-5"
               >
-                <div className="flex items-center justify-center size-10 rounded-full bg-sky-500/10 shrink-0 text-sky-400 font-bold">
+                <div className="flex items-center justify-center size-10 rounded-full bg-sky-500/10 shrink-0 text-sky-600 dark:text-sky-400 font-bold">
                   {index + 1}
                 </div>
 
                 <div>
-                  <h3 className="font-bold text-white mb-1">
+                  <h3 className="font-bold text-slate-900 dark:text-white mb-1">
                     {step.title}
                   </h3>
 
-                  <p className="text-sm text-slate-300 leading-relaxed">
+                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
                     {step.description}
                   </p>
                 </div>
@@ -205,29 +205,29 @@ export default function HomePage() {
       </section>
 
       {/* Pricing */}
-      <section className="py-16 sm:py-20 bg-slate-900/40">
+      <section className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-900/40">
         <Container>
           <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-white mb-2">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
               Simple pricing
             </h2>
 
-            <p className="text-slate-400">
+            <p className="text-slate-500 dark:text-slate-400">
               Start free. Upgrade when your library grows.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
-            <div className="bg-slate-900 rounded-xl p-8 border border-slate-800">
-              <h3 className="font-semibold text-white mb-1">
+            <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-8 border border-slate-200 dark:border-slate-800">
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
                 Free
               </h3>
 
-              <p className="text-4xl font-bold text-white mb-1">
+              <p className="text-4xl font-bold text-slate-900 dark:text-white mb-1">
                 £0
               </p>
 
-              <p className="text-sm text-slate-400 mb-6">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
                 forever
               </p>
 
@@ -235,9 +235,9 @@ export default function HomePage() {
                 {freeFeatures.map(item => (
                   <li
                     key={item}
-                    className="flex items-center gap-2.5 text-sm text-slate-300"
+                    className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-300"
                   >
-                    <Check className="size-4 text-sky-400 shrink-0" />
+                    <Check className="size-4 text-sky-600 dark:text-sky-400 shrink-0" />
 
                     {item}
                   </li>
@@ -253,21 +253,21 @@ export default function HomePage() {
               </LinkButton>
             </div>
 
-            <div className="bg-slate-900 rounded-xl p-8 border-2 border-sky-500 relative">
+            <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-8 border-2 border-sky-500 relative">
               <span className="absolute -top-3 left-8 bg-sky-500/100 text-white text-xs font-semibold px-3 py-1 rounded-full">
                 For growing libraries
               </span>
 
-              <h3 className="font-semibold text-white mb-1">
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
                 Pro
               </h3>
 
-              <p className="text-4xl font-bold text-white mb-1">
+              <p className="text-4xl font-bold text-slate-900 dark:text-white mb-1">
                 £15
-                <span className="text-base font-medium text-slate-400"> / month</span>
+                <span className="text-base font-medium text-slate-500 dark:text-slate-400"> / month</span>
               </p>
 
-              <p className="text-sm text-slate-400 mb-6">
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
                 one plan, no tiers
               </p>
 
@@ -275,9 +275,9 @@ export default function HomePage() {
                 {proFeatures.map(item => (
                   <li
                     key={item}
-                    className="flex items-center gap-2.5 text-sm text-slate-300"
+                    className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-300"
                   >
-                    <Check className="size-4 text-sky-400 shrink-0" />
+                    <Check className="size-4 text-sky-600 dark:text-sky-400 shrink-0" />
 
                     {item}
                   </li>
@@ -299,11 +299,11 @@ export default function HomePage() {
       <section className="py-16 sm:py-20">
         <Container>
           <div className="max-w-3xl mx-auto text-center">
-            <h2 className="text-2xl font-bold text-white mb-3">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-3">
               Ready to put your content to work?
             </h2>
 
-            <p className="text-slate-300 text-lg leading-relaxed mb-8">
+            <p className="text-slate-600 dark:text-slate-300 text-lg leading-relaxed mb-8">
               Create your account in under a minute — free for up to 100 documents or links,
               no credit card required.
             </p>

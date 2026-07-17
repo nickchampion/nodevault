@@ -16,10 +16,10 @@ type FileDto = ListFilesResponse['files'][number]
 const PAGE_SIZE = 10
 
 const statusStyles: Record<FileDto['status'], string> = {
-  pending: 'bg-slate-500/10 text-slate-400',
-  processing: 'bg-amber-500/10 text-amber-400',
-  ready: 'bg-emerald-500/10 text-emerald-400',
-  failed: 'bg-red-500/10 text-red-400',
+  pending: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
+  processing: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+  ready: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
+  failed: 'bg-red-500/10 text-red-700 dark:text-red-400',
 }
 
 const formatBytes = (bytes: number) => {
@@ -90,7 +90,7 @@ export const FileList = ({ vaultId, source }: { vaultId: number, source: FileSou
 
   if (error) {
     return (
-      <p className="text-red-400 py-4 text-center">
+      <p className="text-red-600 dark:text-red-400 py-4 text-center">
         {error}
       </p>
     )
@@ -98,7 +98,7 @@ export const FileList = ({ vaultId, source }: { vaultId: number, source: FileSou
 
   if (!data || data.total === 0) {
     return (
-      <p className="text-slate-400 py-4 text-center">
+      <p className="text-slate-500 dark:text-slate-400 py-4 text-center">
         {source === 'upload'
           ? 'No files yet — upload your first one above.'
           : 'No URLs yet — add your first one above.'}
@@ -108,7 +108,7 @@ export const FileList = ({ vaultId, source }: { vaultId: number, source: FileSou
 
   return (
     <div>
-      <ul className="divide-y divide-slate-800">
+      <ul className="divide-y divide-slate-200 dark:divide-slate-800">
         {data.files.map(file => (
           <li
             key={file.id}
@@ -116,15 +116,15 @@ export const FileList = ({ vaultId, source }: { vaultId: number, source: FileSou
           >
             <div className="flex items-center gap-3 min-w-0">
               {source === 'upload'
-                ? <FileText className="size-4 text-slate-400 shrink-0" />
-                : <Link2 className="size-4 text-slate-400 shrink-0" />}
+                ? <FileText className="size-4 text-slate-500 dark:text-slate-400 shrink-0" />
+                : <Link2 className="size-4 text-slate-500 dark:text-slate-400 shrink-0" />}
 
               <div className="min-w-0">
-                <p className="text-slate-100 font-medium truncate">
+                <p className="text-slate-900 dark:text-slate-100 font-medium truncate">
                   {file.name ?? file.url ?? 'Untitled'}
                 </p>
 
-                <p className="text-sm text-slate-400 truncate">
+                <p className="text-sm text-slate-500 dark:text-slate-400 truncate">
                   {[
                     source === 'url' ? file.url : null,
                     source === 'upload' && file.sizeBytes !== null ? formatBytes(file.sizeBytes) : null,
@@ -133,7 +133,7 @@ export const FileList = ({ vaultId, source }: { vaultId: number, source: FileSou
                 </p>
 
                 {file.status === 'failed' && file.error && (
-                  <p className="text-sm text-red-400 truncate">
+                  <p className="text-sm text-red-600 dark:text-red-400 truncate">
                     {file.error}
                   </p>
                 )}
@@ -151,7 +151,7 @@ export const FileList = ({ vaultId, source }: { vaultId: number, source: FileSou
       </ul>
 
       {data.total > data.pageSize && (
-        <div className="flex justify-center pt-4 mt-2 border-t border-slate-800">
+        <div className="flex justify-center pt-4 mt-2 border-t border-slate-200 dark:border-slate-800">
           <Pagination
             page={data.page}
             pageSize={data.pageSize}

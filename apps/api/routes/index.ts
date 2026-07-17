@@ -1,3 +1,4 @@
+export { accountRouter } from './account/index.js'
 export { authRouter } from './auth/index.js'
 export { commsRouter } from './comms/index.js'
 export { filesRouter } from './files/index.js'

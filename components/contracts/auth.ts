@@ -16,9 +16,13 @@ export const registerRequestSchema = z.object({
   phone: phoneSchema.optional().nullable(),
 })
 
+/** Same editable fields as registration: name, email and optional phone. */
+export const updateProfileRequestSchema = registerRequestSchema
+
 export type LoginRequest = z.infer<typeof loginRequestSchema>
 export type VerifyRequest = z.infer<typeof verifyRequestSchema>
 export type RegisterRequest = z.infer<typeof registerRequestSchema>
+export type UpdateProfileRequest = z.infer<typeof updateProfileRequestSchema>
 
 export const userDtoSchema = z.object({
   id: z.int().positive(),

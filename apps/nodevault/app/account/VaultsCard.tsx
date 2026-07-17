@@ -83,7 +83,7 @@ export const VaultsCard = () => {
       <Card.Header>
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center size-10 rounded-lg bg-sky-500/10 shrink-0">
-            <Vault className="size-5 text-sky-400" />
+            <Vault className="size-5 text-sky-600 dark:text-sky-400" />
           </div>
 
           <div>
@@ -107,12 +107,12 @@ export const VaultsCard = () => {
           )
           : vaults.length === 0
             ? (
-              <p className="text-slate-400 py-4 text-center">
+              <p className="text-slate-500 dark:text-slate-400 py-4 text-center">
                 No vaults yet — create your first one below.
               </p>
             )
             : (
-              <ul className="divide-y divide-slate-800">
+              <ul className="divide-y divide-slate-200 dark:divide-slate-800">
                 {vaults.map(vault => (
                   <li
                     key={vault.id}
@@ -121,19 +121,19 @@ export const VaultsCard = () => {
                     <div>
                       <Link
                         href={`/account/vaults/${vault.id}`}
-                        className="text-slate-100 font-medium hover:text-sky-400 transition-colors"
+                        className="text-slate-900 dark:text-slate-100 font-medium hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
                       >
                         {vault.name}
                       </Link>
 
-                      <p className="text-sm text-slate-400">
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
                         Created
                         {' '}
                         {formatLocalDate(vault.createdAtUTC, 'dd MMM yyyy')}
                       </p>
                     </div>
 
-                    <div className="flex items-center gap-4 text-sm text-slate-400 shrink-0">
+                    <div className="flex items-center gap-4 text-sm text-slate-500 dark:text-slate-400 shrink-0">
                       <span className="flex items-center gap-1.5">
                         <FileText className="size-4" />
                         {count(vault.documentCount, 'document')}
@@ -149,7 +149,7 @@ export const VaultsCard = () => {
                         size="sm"
                         className="hidden sm:inline-flex"
                       >
-                        View
+                        Open
                       </LinkButton>
                     </div>
                   </li>
@@ -158,7 +158,7 @@ export const VaultsCard = () => {
             )}
 
         <form
-          className="flex items-start gap-3 pt-4 mt-2 border-t border-slate-800"
+          className="flex items-start gap-3 pt-4 mt-2 border-t border-slate-200 dark:border-slate-800"
           noValidate
           onSubmit={submit}
         >
