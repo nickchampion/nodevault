@@ -9,6 +9,16 @@ NodeVault is a personal knowledge vault: drop in files or point it at URLs, and 
 3. An **Inngest workflow** picks the file up asynchronously: extracts text (PDF via `unpdf`, DOCX via `mammoth`), chunks it, generates Gemini embeddings, and writes vectors to **pgvector**
 4. Search the vault semantically — cosine similarity over chunks, scoped per account/vault in plain SQL
 
+## Roadmap
+
+Retrieval is the engine, not the product — the value is what gets composed on top of the vault substrate. The near-term build list, roughly in order:
+
+- **Hybrid search** — combine cosine similarity with Postgres full-text search (`tsvector`) in one query using reciprocal rank fusion. Pure semantic search is notoriously weak on exact names, codes, and acronyms — precisely what people search their own documents for — and because the vectors already live in Postgres this is a single SQL query, not an integration project.
+- **Grounded Q&A with citations** — retrieve top-k chunks, hand them to an LLM, and return an answer with citations linking back to the source file/URL and chunk. The `chunkIndex` column already supports pulling neighbouring context. This is the step that turns a results list into "ask your vault" — a categorically different product.
+- **Synthesis** — per-vault digests, "what do my saved articles say about X", contradiction surfacing. Same retrieval engine, different prompt shapes.
+- **Standing queries** — save a query's embedding, then compare newly ingested chunks against it inside the existing Inngest pipeline: "alert me when anything I save matches this topic." The durable-workflow architecture makes this nearly free, and almost nobody in the personal-knowledge space does it.
+- **Vault as an agent substrate** — expose retrieval as an MCP server so AI tools (Claude, Cursor, …) can query your vault directly. This reframes NodeVault from "a search app" to "your personal knowledge layer that every agent can use" — mostly just another read-only procedure.
+
 ## Tech Stack
 
 | Layer | Tech |
@@ -83,6 +93,8 @@ components/
   utils/        Pure utilities (date, string, math)
   utils-server/ Node-only utilities (crypto, auth tokens)
 integrations/
+  cloudflare/   R2 object storage client (uploaded file blobs)
+  gemini/       Google Gemini client (embeddings)
   resend/       Transactional email client
 ```
 
@@ -120,7 +132,3 @@ Server config comes from the `NODEVAULT` environment variable (base64-encoded JS
 |-----|----------|---------|
 | `apps/api` | Fly.io (Docker) | `fly deploy` from `apps/api/` |
 | `apps/nodevault` | Cloudflare Workers | `pnpm run app:build` then `wrangler deploy` |
-
-## Roadmap
-
-Retrieval is the engine, not the product. On top of the vault substrate: hybrid search (semantic + full-text rank fusion), grounded Q&A with citations, standing queries ("alert me when anything I save matches this topic"), and exposing vaults as an MCP server so any AI agent can use your knowledge base. See `docs/future.md`.
