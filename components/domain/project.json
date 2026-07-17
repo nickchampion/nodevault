@@ -1,0 +1,20 @@
+{
+  "name": "@platform/components.domain",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "components/domain",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "components/domain/**/*.ts"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

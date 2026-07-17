@@ -1,0 +1,22 @@
+{
+  "name": "nodevault",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-07-15",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "upload_source_maps": true,
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "route": {
+    "pattern": "www.nodevault.cloud",
+    "custom_domain": true,
+    "zone_name": "nodevault.cloud"
+  },
+  "observability": {
+    "logs": {
+      "enabled": false
+    }
+  }
+}

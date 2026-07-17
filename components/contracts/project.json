@@ -1,0 +1,20 @@
+{
+  "name": "@platform/components.contracts",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "components/contracts",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "components/contracts/**/*.ts"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,0 +1,53 @@
+{
+  "name": "@platform/apps.nodevault",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "application",
+  "sourceRoot": "apps/nodevault",
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "apps/nodevault/**/*.ts",
+          "apps/nodevault/**/*.tsx"
+        ]
+      }
+    },
+    "build": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "npx next build"
+          }
+        ],
+        "cwd": "apps/nodevault"
+      }
+    },
+    "build-cf": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "npx opennextjs-cloudflare build"
+          }
+        ],
+        "cwd": "apps/nodevault"
+      }
+    },
+    "serve": {
+      "executor": "nx:run-commands",
+      "options": {
+        "commands": [
+          {
+            "command": "npx next dev -p 8001 -H 0.0.0.0"
+          }
+        ],
+        "cwd": "apps/nodevault"
+      }
+    }
+  }
+}

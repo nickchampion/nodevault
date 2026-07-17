@@ -1,0 +1,90 @@
+name: Build & Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22'
+  PNPM_VERSION: '10'
+
+jobs:
+  deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    concurrency:
+      group: build-deploy
+    env:
+      NODEVAULT: ${{ secrets.NODEVAULT_CONFIGURATION }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Detect changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            api:
+              - 'apps/api/**'
+              - 'components/**'
+              - 'integrations/**'
+            nodevault:
+              - 'apps/nodevault/**'
+              - 'components/**'
+              - 'integrations/**'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm run lint
+
+      - name: Type check
+        run: pnpm tsc --noEmit
+
+      - name: Build API
+        if: steps.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          NODEVAULT: ${{ secrets.NODEVAULT_CONFIGURATION }}
+        run: pnpm nx build @platform/apps.api
+
+      - name: Build Next.js (nodevault)
+        if: steps.changes.outputs.nodevault == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          NEXT_PUBLIC_ENVIRONMENT: prod
+          NEXT_PUBLIC_VERSION: ${{ github.sha }}
+        run: pnpm nx build-cf @platform/apps.nodevault
+
+      - name: Setup flyctl
+        if: steps.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy API to Fly.io
+        if: steps.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
+        continue-on-error: true
+        working-directory: apps/api
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: flyctl deploy --local-only
+
+      - name: Deploy nodevault to Cloudflare Workers
+        if: steps.changes.outputs.nodevault == 'true' || github.event_name == 'workflow_dispatch'
+        working-directory: apps/nodevault
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx wrangler deploy

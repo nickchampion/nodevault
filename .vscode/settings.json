@@ -1,0 +1,178 @@
+{
+  "i18n-ally.localesPaths": [
+    "locales"
+  ],
+  "i18n-ally.enabledFrameworks": [
+    "vue"
+  ],
+  "i18n-ally.sourceLanguage": "en-GB",
+  "i18n-ally.displayLanguage": "en-GB",
+  "i18n-ally.enabledParsers": [
+    "js",
+    "json"
+  ],
+  "i18n-ally.theme.annotationBorder": "none",
+  "i18n-ally.keystyle": "nested",
+  "i18n-ally.regex.usageMatchAppend": [
+    "[^\\w\\d]ts\\(['\"`]({key})['\"`]"
+  ],
+
+  "editor.wordSeparators": "`~!@#%^&*()=+[{]}\\|;:'\",.<>/?",
+  "js/ts.preferences.quoteStyle": "single",
+  "js/ts.preferences.importModuleSpecifier": "non-relative",
+  "editor.gotoLocation.multipleDefinitions": "goto",
+  "explorer.fileNesting.enabled": true,
+  "explorer.fileNesting.expand": false,
+  "explorer.fileNesting.patterns": {
+    ".gitignore": ".gitattributes, .gitmodules, .gitmessage, .mailmap, .git-blame*",
+    "*.js": "$(capture).js.map, $(capture).min.js, $(capture).d.ts",
+    "*.jsx": "$(capture).js",
+    "*.ts": "$(capture).js, $(capture).*.ts",
+    "*.vue": "$(capture).js, $(capture).*.ts",
+    "*.tsx": "$(capture).ts",
+    "dockerfile": ".dockerignore, dockerfile*",
+    "project.json": "open-next.config.ts,postcss.config.mjs,next-env.d.ts,wrangler.jsonc,fly.toml,vitest.config.ts, vite.config.ts, prettier*, tsconfig.*, .prettier*, eslint.*, .eslint.*, next.config.ts, css.d.ts, pnpm-lock.yaml",
+    "package.json": ".mcp.json,drizzle.config.ts,CLAUDE.md,components.d.ts, version.json, wrangler.toml, .env, project.json, nx.json, readme.mdx, overrides.json, vitest.config.ts, .nvmrc, .editorconfig, .gitignore, eslint*, .npm*, .pnpm*, .prettier*, .vscode*, package-lock.json, pnpm*, prettier*, tsconfig.*",
+    "readme.md": "authors, backers.md, changelog*.md, code_of_conduct.md, readme*, security.md, sponsors.md"
+  },
+  "search.exclude": {
+    "**/.git": true,
+    "**/node_modules": true,
+    "**/bower_components": true,
+    "**/tmp": true,
+    "**/.nuxt": true,
+    "**/dist": true,
+    "**/.esbuild": true,
+    "**/*.xcodeproj": true,
+    "**/*.js.map": true,
+    "**/App/Pods": true,
+    "**/ios/DerivedData": true,
+    "**/android/app/build": true
+  },
+  "files.associations": {
+    "*.css": "tailwindcss"
+  },
+  "editor.quickSuggestions": {
+    "strings": "on"
+  },
+  "js/ts.tsdk.path": "./node_modules/typescript/lib",
+  "js/ts.tsdk.promptToUseWorkspaceVersion": true,
+  "tailwindCSS.classAttributes": [
+    "class",
+    "className",
+    "ui"
+  ],
+  "tailwindCSS.experimental.classRegex": [
+    [
+      "ui:\\s*{([^)]*)\\s*}",
+      "[\"'`]([^\"'`]*).*?[\"'`]"
+    ],
+    [
+      "/\\*\\s?ui\\s?\\*/\\s*{([^;]*)}",
+      ":\\s*[\"'`]([^\"'`]*).*?[\"'`]"
+    ]
+  ],
+  "prettier.enable": false,
+  "editor.formatOnSave": true,
+  "files.autoSave": "onFocusChange",
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "never"
+  },
+
+  "eslint.format.enable": true,
+
+  "editor.defaultFormatter": "dbaeumer.vscode-eslint",
+
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact",
+    "vue",
+    "html",
+    "markdown",
+    "json",
+    "json5",
+    "jsonc",
+    "toml",
+    "xml"
+  ],
+  "[xml]": {
+    "editor.formatOnSave": false
+  },
+  "eslint.runtime": "node",
+  "eslint.rules.customizations": [
+    {
+      "rule": "style/*",
+      "severity": "info",
+      "fixable": true
+    },
+    {
+      "rule": "*-indent",
+      "severity": "info",
+      "fixable": true
+    },
+    {
+      "rule": "*-spacing",
+      "severity": "info",
+      "fixable": true
+    },
+    {
+      "rule": "*-spaces",
+      "severity": "info",
+      "fixable": true
+    },
+    {
+      "rule": "*-order",
+      "severity": "info",
+      "fixable": true
+    },
+    {
+      "rule": "*-dangle",
+      "severity": "info",
+      "fixable": true
+    },
+    {
+      "rule": "*-newline",
+      "severity": "info",
+      "fixable": true
+    },
+    {
+      "rule": "*quotes",
+      "severity": "info",
+      "fixable": true
+    },
+    {
+      "rule": "*semi",
+      "severity": "info",
+      "fixable": true
+    }
+  ],
+  "files.eol": "\n",
+  "vue.server.hybridMode": true,
+  "vue.codeActions.enabled": false,
+  "vue.autoInsert.dotValue": true,
+  "vue.inlayHints.missingProps": true,
+  "[typescript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "dbaeumer.vscode-eslint"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
+  "npm.packageManager": "pnpm",
+
+  "python.defaultInterpreterPath": "${workspaceFolder}/apps/analysis/.venv/bin/python",
+  "python.testing.pytestEnabled": true,
+  "python.testing.pytestArgs": ["apps/analysis"],
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+}

@@ -1,0 +1,70 @@
+# See http://help.github.com/ignore-files/ for more about ignoring files.
+
+# compiled output
+dist
+tmp
+out-tsc
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+*.launch
+.settings/
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+.cursor/*
+!.cursor/settings.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+.wrangler
+.env
+storybook-static
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# nodevault
+.tsbuildinfo
+.tsbuildinfo.storybook
+overrides.json
+
+# Open API auto generated
+.nodevault/openapi/*.*
+components/domain/openapi/models/**/*.ts
+components/nodevault/server/openapi/models/**/*.ts
+
+# nx
+.nx/cache
+.nx/workspace-data
+
+# Next.js
+.next
+.open-next
+next-env.d.ts
+.out
+.output
+
+# pnpm
+.pnpm-store
+
+.nx/polygraph
+.claude/worktrees
+.claude/settings.local.json

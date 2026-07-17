@@ -1,0 +1,31 @@
+{
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022", "dom", "dom.iterable", "webworker"],
+    "jsx": "preserve",
+    "types": ["node", "react", "react-dom"],
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@platform/apps.api": ["../../apps/api/router.ts"],
+      "@platform/components.api": ["../../components/api/index.ts"],
+      "@platform/components.configuration": ["../../components/configuration/index.ts"],
+      "@platform/components.contracts": ["../../components/contracts/index.ts"],
+      "@platform/components.domain": ["../../components/domain/index.ts"],
+      "@platform/components.postgres": ["../../components/postgres/index.ts"],
+      "@platform/components.context": ["../../components/context/index.ts"],
+      "@platform/components.utils": ["../../components/utils/index.ts"],
+      "@platform/components.utils.server": ["../../components/utils-server/index.ts"],
+      "@platform/integrations.resend": ["../../integrations/resend/index.ts"]
+    }
+  },
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".open-next"
+  ]
+}

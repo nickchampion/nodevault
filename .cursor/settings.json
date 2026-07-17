@@ -1,0 +1,19 @@
+{
+  "plugins": {
+    "posthog": {
+      "enabled": true
+    },
+    "figma": {
+      "enabled": true
+    },
+    "slack": {
+      "enabled": true
+    },
+    "sentry": {
+      "enabled": true
+    },
+    "cloudflare": {
+      "enabled": true
+    }
+  }
+}

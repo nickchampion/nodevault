@@ -1,0 +1,46 @@
+{
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "name": "@platform/apps.api",
+  "sourceRoot": "apps/api",
+  "projectType": "application",
+  "targets": {
+    "build": {
+      "executor": "@nx/esbuild:esbuild",
+      "outputs": [
+        "{options.outputPath}"
+      ],
+      "options": {
+        "platform": "node",
+        "outputPath": "apps/api/.output",
+        "format": [
+          "cjs"
+        ],
+        "bundle": true,
+        "thirdParty": true,
+        "minify": false,
+        "sourcemap": true,
+        "main": "apps/api/index.ts",
+        "tsConfig": "apps/api/tsconfig.json",
+        "generatePackageJson": true,
+        "esbuildOptions": {
+          "keepNames": true,
+          "outExtension": {
+            ".js": ".js"
+          }
+        }
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "apps/api/**/*.ts"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

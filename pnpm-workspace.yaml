@@ -1,0 +1,14 @@
+packages: [ "/apps/*", "/components/*", "integrations/*" ]
+allowBuilds:
+  '@parcel/watcher': true
+  '@posthog/cli': true
+  '@swc/core': true
+  core-js: true
+  esbuild: true
+  nx: true
+  protobufjs: true
+  sharp: true
+  unrs-resolver: true
+  vue-demi: true
+  workerd: true
+minimumReleaseAge: 2880

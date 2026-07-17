@@ -1,0 +1,13 @@
+@import "tailwindcss";
+@import "@heroui/styles";
+
+/* Light-only site: keep the page background pure white and use the
+   sky brand colour as the HeroUI accent (buttons, focus rings, links). */
+:root,
+.light {
+  --background: var(--white);
+  --accent: oklch(58.8% 0.158 241.966); /* tailwind sky-600 */
+  --accent-foreground: var(--white);
+  --field-border-width: 1px;
+  --field-border: oklch(92.9% 0.013 255.508); /* tailwind slate-200 */
+}
