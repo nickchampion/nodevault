@@ -1,15 +1,14 @@
 import {
   boolean,
-  pgTable,
+  integer,
   text,
   timestamp,
-  uuid,
 } from 'drizzle-orm/pg-core'
-import { users } from './account.js'
+import { nodevault, users } from './account.js'
 
-export const loginTokens = pgTable('login_tokens', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+export const loginTokens = nodevault.table('login_tokens', {
+  id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
+  userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   email: text('email').notNull(),
   used: boolean('used').notNull().default(false),
   expiresAtUTC: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),

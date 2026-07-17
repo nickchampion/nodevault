@@ -5,8 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1783952610375,
-      "tag": "0000_silky_dragon_man",
+      "when": 1784283920728,
+      "tag": "0000_account-schema",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1784285772056,
+      "tag": "0001_fix-phone-column",
       "breakpoints": true
     }
   ]

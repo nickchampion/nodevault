@@ -1,0 +1,1 @@
+ALTER TABLE "nodevault"."users" ALTER COLUMN "phone" SET DATA TYPE text;

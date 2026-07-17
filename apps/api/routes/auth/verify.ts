@@ -6,7 +6,7 @@ import { AppError, accounts, loginTokens, users } from '@platform/components.dom
 import type { VerifyLoginResponse, VerifyRequest } from '@platform/components.contracts'
 import { toAccountDto, toUserDto } from './mappers.js'
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const TOKEN_ID_PATTERN = /^\d+$/
 
 export const authVerify: ApiHandler<VerifyRequest, VerifyLoginResponse> = async (context) => {
   const { code } = context.event.payload
@@ -18,11 +18,13 @@ export const authVerify: ApiHandler<VerifyRequest, VerifyLoginResponse> = async 
       throw new AppError('auth', 'You have provided an invalid login token, please login again to receive a new code')
     }
 
-    const [loginTokenId] = decryptedToken.split('_')
+    const [tokenIdPart] = decryptedToken.split('_')
 
-    if (!UUID_PATTERN.test(loginTokenId)) {
+    if (!TOKEN_ID_PATTERN.test(tokenIdPart)) {
       throw new AppError('auth', 'You have provided an invalid login token, please login again to receive a new code')
     }
+
+    const loginTokenId = Number(tokenIdPart)
 
     // consume the token atomically: only an unused, unexpired token matches
     const [loginToken] = await context.session.db
@@ -57,6 +59,7 @@ export const authVerify: ApiHandler<VerifyRequest, VerifyLoginResponse> = async 
 
     const authInfo = new AuthInfo({
       ...user,
+      userId: user.id,
       accountName: account.name,
       accountId: account.id,
     })

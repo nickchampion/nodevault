@@ -11,7 +11,12 @@ export const toUserDto = (user: User): UserDto => ({
   firstName: user.firstName,
   lastName: user.lastName,
   email: user.email,
-  phone: user.phone,
+  phone: user.phone
+    ? {
+      countryCode: user.phone.split(' ', 1)[0],
+      number: user.phone.split(' ', 2)[1],
+    }
+    : null,
   roles: user.roles,
   createdAtUTC: toUtcIso(user.createdAtUTC),
 })

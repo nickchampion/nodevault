@@ -35,13 +35,14 @@ export const authRegister: ApiHandler<RegisterRequest, VerifyLoginResponse> = as
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: normalisedEmail,
-      phone: phone ? { countryCode: phone.countryCode, number: phone.number.replace(' ', '') } : null,
+      phone: phone ? `${phone.countryCode} ${phone.number.replace(' ', '')}` : null,
       roles: ['user'],
     })
     .returning()
 
   const authInfo = new AuthInfo({
     ...user,
+    userId: user.id,
     accountName: account.name,
     accountId: account.id,
   })

@@ -16,7 +16,7 @@ Node.js API server built on Koa with OpenAPI v3 validation via `openapi-backend`
 
 **Stack:** Node.js · Koa · openapi-backend · RavenDB · TypeScript
 
-**Dev server:** `pnpm run api` → `http://api.nodevault.local:9002`
+**Dev server:** `pnpm run api` → `http://api.nodevault.local:9001`
 
 #### Auth flow
 
@@ -150,9 +150,8 @@ Nuxt 4 SSR app deployed to Cloudflare Workers. Light-only UI (sky/slate colour s
 pnpm install
 
 # Start servers (separate terminals)
-pnpm run api          # API on :9002
-pnpm run app          # NodeVault Nuxt on :9001
-pnpm run nickchampion # Nick Champion Nuxt on :9003
+pnpm run api          # API on :8002
+pnpm run app          # NodeVault Nuxt on :8001
 
 # Type check everything
 npx tsc --noEmit

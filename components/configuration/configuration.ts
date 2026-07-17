@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/prefer-https */
 import type { EnvironmentSettings } from '@platform/components.configuration'
 
 export type ServerConfiguration = {
@@ -8,7 +9,7 @@ export type ServerConfiguration = {
   origins: string[]
   environment: EnvironmentSettings
   version: string
-  postgres: Postgres
+  neon: Neon
   cloudflare: Cloudflare
   resend: {
     apiKey: string
@@ -23,12 +24,10 @@ export type BasicAuth = {
   secret: string
 }
 
-export type Postgres = {
-
-  /** Connection string, e.g. postgres://user:pass@host:5432/db */
+export type Neon = {
   url: string
-
-  /** Maximum pool size per process */
+  urlUnpooled: string
+  branch: string
   poolSize: number
 }
 
@@ -43,8 +42,8 @@ export const server = {
     prod: false,
   },
   origins: {
-    default: ['https://www.nodevault.local:9001', 'https://www.nickchampion.local:9003'],
-    prod: ['https://www.nodevault.cloud', 'https://www.nickchampion.me'],
+    default: ['http://www.nodevault.local:8001'],
+    prod: ['https://www.nodevault.cloud'],
   },
   production: {
     default: false,
@@ -55,19 +54,26 @@ export const server = {
     prod: 'env$NODEVAULT_VERSION',
   },
   api: {
-    default: 'https://api.nodevault.local:9002',
+    default: 'http://api.nodevault.local:8002',
     prod: 'https://api.nodevault.cloud',
   },
   app: {
-    default: 'https://www.nodevault.local:9001',
+    default: 'http://www.nodevault.local:8001',
     prod: 'https://www.nodevault.cloud',
   },
-  postgres: {
+  neon: {
     url: {
-      default: 'postgres://nodevault:nodevault@localhost:5432/nodevault',
-      prod: 'env$DATABASE_URL',
+      encrypted: true,
+      default: '0489dLDFmT1IDQXuhbYQw7IfAUB1EuhMDdZLuCz8gIOmeQ2fMqtRMjov6qY5POoBLj/khf2h1YMaJvxNh1lF5B8=',
+      prod: 'wO8ajY6fov8fDrmHvrXwD3jCB7ff8XaQhPEPDzISQVvvBwE/M6y/A8rRXaeMLTGmFRnJaOgcHrpOmJH0QUMheUP48poOsFLs48mUIXR1P8Zp9Ebgy1NrOQHbI/r50I2uRgMGBoCKFARqUxnLr8Q/fIuahaJ3g08fiV/gtOg4nHcd1YCGJqS8gj8gYSUzv36l6FM7zniL+qIw3JX1io8qVkU=',
     },
-    poolSize: 10,
+    urlUnpooled: {
+      encrypted: true,
+      default: '0489dLDFmT1IDQXuhbYQw7IfAUB1EuhMDdZLuCz8gIOmeQ2fMqtRMjov6qY5POoBLj/khf2h1YMaJvxNh1lF5B8=',
+      prod: 'Iuki5D0qjpGGSvIbwpAqquoL2lGIjFABoPiCK+UHhb8y49AUXp3ACCYdFmDOkGw+Kyv7sSxhbZ0KTxeWrgEtymLugS2IphYY87wMq68dKKlRdfJSz232mgDJdhsakrtUInvjHGeEzEpOxKnzMT2dPUdBhV9PNiWZ2SBIaFqhzdGucPnmmZOsftELSDRdsJDhgV/QlbrTotSMAg==',
+    },
+    branch: 'production',
+    poolSize: 5,
   },
   cloudflare: {
     accountId: '6588d1ee1643e6a11baba75c0cbea29e',
@@ -83,7 +89,7 @@ export const server = {
       prod: 'SiDNd6gFBH0HP4T/XRDYyrFyC5olQWIH3n1rnvMprd9b2ZRrr7SdMMm8REvB0Q==',
       encrypted: true,
     },
-    from: 'nodevault <nodevault@nickchampion.me>',
-    contact: 'mail@nickchampion.me',
+    from: 'nodevault <nodevault@nodevault.cloud>',
+    contact: 'hello@nodevault.cloud',
   },
 }

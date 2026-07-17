@@ -11,7 +11,7 @@ import { inngestMiddleware } from './inngest/middleware.js'
  */
 const start = async () => {
   // one pool per process; each request Context gets its own unit-of-work session
-  const pool = createPool(serverConfiguration.postgres)
+  const pool = createPool(serverConfiguration.neon)
 
   const api = new Api(
     {

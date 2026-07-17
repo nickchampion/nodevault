@@ -1,11 +1,11 @@
-app = "node-vault"
+app = "nodevault"
 primary_region = "lhr"
 
 [build]
   dockerfile = "Dockerfile"
 
 [http_service]
-  internal_port = 9002
+  internal_port = 8002
   force_https = true
   auto_stop_machines = "stop"
   auto_start_machines = true

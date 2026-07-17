@@ -1,6 +1,6 @@
 {
-  "id": "e99e838b-d50a-4c7c-aa41-c3efef480100",
-  "prevId": "00000000-0000-0000-0000-000000000000",
+  "id": "72b772cf-b7bc-4bff-b90b-542ca2f634a2",
+  "prevId": "e99e838b-d50a-4c7c-aa41-c3efef480100",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -108,7 +108,7 @@
         },
         "phone": {
           "name": "phone",
-          "type": "jsonb",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         },

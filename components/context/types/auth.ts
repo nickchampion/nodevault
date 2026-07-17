@@ -10,8 +10,8 @@ export class AuthInfo {
   accountName!: string
   firstName!: string
   lastName: string | undefined
-  userId: string | undefined
-  accountId: string | undefined
+  userId: number | undefined
+  accountId: number | undefined
   roles: string[] = ['guest']
 
   constructor(fields: Partial<AuthInfo>) {

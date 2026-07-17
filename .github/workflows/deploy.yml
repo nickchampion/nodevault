@@ -68,6 +68,14 @@ jobs:
           NEXT_PUBLIC_VERSION: ${{ github.sha }}
         run: pnpm nx build-cf @platform/apps.nodevault
 
+      - name: Postgres Migration Neon
+        if: steps.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
+        env:
+          NEXT_PUBLIC_ENVIRONMENT: prod
+          NEXT_PUBLIC_VERSION: ${{ github.sha }}
+          NODEVAULT: ${{ secrets.NODEVAULT_CONFIGURATION }}
+        run: pnpm run db:neon
+
       - name: Setup flyctl
         if: steps.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
         uses: superfly/flyctl-actions/setup-flyctl@master

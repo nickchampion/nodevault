@@ -21,7 +21,7 @@ export type VerifyRequest = z.infer<typeof verifyRequestSchema>
 export type RegisterRequest = z.infer<typeof registerRequestSchema>
 
 export const userDtoSchema = z.object({
-  id: z.uuid(),
+  id: z.int().positive(),
   firstName: z.string(),
   lastName: z.string(),
   email: z.email(),
@@ -31,7 +31,7 @@ export const userDtoSchema = z.object({
 })
 
 export const accountDtoSchema = z.object({
-  id: z.uuid(),
+  id: z.int().positive(),
   name: z.string(),
   createdAtUTC: z.iso.datetime(),
 })
