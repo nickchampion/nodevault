@@ -1,5 +1,6 @@
 packages: [ "/apps/*", "/components/*", "integrations/*" ]
 allowBuilds:
+  '@google/genai': false
   '@parcel/watcher': true
   '@posthog/cli': true
   '@swc/core': true

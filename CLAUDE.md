@@ -149,7 +149,7 @@ Conventions:
 - `begin()` is lazy: the connection is only checked out on the first statement, and only held until commit/rollback
 - Timestamps are `timestamptz` in `mode: 'date'` — Drizzle returns `Date` objects; mappers convert them to UTC ISO strings for responses
 
-Connection config lives in `serverConfiguration.postgres` (dev default `postgres://nodevault:nodevault@localhost:5432/nodevault`, prod from `DATABASE_URL`; drizzle-kit reads the same URL via `drizzle.config.ts`). Local dev database: `docker start nodevault-postgres` (a `postgres:16-alpine` container).
+Connection config lives in `serverConfiguration.postgres` (dev default `postgres://nodevault:nodevault@localhost:5432/nodevault`, prod from `DATABASE_URL`; drizzle-kit reads the same URL via `drizzle.config.ts`). Local dev database: `docker start nodevault-postgres` (a `pgvector/pgvector:pg18` container).
 
 ## Adding a New API Endpoint
 

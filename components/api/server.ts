@@ -120,10 +120,6 @@ export class Api {
     }
   }
 
-  /**
-   * Handle CORS preflight, should only happen in dev as we proxy via Cloudflare in other
-   * environments so we can use the same domain, protocol and port as the front end
-   */
   cors = (koa: KoaContext) => {
     const origin = this.resolveOrigin(koa.get('origin'))
 

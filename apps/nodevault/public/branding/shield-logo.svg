@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 212 48" fill="none">
+  <g transform="translate(4 4) scale(0.625)">
+    <path d="M32 5 55 13.5V29c0 15-9.5 24.5-23 30C18.5 53.5 9 44 9 29V13.5Z" stroke="#0f172a" stroke-width="4.5" stroke-linejoin="round"/>
+    <path d="M32 30 22.5 20.5M32 30 41.5 20.5M32 30v14" stroke="#0284c7" stroke-width="3" stroke-linecap="round"/>
+    <circle cx="32" cy="30" r="5.5" fill="#0284c7"/>
+    <circle cx="22.5" cy="20.5" r="3.5" fill="#0ea5e9"/>
+    <circle cx="41.5" cy="20.5" r="3.5" fill="#0ea5e9"/>
+    <circle cx="32" cy="44" r="3.5" fill="#0ea5e9"/>
+  </g>
+  <text x="54" y="33" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="25" font-weight="700" letter-spacing="-0.4" fill="#0f172a">Node<tspan fill="#0284c7">Vault</tspan></text>
+</svg>

@@ -167,13 +167,13 @@ export const RegisterForm = () => {
         </Alert>
       )}
 
-      <p className="text-sm text-slate-500 text-center pt-2">
+      <p className="text-sm text-slate-400 text-center pt-2">
         Already have an account?
         {' '}
 
         <Link
           href="/auth/login"
-          className="text-sky-600 font-semibold hover:underline"
+          className="text-sky-400 font-semibold hover:underline"
         >
           Sign in
         </Link>

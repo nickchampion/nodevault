@@ -1,7 +1,8 @@
 import { serverConfiguration } from '@platform/components.configuration'
 import { Api } from '@platform/components.api'
-import { PgSession, createPool } from '@platform/components.postgres'
+import { PgSession } from '@platform/components.postgres'
 import { schema } from '@platform/components.domain'
+import { pool } from './db.js'
 import { appRouter } from './router.js'
 import { inngestMiddleware } from './inngest/middleware.js'
 
@@ -10,9 +11,6 @@ import { inngestMiddleware } from './inngest/middleware.js'
  * exposed under the /trpc prefix, e.g. POST /trpc/auth.login
  */
 const start = async () => {
-  // one pool per process; each request Context gets its own unit-of-work session
-  const pool = createPool(serverConfiguration.neon)
-
   const api = new Api(
     {
       host: serverConfiguration.dev ? 'api.nodevault.local' : undefined,

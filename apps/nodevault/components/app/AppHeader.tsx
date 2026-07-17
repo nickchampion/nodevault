@@ -5,13 +5,14 @@ import { Button, Drawer, useOverlayState } from '@heroui/react'
 import { Mail, Menu } from 'lucide-react'
 import { Container } from '../ui/Container'
 import { LinkButton } from '../ui/LinkButton'
+import { AccountMenu } from './AccountMenu'
 import { AppLogo } from './AppLogo'
 
 export const AppHeader = () => {
   const menu = useOverlayState({ defaultOpen: false })
 
   return (
-    <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-sm border-b border-slate-200">
+    <header className="sticky top-0 z-50 bg-slate-950/80 backdrop-blur-sm border-b border-slate-800">
       <Container className="flex items-center justify-between gap-4 h-16">
         <Link
           href="/"
@@ -19,7 +20,10 @@ export const AppHeader = () => {
         >
           <AppLogo className="size-8" />
 
-          <span className="font-semibold text-sm tracking-tight text-slate-900">Node Vault</span>
+          <span className="font-semibold text-sm tracking-tight text-white">
+            Node
+            <span className="text-sky-400">Vault</span>
+          </span>
         </Link>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -31,6 +35,8 @@ export const AppHeader = () => {
             <Mail className="size-4" />
             Get in touch
           </LinkButton>
+
+          <AccountMenu />
 
           <Drawer state={menu}>
             <Button
@@ -52,7 +58,10 @@ export const AppHeader = () => {
                       <span className="flex items-center gap-2.5">
                         <AppLogo className="size-8" />
 
-                        <span className="font-semibold text-sm tracking-tight">NodeVault AI</span>
+                        <span className="font-semibold text-sm tracking-tight">
+                          Node
+                          <span className="text-sky-400">Vault</span>
+                        </span>
                       </span>
                     </Drawer.Heading>
                   </Drawer.Header>

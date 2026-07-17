@@ -1,191 +1,126 @@
 # NodeVault
 
-An NX monorepo containing two frontend applications, a shared REST API, and a set of platform components.
+NodeVault is a personal knowledge vault: drop in files or point it at URLs, and it turns them into a searchable, private knowledge base. Content is ingested through durable background workflows — chunked, embedded, and stored as vectors in Postgres — so you can find things by *meaning*, not just keywords. The goal is a knowledge layer you can ask questions of (grounded answers with citations back to your own documents) and that your AI tools can query on your behalf.
 
-**NodeVault** (`nodevault.cloud`) — a privacy information portal covering three practical paths to reducing your digital footprint: de-Googling your phone with GrapheneOS, replacing cloud subscriptions with a self-hosted UmbrelOS home server, and protecting your home network from IoT surveillance.
+**How it works today:**
 
-**Nick Champion** (`nickchampion.me`) — a personal profile and CV site showcasing engineering background, technical expertise, and project work.
+1. Sign in with a magic link (no passwords) — email delivery via Resend
+2. Create a **vault** and add content: upload a file or submit a URL
+3. An **Inngest workflow** picks the file up asynchronously: extracts text (PDF via `unpdf`, DOCX via `mammoth`), chunks it, generates Gemini embeddings, and writes vectors to **pgvector**
+4. Search the vault semantically — cosine similarity over chunks, scoped per account/vault in plain SQL
 
----
+## Tech Stack
 
-## Apps
+| Layer | Tech |
+|-------|------|
+| Frontend | Next.js 15 (App Router) · React 19 · HeroUI v3 · Tailwind CSS 4 |
+| API | Node.js · Koa · **tRPC v11** · zod contracts |
+| Background jobs | **Inngest** — durable, step-based workflows |
+| Database | Postgres (Neon in prod) · Drizzle ORM · **pgvector** |
+| Embeddings | Google Gemini (`@google/genai`) |
+| Email | Resend |
+| Hosting | Frontend on Cloudflare Workers (OpenNext) · API on Fly.io · file storage on R2 |
+| Tooling | NX monorepo · pnpm · TypeScript · Vitest · tsx |
 
-### `apps/api` — REST API
+### tRPC — end-to-end type safety, no codegen
 
-Node.js API server built on Koa with OpenAPI v3 validation via `openapi-backend`. Runs locally with `tsx watch` and deploys to [Fly.io](https://fly.io) as a Docker container (`nodevault-api`, `lhr` region).
-
-**Stack:** Node.js · Koa · openapi-backend · RavenDB · TypeScript
-
-**Dev server:** `pnpm run api` → `http://api.nodevault.local:9001`
-
-#### Auth flow
-
-Magic-link, no passwords:
-
-1. `POST /auth/login` — looks up user by email, generates an encrypted token stored as a `LoginToken` document (10-minute TTL via RavenDB `@expires`), fetches the rendered login email from the Nuxt app, and sends it via Resend.
-2. User clicks the link → `POST /auth/verify` — decrypts the code, validates the `LoginToken`, marks it used, and returns a signed JWT + user/account payload.
-
-#### Handler pattern
+The API is a tRPC router hosted on Koa, but business logic lives in plain **ApiHandlers** that declare their contract types as generics:
 
 ```typescript
-export const authLogin: ApiHandler = async (context): Promise<Response> => {
-  const { email } = context.event.payload as LoginRequestSchema
+export const authLogin: ApiHandler<LoginRequest, OkResponse> = async (context) => {
+  const body = context.event.payload  // typed & zod-validated
   // ...
-  return context.event.response.ok()
+  return context.event.response.ok()  // checked against the response contract
 }
 ```
 
-Handlers are registered by name in `apps/api/handlers/index.ts` — the key **must exactly match the `operationId`** in the OpenAPI schema. The middy middleware lifecycle auto-commits the RavenDB session after each handler.
+Handlers are wired onto procedures via an `execute()` bridge, with every procedure declaring `.input()` **and** `.output()` schemas from the shared contracts package — so requests are validated and responses are verified (and excess fields stripped) at runtime, while a handler whose types disagree with its schemas is a *compile-time* error at the wiring site:
 
-#### Request lifecycle
-
-```
-Koa → OpenAPI route match + schema validation
-  → InboundEvent + Context created (RavenDB Session attached)
-  → middy middleware:
-      before:  logging, timer
-      handler: ApiHandler
-      after:   commit session, set response headers
-      error:   normalise to StandardResponse
-  → Koa response
+```typescript
+export const authRouter = router({
+  verify: publicProcedure
+    .input(verifyRequestSchema)
+    .output(verifyLoginResponseSchema)
+    .mutation(execute(authVerify)),
+})
 ```
 
----
+The frontend imports the router **type only** (`@platform/apps.api`) and gets a fully typed client with zero code generation:
 
-### `apps/nodevault` — NodeVault frontend
+```typescript
+await api.vaults.create.mutate({ name })   // typed end-to-end
+```
 
-Nuxt 4 (`compatibilityVersion: 4`) SSR app deployed to Cloudflare Workers via the `cloudflare_module` preset. All pages server-render by default; no prerendering.
+Each mutating request runs inside a single Postgres transaction (unit of work) managed by middleware — handlers never touch transaction code; a thrown error or 4xx response rolls everything back.
 
-**Stack:** Nuxt 4 · Vue 3 · Nuxt UI · Pinia · Tailwind CSS · TypeScript
+### Inngest — durable ingestion pipeline
 
-**Dev server:** `pnpm run app` → `http://www.nodevault.local:9001`
+File processing is too slow and failure-prone for a request/response cycle, so upload endpoints just persist the row and emit an event:
 
-**Deploy:** `pnpm run app:build` → Wrangler → Cloudflare Workers (`nodevault` worker)
+```typescript
+await inngest.send({ name: 'files/file.uploaded', data: { fileId } })
+```
 
-#### Content areas
+The workflow (`apps/api/inngest/functions/process-file.ts`) runs as discrete, individually-retried `step.run()` units — fetch/extract text, chunk, embed, store vectors, mark ready. A step that fails retries from that step, not from the beginning, and file status (`pending → processing → ready | failed`) is visible to the frontend via polling. Locally, `pnpm run inngest` gives you a dev UI at http://localhost:8288 showing every run, step, and payload.
 
-| Section | Path | Description |
-|---------|------|-------------|
-| Privacy Phones | `/phones` | GrapheneOS — de-Googling your phone, compatible devices, privacy app stack |
-| Home Server | `/umbrelos` | UmbrelOS self-hosting — hardware, app directory, replacing cloud subscriptions |
-| Privacy Router | `/privacy-router` | DNS blocking, WireGuard VPN, VLAN isolation for home networks |
-| Blog | `/blog` | Articles and guides |
-| Contact | `/company/contact` | Get in touch form |
-| About | `/company/about` | About NodeVault |
+### pgvector — vectors live next to your data
 
-#### Layouts
+Embeddings are stored in the same Postgres schema as everything else (Drizzle `vector` columns + HNSW index). That means vector search composes with ordinary SQL — scoped by account, vault, date, or status in one `WHERE` clause, transactionally consistent, no separate vector database to sync.
 
-| Layout | Used for |
-|--------|---------|
-| `default` | All public-facing pages — sticky header, footer |
-| `admin` | Admin section — full-width header, left sidebar nav |
-| `email` | Email templates — branded email card shell (header + footer), no Nuxt chrome injected into inline styles |
+## Monorepo Structure
 
-#### Email rendering
+```
+apps/
+  api/          Koa + tRPC API server (routes/ per domain) + Inngest functions
+  nodevault/    Next.js 15 frontend (Cloudflare Workers via OpenNext)
+components/
+  api/          Koa host for tRPC, router/procedure helpers, execute() bridge
+  configuration/ Config builder + server config (NODEVAULT env var)
+  context/      Context, InboundEvent, Response, Session, structured logging
+  contracts/    Public API contracts — zod schemas + DTO types (client-safe)
+  domain/       Drizzle schema + inferred row types, AppError
+  postgres/     PgSession unit of work, pool factory, migrations
+  utils/        Pure utilities (date, string, math)
+  utils-server/ Node-only utilities (crypto, auth tokens)
+integrations/
+  resend/       Transactional email client
+```
 
-Email templates are Nuxt pages under `/emails/*` using the `email` layout. The API calls `renderEmail(appUrl, '/emails/login', params)` which fetches the SSR-rendered HTML and passes it to Resend. Query params supply the template variables (e.g. `name`, `code`).
-
-#### Key composables & stores
-
-| Path | Purpose |
-|------|---------|
-| `app/stores/auth-store.ts` | Pinia store — JWT tokens, expiry, `apiOptions()` |
-| `app/composables/useApiClient.ts` | Returns a typed `NodeVaultApiClient` bound to auth tokens |
-| `app/composables/useConfig.ts` | Runtime config access |
-
----
-
-### `apps/nickchampion` — Personal profile site
-
-Nuxt 4 SSR app deployed to Cloudflare Workers. Light-only UI (sky/slate colour scheme) with forced light mode — dark mode is disabled at the CSS level regardless of system preference.
-
-**Stack:** Nuxt 4 · Vue 3 · Nuxt UI · Tailwind CSS · TypeScript
-
-**Dev server:** `pnpm run nickchampion` → `http://www.nickchampion.local:9003`
-
-**Deploy:** Cloudflare Workers (`nickchampion` worker)
-
-#### Pages
-
-| Route | Description |
-|-------|-------------|
-| `/` | Landing page — intro, key strengths, technical expertise, current project, recent roles |
-| `/cv` | Full CV — career history, education, notable achievements |
-| `/nodevault` | NodeVault project showcase — what it is, tech stack, engineering highlights |
-| `/contact` | Contact form — name, email, optional phone, message; posts to `/comms/contact` API endpoint |
-
-#### Notes
-
-- No auth — fully public, no admin section
-- Contact form submits to the same `/comms/contact` API endpoint as NodeVault, with `interests: ['other']` injected silently (required by the shared schema)
-- Uses `PhoneInput` component copied from NodeVault, backed by `Countries` domain model
-- Dark mode disabled: `@variant dark` redefined to `never-dark` in CSS, plus `.dark` CSS variable block overridden to light values in `app/assets/css/main.css`
-
----
-
-## Components (shared libraries)
-
-| Package alias | Path | Purpose |
-|---------------|------|---------|
-| `@platform/components.api` | `components/api` | Koa server, OpenAPI routing, middy middleware, handler types |
-| `@platform/components.nodevault.server` | `components/nodevault/server` | Server config, domain models, RavenDB indexes |
-| `@platform/components.nodevault.client` | `components/nodevault/client` | Client runtime config, `NodeVaultApiClient`, typed request methods |
-| `@platform/components.nodevault.openapi` | `components/nodevault/openapi` | OpenAPI document composition, models, request/response schemas |
-| `@platform/components.configuration` | `components/configuration` | Config builder (`build<T>()`) |
-| `@platform/components.context` | `components/context` | `Context`, `InboundEvent`, `Response`, `Log`, middy wrappers |
-| `@platform/components.domain` | `components/domain` | Domain models (`User`, `Account`, `LoginToken`, `Contact`), types, geo data |
-| `@platform/components.ravendb` | `components/ravendb` | `Session` wrapper, document store helpers, search utilities |
-| `@platform/components.search` | `components/search` | Search/query builders |
-| `@platform/components.utils` | `components/utils` | Pure utilities — date, string, math (no Node.js-specific APIs) |
-| `@platform/components.utils.server` | `components/utils-server` | Server-only utilities — crypto, encoding, JWT |
-| `@platform/integrations.resend` | `integrations/resend` | Resend email client — `createResendClient`, `sendEmail` |
-| `@platform/integrations.cloudflare` | `integrations/cloudflare` | Cloudflare Workers helpers |
-
----
+Three strict layers keep the boundaries clean: **storage** (Drizzle rows, server-only) → **mappers** (explicit field picking, `Date` → UTC ISO) → **contracts** (zod DTOs, the only thing the frontend imports).
 
 ## Development
 
 ```bash
-# Install dependencies
 pnpm install
 
-# Start servers (separate terminals)
-pnpm run api          # API on :8002
-pnpm run app          # NodeVault Nuxt on :8001
+# Local Postgres (pgvector/pgvector:pg18 container)
+docker start nodevault-postgres
+pnpm run db           # apply migrations
 
-# Type check everything
-npx tsc --noEmit
+# Separate terminals:
+pnpm run api          # API (tsx watch)
+pnpm run app          # Next.js frontend on :8001
+pnpm run inngest      # Inngest dev server UI on :8288
 
-# Run tests
-npx vitest
-
-# Lint with autofix
-pnpm run lint
-
-# Regenerate OpenAPI client types from schemas
-pnpm run schemas
+# Quality
+npx vitest            # tests
+npx tsc --noEmit      # type check
+pnpm run lint         # lint with autofix
 ```
 
-### Local hosts
-
-Add to `/etc/hosts`:
-
-```
-127.0.0.1  api.nodevault.local
-127.0.0.1  www.nodevault.local
-127.0.0.1  www.nickchampion.local
-```
+Migrations: edit the schema in `components/domain/models/`, then `pnpm run db:generate --name=<change>` and `pnpm run db`. See `docs/migrations.md`.
 
 ### Configuration
 
-Server config is passed as a base64-encoded JSON string in the `NODEVAULT` environment variable. Local overrides are read from the path in `NODEVAULT_OVERRIDES`. See `components/configuration/server/configuration.ts` for the full config schema.
-
----
+Server config comes from the `NODEVAULT` environment variable (base64-encoded JSON); local overrides from the path in `NODEVAULT_OVERRIDES`. Database URL defaults to `postgres://nodevault:nodevault@localhost:5432/nodevault` in dev, `DATABASE_URL` (Neon) in prod.
 
 ## Deployment
 
 | App | Platform | Command |
 |-----|----------|---------|
-| `apps/api` | Fly.io (Docker, `lhr`) | `fly deploy` from `apps/api/` |
-| `apps/nodevault` | Cloudflare Workers | `pnpm run app:build` then `wrangler deploy` from `apps/nodevault/` |
-| `apps/nickchampion` | Cloudflare Workers | build then `wrangler deploy` from `apps/nickchampion/` |
+| `apps/api` | Fly.io (Docker) | `fly deploy` from `apps/api/` |
+| `apps/nodevault` | Cloudflare Workers | `pnpm run app:build` then `wrangler deploy` |
+
+## Roadmap
+
+Retrieval is the engine, not the product. On top of the vault substrate: hybrid search (semantic + full-text rank fusion), grounded Q&A with citations, standing queries ("alert me when anything I save matches this topic"), and exposing vaults as an MCP server so any AI agent can use your knowledge base. See `docs/future.md`.

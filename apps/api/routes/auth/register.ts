@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import { AuthInfo, type ApiHandler } from '@platform/components.context'
 import { createAuthTokenForUser } from '@platform/components.utils.server'
+import { createResendClient } from '@platform/integrations.resend'
 import type { RegisterRequest, VerifyLoginResponse } from '@platform/components.contracts'
 import { accounts, users } from '@platform/components.domain'
 import { toAccountDto, toUserDto } from './mappers.js'
@@ -46,6 +47,21 @@ export const authRegister: ApiHandler<RegisterRequest, VerifyLoginResponse> = as
     accountName: account.name,
     accountId: account.id,
   })
+
+  try {
+    const resend = createResendClient()
+
+    const html = await resend.render('/emails/welcome', { name: user.firstName })
+
+    await resend.send({
+      to: user.email,
+      subject: 'Welcome to NodeVault',
+      html,
+    })
+  } catch (error) {
+    // a failed welcome email should not roll back the registration
+    context.log.error('Failed to send welcome email', { error })
+  }
 
   const authTokens = createAuthTokenForUser(authInfo)
   const verifyResponse: VerifyLoginResponse = {

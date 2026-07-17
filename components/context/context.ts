@@ -4,12 +4,6 @@ import { Log, type LogLevel } from './log.js'
 import type { AuthInfo } from './types/auth.js'
 import { NullSession, type Session, type SessionFactory } from './types/session.js'
 
-type ContextEvent = (context: Context) => Promise<void> | void
-
-export interface ContextEvents {
-  error: ContextEvent
-}
-
 /**
  * Context is the central component to all event and api handlers. We create a new context for
  * each endpoint or event invocation with a new database session which manages all database
@@ -29,7 +23,6 @@ export class Context<TPayload = unknown, TBody extends ResponseValue = ResponseV
   public error?: unknown
   public log: Log
 
-  private eventListeners: Record<string, ContextEvent[]> = {}
   private sessionFactory: SessionFactory
   private currentSession?: Session
 
@@ -41,9 +34,6 @@ export class Context<TPayload = unknown, TBody extends ResponseValue = ResponseV
     this.sessionFactory = sessionFactory ?? (() => new NullSession())
   }
 
-  /**
-   * The database session for this context, created lazily on first access
-   */
   public get session(): Session {
     if (!this.currentSession) this.currentSession = this.sessionFactory()
 
@@ -57,36 +47,5 @@ export class Context<TPayload = unknown, TBody extends ResponseValue = ResponseV
 
   public setUser(user: AuthInfo) {
     this.user = user
-  }
-
-  /**
-   * Register a listener for the specified session event
-   * @param event
-   * @param listener
-   */
-  public on<T extends keyof ContextEvents>(event: T, listener: ContextEvents[T]) {
-    if (!Object.hasOwn(this.eventListeners, event)) {
-      this.eventListeners[event] = []
-    }
-
-    this.eventListeners[event].push(listener)
-  }
-
-  /**
-   * Raise an event and invoke event listeners asyncronously
-   * @param event
-   * @param arg
-   * @returns
-   */
-  public async emit<T extends keyof ContextEvents>(event: T): Promise<void> {
-    const events = this.eventListeners[event] || []
-
-    for (const event_ of events) {
-      try {
-        await event_(this)
-      } catch (error) {
-        this.log.error(`Listener for "${event}" threw`, error)
-      }
-    }
   }
 }

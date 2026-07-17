@@ -1,5 +1,5 @@
 import { router } from '@platform/components.api'
-import { authRouter, commsRouter, systemRouter } from './routes/index.js'
+import { authRouter, commsRouter, filesRouter, systemRouter, vaultsRouter } from './routes/index.js'
 
 /**
  * The application router: one router per routes/ subdirectory, merged here under its
@@ -12,7 +12,9 @@ import { authRouter, commsRouter, systemRouter } from './routes/index.js'
 export const appRouter = router({
   auth: authRouter,
   comms: commsRouter,
+  files: filesRouter,
   system: systemRouter,
+  vaults: vaultsRouter,
 })
 
 export type AppRouter = typeof appRouter

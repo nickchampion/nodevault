@@ -1,13 +1,13 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 
-/* Light-only site: keep the page background pure white and use the
-   sky brand colour as the HeroUI accent (buttons, focus rings, links). */
+/* Dark-blue site: deep navy page background with the sky brand colour as
+   the HeroUI accent (buttons, focus rings, links). */
 :root,
-.light {
-  --background: var(--white);
-  --accent: oklch(58.8% 0.158 241.966); /* tailwind sky-600 */
+.dark {
+  --background: oklch(12.9% 0.042 264.695); /* tailwind slate-950 */
+  --accent: oklch(68.5% 0.169 237.323); /* tailwind sky-500 */
   --accent-foreground: var(--white);
   --field-border-width: 1px;
-  --field-border: oklch(92.9% 0.013 255.508); /* tailwind slate-200 */
+  --field-border: oklch(27.9% 0.041 260.031); /* tailwind slate-800 */
 }

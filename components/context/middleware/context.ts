@@ -81,10 +81,6 @@ export const contextMiddleware = (): IMiddleware => {
       path: context.event?.path,
       method: context.event?.method,
     })
-
-    // if an error occurs during execution of a handler we may have compensation logic we need to execute.
-    // This is often handled in a session commit error event, but this flow does not cater for all use cases
-    await context.emit('error')
   }
 
   return {

@@ -11,6 +11,9 @@ export type ServerConfiguration = {
   version: string
   neon: Neon
   cloudflare: Cloudflare
+  gemini: {
+    apiKey: string
+  }
   resend: {
     apiKey: string
     from: string
@@ -34,6 +37,9 @@ export type Neon = {
 export type Cloudflare = {
   accountId: string
   apiKey: string
+  r2: {
+    bucket: string
+  }
 }
 
 export const server = {
@@ -80,6 +86,20 @@ export const server = {
     apiKey: {
       default: 'zshhB3CwntGNBdMigHIC3eleLw33laknTfZ0+3aS8jEwciTVZDNaaJCd90mWCbkbs6LpcPXVNPDokgSoz5ou',
       prod: 'C5hRCGX0iUDF6fbZLUCcCZlEgPmyjM+VSJXwe8PsdYEHF2/leyn+6RgfE7ht1SMtfY2uW83/tXj2rdfNmMSK',
+      encrypted: true,
+    },
+    r2: {
+      bucket: {
+        default: 'nodevault-dev',
+        prod: 'nodevault',
+      },
+    },
+  },
+  gemini: {
+    // placeholders — encrypt a real Gemini API key for each environment (decrypts to null until then)
+    apiKey: {
+      default: 'REPLACE_ME_ENCRYPTED',
+      prod: 'REPLACE_ME_ENCRYPTED',
       encrypted: true,
     },
   },

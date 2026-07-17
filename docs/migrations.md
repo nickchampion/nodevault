@@ -62,7 +62,7 @@ Connection resolution (see `drizzle.config.ts`): `DATABASE_URL` if set, otherwis
 
 ```bash
 # local dev (default URL, dev container must be up)
-docker start nodevault-postgres   # postgres:16-alpine, once per boot
+docker start nodevault-postgres   # pgvector/pgvector:pg18, once per boot
 pnpm run db
 
 # any other environment
@@ -85,6 +85,6 @@ DATABASE_URL=postgres://user:pass@host:5432/db pnpm run db
   ```bash
   docker rm -f nodevault-postgres
   docker run -d --name nodevault-postgres -e POSTGRES_USER=nodevault -e POSTGRES_PASSWORD=nodevault \
-    -e POSTGRES_DB=nodevault -p 5432:5432 postgres:16-alpine
+    -e POSTGRES_DB=nodevault -p 5432:5432 pgvector/pgvector:pg18
   pnpm run db
   ```

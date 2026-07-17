@@ -1,7 +1,7 @@
 import type pg from 'pg'
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
-import type { DatabaseClient, Session } from '@platform/components.context'
-import { AppError } from '@platform/components.domain'
+import type { DatabaseClient, Session, SessionEvents, SessionEvent } from '@platform/components.context'
+import { AppError, schema } from '@platform/components.domain'
 
 /**
  * Postgres-backed unit-of-work session, one per request Context.
@@ -26,6 +26,7 @@ export class PgSession implements Session {
   private client?: pg.PoolClient
   private begun = false
   private drizzleDb: NodePgDatabase<Record<string, unknown>>
+  private eventListeners: Record<string, SessionEvent[]> = {}
 
   constructor(pool: pg.Pool, schema?: Record<string, unknown>) {
     this.pool = pool
@@ -35,6 +36,14 @@ export class PgSession implements Session {
     const facade = { query: (...arguments_: unknown[]) => this.run(...arguments_) }
 
     this.drizzleDb = drizzle(facade as unknown as pg.Pool, { schema })
+  }
+
+  on<T extends keyof SessionEvents>(event: T, listener: SessionEvents[T]): void | Promise<void> {
+    if (!this.eventListeners[event]) {
+      this.eventListeners[event] = []
+    }
+
+    this.eventListeners[event].push(listener)
   }
 
   public get db(): DatabaseClient {
@@ -72,7 +81,9 @@ export class PgSession implements Session {
     }
 
     try {
+      this.emit('beforeCommit')
       await this.client!.query('COMMIT')
+      this.emit('afterCommit')
     } finally {
       this.release()
     }
@@ -87,6 +98,22 @@ export class PgSession implements Session {
       // the connection may already be dead; releasing it below is all that matters
     } finally {
       this.release()
+    }
+  }
+
+  /**
+   * Raise an event and invoke event listeners asyncronously
+   * @param event
+   * @param arg
+   * @returns
+   */
+  private async emit<T extends keyof SessionEvents>(event: T): Promise<void> {
+    const events = this.eventListeners[event]
+
+    if (!events) return
+
+    for (const evt of events) {
+      await evt(new PgSession(this.pool, schema))
     }
   }
 

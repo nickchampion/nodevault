@@ -13,6 +13,16 @@ import { AppError } from '@platform/components.domain'
 // eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface DatabaseClient {}
 
+export type SessionEvent = (session: Session) => Promise<void> | void
+
+/**
+ * Interface defining events the Session raises
+ */
+export interface SessionEvents {
+  beforeCommit: SessionEvent
+  afterCommit: SessionEvent
+}
+
 /**
  * Unit-of-work database session, one per request Context.
  *
@@ -53,6 +63,9 @@ export interface Session {
 
   /** Run a statement and return the affected row count. */
   execute(text: string, parameters?: unknown[]): Promise<number>
+
+  /** register an event handler */
+  on<T extends keyof SessionEvents>(event: T, listener: SessionEvents[T]): void | Promise<void>
 }
 
 export type SessionFactory = () => Session
@@ -63,6 +76,10 @@ export type SessionFactory = () => Session
  * no-ops so handlers that never touch data (e.g. ping) run fine.
  */
 export class NullSession implements Session {
+  on<T extends keyof SessionEvents>(_event: T, _listener: SessionEvents[T]): void | Promise<void> {
+    return
+  }
+
   public transactional = false
   public veto = false
 

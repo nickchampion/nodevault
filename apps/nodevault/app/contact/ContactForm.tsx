@@ -68,16 +68,16 @@ export const ContactForm = () => {
       <Card>
         <Card.Content>
           <div className="flex flex-col items-center gap-4 py-8 text-center">
-            <div className="flex items-center justify-center size-14 rounded-full bg-sky-50">
-              <Check className="size-7 text-sky-500" />
+            <div className="flex items-center justify-center size-14 rounded-full bg-sky-500/10">
+              <Check className="size-7 text-sky-400" />
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text-slate-900">
+              <h3 className="text-lg font-semibold text-white">
                 Message sent
               </h3>
 
-              <p className="text-slate-500 mt-1">
+              <p className="text-slate-400 mt-1">
                 Thanks
                 {' '}
                 {state.name}
