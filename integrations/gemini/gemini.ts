@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai'
-import { serverConfiguration } from '@platform/components.configuration'
+import { serverConfiguration } from '@platform/components.configuration.server'
 import { AppError } from '@platform/components.domain'
 
 export const embeddingModel = 'gemini-embedding-001'

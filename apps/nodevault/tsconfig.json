@@ -9,6 +9,7 @@
       "@platform/apps.api": ["../../apps/api/router.ts"],
       "@platform/components.api": ["../../components/api/index.ts"],
       "@platform/components.configuration": ["../../components/configuration/index.ts"],
+      "@platform/components.configuration.server": ["../../components/configuration/server.ts"],
       "@platform/components.contracts": ["../../components/contracts/index.ts"],
       "@platform/components.domain": ["../../components/domain/index.ts"],
       "@platform/components.postgres": ["../../components/postgres/index.ts"],

@@ -174,8 +174,8 @@ export const SearchPanel = ({ vaultId }: { vaultId: number }) => {
                 </p>
 
                 <span className="text-xs text-slate-500 dark:text-slate-400 shrink-0 ml-auto">
-                  {Math.round(result.similarity * 100)}
-                  % match
+                  {Math.round(result.relevance * 100)}
+                  % relevance
                 </span>
 
                 {result.source === 'url' && result.assetUrl && (

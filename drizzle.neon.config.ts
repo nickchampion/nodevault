@@ -1,5 +1,5 @@
 import { defineConfig } from 'drizzle-kit'
-import { serverConfiguration } from '@platform/components.configuration'
+import { serverConfiguration } from '@platform/components.configuration.server'
 
 export default defineConfig({
   dialect: 'postgresql',

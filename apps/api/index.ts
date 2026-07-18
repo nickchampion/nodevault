@@ -1,4 +1,4 @@
-import { serverConfiguration } from '@platform/components.configuration'
+import { serverConfiguration } from '@platform/components.configuration.server'
 import { Api } from '@platform/components.api'
 import { PgSession } from '@platform/components.postgres'
 import { schema } from '@platform/components.domain'

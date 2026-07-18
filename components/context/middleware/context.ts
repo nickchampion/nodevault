@@ -1,4 +1,4 @@
-import { serverConfiguration } from '@platform/components.configuration'
+import { serverConfiguration } from '@platform/components.configuration.server'
 import { normalizeError } from '@platform/components.domain'
 import type { Context } from '../index.js'
 import type { IMiddleware } from '../types/index.js'

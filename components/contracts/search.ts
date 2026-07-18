@@ -20,7 +20,9 @@ export const searchResultDtoSchema = z.object({
   source: assetSourceSchema,
   chunkIndex: z.int().nonnegative(),
   text: z.string(),
-  similarity: z.number(),
+  // reciprocal-rank-fusion score combining vector similarity and full-text rank — meaningful
+  // only relative to other results in the same response, not a calibrated 0-1 confidence
+  relevance: z.number(),
 })
 
 export type SearchResultDto = z.infer<typeof searchResultDtoSchema>

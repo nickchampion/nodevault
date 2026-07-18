@@ -1,5 +1,5 @@
 import { Resend } from 'resend'
-import { serverConfiguration } from '@platform/components.configuration'
+import { serverConfiguration } from '@platform/components.configuration.server'
 import { AppError } from '@platform/components.domain'
 
 export type SendEmailOptions = {

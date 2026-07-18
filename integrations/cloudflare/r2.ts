@@ -1,4 +1,4 @@
-import { serverConfiguration } from '@platform/components.configuration'
+import { serverConfiguration } from '@platform/components.configuration.server'
 import { AppError } from '@platform/components.domain'
 
 export type PutObjectOptions = {
@@ -23,7 +23,7 @@ export const createR2Client = () => {
     get: async (key: string): Promise<Uint8Array<ArrayBuffer>> => {
       const response = await fetch(objectUrl(key), { headers: headers() })
 
-      if (!response.ok) throw new AppError('internal', `R2 get failed [${response.status}]: ${key}`)
+      if (!response.ok) throw new AppError('internal', `R2 get failed [${response.status}]: ${key} - ${await response.text()}`)
 
       return new Uint8Array(await response.arrayBuffer())
     },
@@ -34,7 +34,7 @@ export const createR2Client = () => {
         body,
       })
 
-      if (!response.ok) throw new AppError('internal', `R2 upload failed [${response.status}]: ${key}`)
+      if (!response.ok) throw new AppError('internal', `R2 upload failed [${response.status}]: ${key} - ${await response.text()}`)
     },
     delete: async (key: string) => {
       const response = await fetch(objectUrl(key), {
@@ -43,7 +43,7 @@ export const createR2Client = () => {
       })
 
       if (!response.ok && response.status !== 404) {
-        throw new AppError('internal', `R2 delete failed [${response.status}]: ${key}`)
+        throw new AppError('internal', `R2 delete failed [${response.status}]: ${key} - ${await response.text()}`)
       }
     },
   }

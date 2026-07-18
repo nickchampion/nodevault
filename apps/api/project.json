@@ -17,6 +17,9 @@
         ],
         "bundle": true,
         "thirdParty": true,
+        "external": [
+          "jsdom"
+        ],
         "minify": false,
         "sourcemap": true,
         "main": "apps/api/index.ts",

@@ -1,6 +1,8 @@
+import type { SQL } from 'drizzle-orm'
 import { sql } from 'drizzle-orm'
 import {
   bigint,
+  customType,
   index,
   integer,
   text,
@@ -9,6 +11,12 @@ import {
   vector,
 } from 'drizzle-orm/pg-core'
 import { accounts, nodevault } from './account.js'
+
+const tsvector = customType<{ data: string }>({
+  dataType() {
+    return 'tsvector'
+  },
+})
 
 export type AssetSource = 'file' | 'url'
 export type AssetStatus = 'pending' | 'processing' | 'ready' | 'failed'
@@ -49,10 +57,15 @@ export const assetChunks = nodevault.table('asset_chunks', {
   text: text('text').notNull(),
   // null until the embedding workflow step has processed the chunk
   embedding: vector('embedding', { dimensions: 768 }),
+  // generated from `text` for Postgres full-text search — catches exact names/codes/acronyms that embeddings blur
+  searchVector: tsvector('search_vector').notNull().generatedAlwaysAs(
+    (): SQL => sql`to_tsvector('english', ${assetChunks.text})`,
+  ),
   createdAtUTC: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, table => [
   uniqueIndex('asset_chunks_asset_id_chunk_index_unique').on(table.assetId, table.chunkIndex),
   index('asset_chunks_embedding_idx').using('hnsw', table.embedding.op('vector_cosine_ops')),
+  index('asset_chunks_search_vector_idx').using('gin', table.searchVector),
 ])
 
 export type Vault = typeof vaults.$inferSelect

@@ -4,6 +4,7 @@ import { defineConfig } from 'vitest/config'
 const alias = {
   '@platform/components.api': path.resolve('./components/api/index.ts'),
   '@platform/components.configuration': path.resolve('./components/configuration/index.ts'),
+  '@platform/components.configuration.server': path.resolve('./components/configuration/server.ts'),
   '@platform/components.context': path.resolve('./components/context/index.ts'),
   '@platform/components.contracts': path.resolve('./components/contracts/index.ts'),
   '@platform/components.domain': path.resolve('./components/domain/index.ts'),

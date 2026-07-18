@@ -1,5 +1,5 @@
 import { Inngest, eventType } from 'inngest'
-import { serverConfiguration } from '@platform/components.configuration'
+import { serverConfiguration } from '@platform/components.configuration.server'
 import { assetFileUploadedEventSchema as assetFileUploadedEventSchema, assetUrlSubmittedEventSchema } from '@platform/components.contracts'
 
 /**
