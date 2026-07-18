@@ -1,10 +1,9 @@
 import {
   and, cosineDistance, desc, eq, isNotNull, sql,
 } from 'drizzle-orm'
-import type { ApiHandler } from '@platform/components.context'
-import type { SearchVaultRequest, SearchVaultResponse } from '@platform/components.contracts'
-import { AppError, assetChunks, assets, vaults } from '@platform/components.domain'
+import { assetChunks, assets } from '@platform/components.domain'
 import { createGeminiClient } from '@platform/integrations.gemini'
+import type { SearchStrategy } from './types.js'
 
 const RESULT_LIMIT = 10
 
@@ -20,36 +19,15 @@ const RRF_MAX_SCORE = 2 / (RRF_K + 1)
 
 // a chunk only enters the vector candidate pool if its similarity clears the vault's own
 // noise floor for this query (mean + N stddev across the vault's chunks) — a fixed absolute
-// cosine cutoff doesn't work here because unrelated chunks still commonly score ~0.5+, so an
-// unrelated query ("tax filing deadline" against recipes) would otherwise still return a
-// full top-K of "best of the noise" instead of nothing
+// cosine cutoff doesn't work here because unrelated chunks still commonly score ~0.5+
 const VECTOR_STDDEV_MULTIPLIER = 1.5
 
-export const assetsSearch: ApiHandler<SearchVaultRequest, SearchVaultResponse> = async (context) => {
-  const accountId = context.user?.accountId
-
-  if (!accountId) return context.event.response.unauthorised()
-
-  const { vaultId, query, type } = context.event.payload
-
-  const vault = await context.session.db.query.vaults.findFirst({
-    columns: { id: true },
-    where: and(eq(vaults.id, vaultId), eq(vaults.accountId, accountId)),
-  })
-
-  if (!vault) return context.event.response.notFound()
-
-  if (type === 'qa') {
-    throw new AppError('validation', 'Q & A search is not available yet — try Document retrieval.')
-  }
-
+export const combinedSearch: SearchStrategy = async (db, vaultId, query) => {
   const queryEmbedding = await createGeminiClient().embedQuery(query)
 
   const similarity = sql<number>`1 - (${cosineDistance(assetChunks.embedding, queryEmbedding)})`
   const tsQuery = sql`websearch_to_tsquery('english', ${query})`
   const textRank = sql<number>`ts_rank_cd(${assetChunks.searchVector}, ${tsQuery})`
-
-  const db = context.session.db
 
   const vectorStats = db.$with('vector_stats').as(
     db
@@ -98,6 +76,8 @@ export const assetsSearch: ApiHandler<SearchVaultRequest, SearchVaultResponse> =
     db
       .select({
         chunkId: sql<number>`coalesce(${vectorMatches.chunkId}, ${textMatches.chunkId})`.as('chunk_id'),
+        // cast to float8 — plain division produces numeric, which node-postgres returns as a
+        // string (to avoid precision loss), failing the `relevance: z.number()` contract
         score: sql<number>`(coalesce(1.0 / (${RRF_K} + ${vectorMatches.rank}), 0) + coalesce(1.0 / (${RRF_K} + ${textMatches.rank}), 0))::float8`.as('score'),
       })
       .from(vectorMatches)
@@ -114,6 +94,8 @@ export const assetsSearch: ApiHandler<SearchVaultRequest, SearchVaultResponse> =
         source: assets.source,
         chunkIndex: assetChunks.chunkIndex,
         text: assetChunks.text,
+        // normalised against the max possible fused score (rank 1 in both signals) so the
+        // percentage reflects absolute signal strength, not just "best of this response"
         relevance: sql<number>`(${fused.score} / ${RRF_MAX_SCORE})::float8`.as('relevance'),
       })
       .from(fused)
@@ -122,12 +104,10 @@ export const assetsSearch: ApiHandler<SearchVaultRequest, SearchVaultResponse> =
       .orderBy(assets.id, desc(fused.score)),
   )
 
-  const rows = await db
+  return db
     .with(vectorStats, vectorMatches, textMatches, fused, bestChunkPerAsset)
     .select()
     .from(bestChunkPerAsset)
     .orderBy(desc(bestChunkPerAsset.relevance))
     .limit(RESULT_LIMIT)
-
-  return context.event.response.ok({ type, results: rows })
 }

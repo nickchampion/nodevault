@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { assetSourceSchema } from './assets.js'
 
-export const searchTypeSchema = z.enum(['retrieval', 'qa'])
+export const searchTypeSchema = z.enum(['combined', 'keyword', 'semantic', 'agentic'])
 
 export type SearchType = z.infer<typeof searchTypeSchema>
 
@@ -20,8 +20,8 @@ export const searchResultDtoSchema = z.object({
   source: assetSourceSchema,
   chunkIndex: z.int().nonnegative(),
   text: z.string(),
-  // reciprocal-rank-fusion score combining vector similarity and full-text rank — meaningful
-  // only relative to other results in the same response, not a calibrated 0-1 confidence
+  // meaning depends on the search type: cosine similarity for semantic, normalised text
+  // rank for keyword — always in [0, 1], comparable within a response but not across types
   relevance: z.number(),
 })
 

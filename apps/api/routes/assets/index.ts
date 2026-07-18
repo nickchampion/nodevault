@@ -15,7 +15,7 @@ import {
 import { assetsDelete } from './delete.js'
 import { assetsDownload } from './download.js'
 import { assetsList } from './list.js'
-import { assetsSearch } from './search.js'
+import { assetsSearch } from './search/index.js'
 import { assetsSubmitUrl } from './submit-url.js'
 import { assetsUpload } from './upload.js'
 

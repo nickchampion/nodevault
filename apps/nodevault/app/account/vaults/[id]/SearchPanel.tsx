@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import {
-  Button, Input, Label, Spinner, TextField, ToggleButton, ToggleButtonGroup,
+  Button, Input, Label, Spinner, TextField, ToggleButton, ToggleButtonGroup, Tooltip,
 } from '@heroui/react'
 import {
   Download, ExternalLink, FileText, Link2, Search,
@@ -32,13 +32,31 @@ const downloadAsset = async (vaultId: number, result: SearchResultDto) => {
   URL.revokeObjectURL(url)
 }
 
-const searchModes: { id: SearchType, label: string }[] = [
-  { id: 'retrieval', label: 'Document retrieval' },
-  { id: 'qa', label: 'Q & A' },
+const searchModes: { id: SearchType, label: string, description: string }[] = [
+  {
+    id: 'combined',
+    label: 'Combined',
+    description: 'Blends keyword and semantic matching for the best all-round results. Recommended for most searches.',
+  },
+  {
+    id: 'keyword',
+    label: 'Keyword match',
+    description: 'Matches exact words, names, codes, and acronyms using full-text search.',
+  },
+  {
+    id: 'semantic',
+    label: 'Semantic search',
+    description: 'Finds conceptually related content even when the exact words don’t match.',
+  },
+  {
+    id: 'agentic',
+    label: 'Agentic query',
+    description: 'Multi-step, AI-assisted search that can reason across documents. Coming soon.',
+  },
 ]
 
 export const SearchPanel = ({ vaultId }: { vaultId: number }) => {
-  const [type, setType] = useState<SearchType>('retrieval')
+  const [type, setType] = useState<SearchType>('combined')
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResultDto[] | null>(null)
   const [searching, setSearching] = useState(false)
@@ -98,9 +116,17 @@ export const SearchPanel = ({ vaultId }: { vaultId: number }) => {
           className="mb-3"
         >
           {searchModes.map(mode => (
-            <ToggleButton key={mode.id} id={mode.id}>
-              {mode.label}
-            </ToggleButton>
+            <Tooltip.Root key={mode.id} delay={200}>
+              <Tooltip.Trigger>
+                <ToggleButton id={mode.id}>
+                  {mode.label}
+                </ToggleButton>
+              </Tooltip.Trigger>
+
+              <Tooltip.Content className="break-normal">
+                {mode.description}
+              </Tooltip.Content>
+            </Tooltip.Root>
           ))}
         </ToggleButtonGroup>
 
