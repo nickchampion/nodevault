@@ -14,6 +14,12 @@ export const getVaultRequestSchema = z.object({
 
 export type GetVaultRequest = z.infer<typeof getVaultRequestSchema>
 
+export const deleteVaultRequestSchema = z.object({
+  vaultId: z.int().positive(),
+})
+
+export type DeleteVaultRequest = z.infer<typeof deleteVaultRequestSchema>
+
 export const vaultDtoSchema = z.object({
   id: z.int().positive(),
   name: z.string(),

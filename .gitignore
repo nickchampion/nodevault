@@ -45,6 +45,7 @@ Thumbs.db
 .tsbuildinfo
 .tsbuildinfo.storybook
 overrides.json
+nodevault-embeddings-key.json
 
 # Open API auto generated
 .nodevault/openapi/*.*

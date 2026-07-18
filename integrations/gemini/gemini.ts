@@ -50,7 +50,14 @@ const embed = async (ai: GoogleGenAI, texts: string[], taskType: TaskType): Prom
 }
 
 export const createGeminiClient = () => {
-  const ai = new GoogleGenAI({ apiKey: serverConfiguration.gemini.apiKey })
+  const { project, location, credentials } = serverConfiguration.gemini
+
+  const ai = new GoogleGenAI({
+    vertexai: true,
+    project,
+    location,
+    googleAuthOptions: { credentials: JSON.parse(credentials) },
+  })
 
   return {
     embedChunks: (texts: string[]): Promise<number[][]> => embed(ai, texts, 'RETRIEVAL_DOCUMENT'),

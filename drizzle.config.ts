@@ -6,6 +6,6 @@ export default defineConfig({
   schema: './components/domain/models/*.ts',
   out: './components/postgres/migrations',
   dbCredentials: {
-    url: serverConfiguration.neon.urlUnpooled,
+    url: serverConfiguration.postgres.urlUnpooled,
   },
 })

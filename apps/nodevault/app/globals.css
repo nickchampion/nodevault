@@ -21,4 +21,15 @@
   --accent-foreground: var(--white);
   --field-border-width: 1px;
   --field-border: oklch(27.9% 0.041 260.031); /* tailwind slate-800 */
+
+  /* HeroUI's default dark surfaces are near-neutral grays (hue ~285-286, low
+     chroma) that read as brown/olive against this site's saturated blue
+     background. Retint them with the same blue hue family (~257-266),
+     stepping up the tailwind slate scale by lightness so the existing
+     depth ordering (background < surface/field < tabs track < selected
+     segment) is preserved. */
+  --surface: oklch(20.8% 0.042 265.755); /* tailwind slate-900 — cards */
+  --field-background: oklch(20.8% 0.042 265.755); /* tailwind slate-900 — inputs, textareas */
+  --default: oklch(27.9% 0.041 260.031); /* tailwind slate-800 — tabs track */
+  --segment: oklch(37.2% 0.044 257.287); /* tailwind slate-700 — selected tab */
 }

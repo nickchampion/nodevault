@@ -31,15 +31,15 @@ export const assetsSearch: ApiHandler<SearchVaultRequest, SearchVaultResponse> =
 
   const similarity = sql<number>`1 - (${cosineDistance(assetChunks.embedding, queryEmbedding)})`
 
-  const rows = await context.session.db
-    .select({
+  const bestChunkPerAsset = context.session.db
+    .selectDistinctOn([assets.id], {
       assetId: assets.id,
       assetName: assets.name,
       assetUrl: assets.url,
       source: assets.source,
       chunkIndex: assetChunks.chunkIndex,
       text: assetChunks.text,
-      similarity,
+      similarity: similarity.as('similarity'),
     })
     .from(assetChunks)
     .innerJoin(assets, eq(assetChunks.assetId, assets.id))
@@ -48,7 +48,13 @@ export const assetsSearch: ApiHandler<SearchVaultRequest, SearchVaultResponse> =
       isNotNull(assetChunks.embedding),
       gt(similarity, SIMILARITY_THRESHOLD),
     ))
-    .orderBy(desc(similarity))
+    .orderBy(assets.id, desc(similarity))
+    .as('best_chunk_per_asset')
+
+  const rows = await context.session.db
+    .select()
+    .from(bestChunkPerAsset)
+    .orderBy(desc(bestChunkPerAsset.similarity))
     .limit(RESULT_LIMIT)
 
   return context.event.response.ok({ type, results: rows })

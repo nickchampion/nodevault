@@ -197,12 +197,12 @@ export const VaultTabs = ({ vaultId }: { vaultId: number }) => {
             </Tabs.Tab>
 
             <Tabs.Tab id="upload">
-              Upload
+              Vault files
               <Tabs.Indicator />
             </Tabs.Tab>
 
             <Tabs.Tab id="import-url">
-              Import URL
+              Vault URLs
               <Tabs.Indicator />
             </Tabs.Tab>
           </Tabs.List>

@@ -20,11 +20,32 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Determine diff base
+        id: base
+        run: |
+          BEFORE="${{ github.event.before }}"
+          EMPTY_TREE="$(git hash-object -t tree /dev/null)"
+          if [ -n "$BEFORE" ] && [ "$BEFORE" != "0000000000000000000000000000000000000000" ] \
+            && git cat-file -e "$BEFORE^{commit}" 2>/dev/null \
+            && git merge-base --is-ancestor "$BEFORE" HEAD 2>/dev/null; then
+            SHA="$BEFORE"
+          elif git rev-parse --verify -q HEAD~1 >/dev/null; then
+            SHA="$(git rev-parse HEAD~1)"
+            echo "::warning::github.event.before is not an ancestor of HEAD (likely an amend + force-push) — falling back to HEAD~1 for change detection"
+          else
+            SHA="$EMPTY_TREE"
+            echo "::warning::No previous commit found — treating all files as changed"
+          fi
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
 
       - name: Detect changes
         uses: dorny/paths-filter@v3
         id: changes
         with:
+          base: ${{ steps.base.outputs.sha }}
           filters: |
             api:
               - 'apps/api/**'

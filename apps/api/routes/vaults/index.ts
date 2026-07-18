@@ -1,11 +1,14 @@
 import { execute, protectedProcedure, router } from '@platform/components.api'
 import {
   createVaultRequestSchema,
+  deleteVaultRequestSchema,
   getVaultRequestSchema,
   listVaultsResponseSchema,
+  okResponseSchema,
   vaultDtoSchema,
 } from '@platform/components.contracts'
 import { vaultCreate } from './create.js'
+import { vaultDelete } from './delete.js'
 import { vaultGet } from './get.js'
 import { vaultsList } from './list.js'
 
@@ -23,4 +26,9 @@ export const vaultsRouter = router({
     .input(createVaultRequestSchema)
     .output(vaultDtoSchema)
     .mutation(execute(vaultCreate)),
+
+  delete: protectedProcedure
+    .input(deleteVaultRequestSchema)
+    .output(okResponseSchema)
+    .mutation(execute(vaultDelete)),
 })

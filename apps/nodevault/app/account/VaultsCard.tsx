@@ -8,12 +8,13 @@ import {
 import { createVaultRequestSchema } from '@platform/components.contracts'
 import { formatLocalDate } from '@platform/components.utils'
 import {
-  FileText, Link2, Plus, Vault,
+  FileText, Link2, Plus, Trash2, Vault,
 } from 'lucide-react'
 import type { SubmitEvent } from 'react'
 import type { inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '@platform/apps.api'
 import { LinkButton } from '../../components/ui/LinkButton'
+import { ConfirmDialog } from '../../components/ui/ConfirmDialog'
 import { api } from '../../lib/api'
 import { zodValidate } from '../../lib/validation'
 import type { FormErrors } from '../../lib/validation'
@@ -31,6 +32,9 @@ export const VaultsCard = () => {
   const [errors, setErrors] = useState<FormErrors>({})
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [pendingDelete, setPendingDelete] = useState<VaultDto | null>(null)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -78,8 +82,35 @@ export const VaultsCard = () => {
     }
   }
 
+  const confirmDelete = async () => {
+    if (!pendingDelete) return
+
+    setDeleting(true)
+    setDeleteError(null)
+
+    try {
+      await api.vaults.delete.mutate({ vaultId: pendingDelete.id })
+      setVaults(vaults.filter(vault => vault.id !== pendingDelete.id))
+      setPendingDelete(null)
+    } catch (error_) {
+      setDeleteError((error_ as Error).message || 'Failed to delete the vault')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <Card>
+      <ConfirmDialog
+        isOpen={pendingDelete !== null}
+        title="Delete vault?"
+        description={`This will permanently delete "${pendingDelete?.name ?? 'this vault'}" and all of its documents and URLs. This cannot be undone.`}
+        confirmLabel="Delete"
+        isConfirming={deleting}
+        onOpenChangeAction={isOpen => !isOpen && setPendingDelete(null)}
+        onConfirmAction={() => void confirmDelete()}
+      />
+
       <Card.Header>
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center size-10 rounded-lg bg-sky-500/10 shrink-0">
@@ -151,11 +182,36 @@ export const VaultsCard = () => {
                       >
                         Open
                       </LinkButton>
+
+                      <Button
+                        variant="ghost"
+                        isIconOnly
+                        aria-label="Delete vault"
+                        isDisabled={pendingDelete !== null}
+                        onPress={() => setPendingDelete(vault)}
+                      >
+                        <Trash2 className="size-4 text-red-600 dark:text-red-400" />
+                      </Button>
                     </div>
                   </li>
                 ))}
               </ul>
             )}
+
+        {deleteError && (
+          <Alert
+            status="danger"
+            className="mt-4"
+          >
+            <Alert.Indicator />
+
+            <Alert.Content>
+              <Alert.Title>Something went wrong</Alert.Title>
+
+              <Alert.Description>{deleteError}</Alert.Description>
+            </Alert.Content>
+          </Alert>
+        )}
 
         <form
           className="flex items-start gap-3 pt-4 mt-2 border-t border-slate-200 dark:border-slate-800"

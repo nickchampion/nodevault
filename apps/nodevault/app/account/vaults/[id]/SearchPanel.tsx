@@ -4,7 +4,9 @@ import { useState } from 'react'
 import {
   Button, Input, Label, Spinner, TextField, ToggleButton, ToggleButtonGroup,
 } from '@heroui/react'
-import { FileText, Link2, Search } from 'lucide-react'
+import {
+  Download, ExternalLink, FileText, Link2, Search,
+} from 'lucide-react'
 import type { FormEvent } from 'react'
 import type { SearchType } from '@platform/components.contracts'
 import type { inferRouterOutputs } from '@trpc/server'
@@ -13,6 +15,22 @@ import { api } from '../../../../lib/api'
 
 type SearchVaultResponse = inferRouterOutputs<AppRouter>['assets']['search']
 type SearchResultDto = SearchVaultResponse['results'][number]
+
+const downloadAsset = async (vaultId: number, result: SearchResultDto) => {
+  const { name, contentType, content } = await api.assets.download.query({ vaultId, assetId: result.assetId })
+
+  const bytes = Uint8Array.from(atob(content), char => char.charCodeAt(0))
+  const blob = new Blob([bytes], { type: contentType ?? 'application/octet-stream' })
+  const url = URL.createObjectURL(blob)
+
+  const link = document.createElement('a')
+
+  link.href = url
+  link.download = name
+  link.click()
+
+  URL.revokeObjectURL(url)
+}
 
 const searchModes: { id: SearchType, label: string }[] = [
   { id: 'retrieval', label: 'Document retrieval' },
@@ -25,6 +43,21 @@ export const SearchPanel = ({ vaultId }: { vaultId: number }) => {
   const [results, setResults] = useState<SearchResultDto[] | null>(null)
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [downloadingId, setDownloadingId] = useState<number | null>(null)
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+
+  const download = async (result: SearchResultDto) => {
+    setDownloadingId(result.assetId)
+    setDownloadError(null)
+
+    try {
+      await downloadAsset(vaultId, result)
+    } catch (error_) {
+      setDownloadError((error_ as Error).message || 'Failed to download the file')
+    } finally {
+      setDownloadingId(null)
+    }
+  }
 
   const submit = async (event: FormEvent) => {
     event.preventDefault()
@@ -118,11 +151,17 @@ export const SearchPanel = ({ vaultId }: { vaultId: number }) => {
         </p>
       )}
 
+      {downloadError && (
+        <p className="text-sm text-red-600 dark:text-red-400 mt-2">
+          {downloadError}
+        </p>
+      )}
+
       {!searching && results && results.length > 0 && (
         <ul className="divide-y divide-slate-200 dark:divide-slate-800">
           {results.map(result => (
             <li
-              key={`${result.assetId}-${result.chunkIndex}`}
+              key={result.assetId}
               className="py-3"
             >
               <div className="flex items-center gap-2 mb-1">
@@ -138,6 +177,33 @@ export const SearchPanel = ({ vaultId }: { vaultId: number }) => {
                   {Math.round(result.similarity * 100)}
                   % match
                 </span>
+
+                {result.source === 'url' && result.assetUrl && (
+                  <a
+                    href={result.assetUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Open in a new tab"
+                    className="shrink-0 text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                  >
+                    <ExternalLink className="size-4" />
+                  </a>
+                )}
+
+                {result.source === 'file' && (
+                  <Button
+                    variant="ghost"
+                    isIconOnly
+                    aria-label="Download file"
+                    isDisabled={downloadingId === result.assetId}
+                    onPress={() => void download(result)}
+                    className="shrink-0"
+                  >
+                    {downloadingId === result.assetId
+                      ? <Spinner size="sm" />
+                      : <Download className="size-4" />}
+                  </Button>
+                )}
               </div>
 
               <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-3">

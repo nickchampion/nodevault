@@ -2,6 +2,8 @@ import { execute, protectedProcedure, router } from '@platform/components.api'
 import {
   assetDtoSchema,
   deleteAssetRequestSchema,
+  downloadAssetRequestSchema,
+  downloadAssetResponseSchema,
   listAssetsRequestSchema,
   listAssetsResponseSchema,
   okResponseSchema,
@@ -11,6 +13,7 @@ import {
   uploadFileAssetRequestSchema,
 } from '@platform/components.contracts'
 import { assetsDelete } from './delete.js'
+import { assetsDownload } from './download.js'
 import { assetsList } from './list.js'
 import { assetsSearch } from './search.js'
 import { assetsSubmitUrl } from './submit-url.js'
@@ -26,6 +29,11 @@ export const assetsRouter = router({
     .input(deleteAssetRequestSchema)
     .output(okResponseSchema)
     .mutation(execute(assetsDelete)),
+
+  download: protectedProcedure
+    .input(downloadAssetRequestSchema)
+    .output(downloadAssetResponseSchema)
+    .query(execute(assetsDownload)),
 
   upload: protectedProcedure
     .input(uploadFileAssetRequestSchema)

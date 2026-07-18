@@ -18,7 +18,7 @@ const PAGE_SIZE = 10
 
 const statusStyles: Record<AssetDto['status'], string> = {
   pending: 'bg-slate-500/10 text-slate-600 dark:text-slate-400',
-  processing: 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
+  processing: 'bg-sky-400/10 text-sky-600 dark:text-sky-300',
   ready: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
   failed: 'bg-red-500/10 text-red-700 dark:text-red-400',
 }

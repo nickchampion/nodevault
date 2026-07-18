@@ -98,6 +98,21 @@ export const assetDtoSchema = z.object({
   createdAtUTC: z.iso.datetime(),
 })
 
+export const downloadAssetRequestSchema = z.object({
+  vaultId: z.int().positive(),
+  assetId: z.int().positive(),
+})
+
+export type DownloadAssetRequest = z.infer<typeof downloadAssetRequestSchema>
+
+export const downloadAssetResponseSchema = z.object({
+  name: z.string(),
+  contentType: z.string().nullable(),
+  content: z.base64(),
+})
+
+export type DownloadAssetResponse = z.infer<typeof downloadAssetResponseSchema>
+
 export const listAssetsResponseSchema = z.object({
   assets: z.array(assetDtoSchema),
   total: z.int().nonnegative(),
