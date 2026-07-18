@@ -8,7 +8,8 @@ import { contentTypeForFileName, maxUploadBytes } from '@platform/components.con
 import { Link2, Upload } from 'lucide-react'
 import type { FormEvent } from 'react'
 import { api } from '../../../../lib/api'
-import { FileList } from './FileList'
+import { AssetList } from './AssetList'
+import { SearchPanel } from './SearchPanel'
 
 const readAsBase64 = (file: File) => new Promise<string>((resolve, reject) => {
   const reader = new FileReader()
@@ -55,7 +56,7 @@ const UploadFileForm = ({ vaultId, onUploaded }: { vaultId: number, onUploaded: 
     try {
       const content = await readAsBase64(file)
 
-      await api.files.upload.mutate({
+      await api.assets.upload.mutate({
         vaultId,
         name: file.name,
         contentType,
@@ -119,63 +120,102 @@ const UploadFileForm = ({ vaultId, onUploaded }: { vaultId: number, onUploaded: 
   )
 }
 
-const AddUrlForm = () => {
+const AddUrlForm = ({ vaultId, onSubmitted }: { vaultId: number, onSubmitted: () => void }) => {
   const [url, setUrl] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  // parse handler wired in a later change
-  const submit = (event: FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault()
+
+    if (!url.trim() || submitting) return
+
+    setSubmitting(true)
+    setError(null)
+
+    try {
+      await api.assets.submitUrl.mutate({ vaultId, url: url.trim() })
+
+      setUrl('')
+      onSubmitted()
+    } catch (error_) {
+      setError((error_ as Error).message || 'Failed to submit the URL')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (
     <form
-      className="flex items-start gap-3 pb-4 mb-2 border-b border-slate-200 dark:border-slate-800"
+      className="pb-4 mb-2 border-b border-slate-200 dark:border-slate-800"
       noValidate
       onSubmit={submit}
     >
-      <TextField
-        value={url}
-        onChange={setUrl}
-        className="flex-1"
-        aria-label="URL to parse"
-      >
-        <Label className="sr-only">URL to parse</Label>
+      <div className="flex items-start gap-3">
+        <TextField
+          value={url}
+          onChange={setUrl}
+          className="flex-1"
+          aria-label="URL to parse"
+        >
+          <Label className="sr-only">URL to parse</Label>
 
-        <Input placeholder="https://example.com/page" />
-      </TextField>
+          <Input placeholder="https://example.com/page" />
+        </TextField>
 
-      <Button
-        type="submit"
-        isDisabled={!url.trim()}
-      >
-        <Link2 className="size-4" />
-        Parse URL
-      </Button>
+        <Button
+          type="submit"
+          isDisabled={!url.trim() || submitting}
+          isPending={submitting}
+        >
+          <Link2 className="size-4" />
+          {submitting ? 'Submitting…' : 'Parse URL'}
+        </Button>
+      </div>
+
+      {error && (
+        <p className="text-sm text-red-600 dark:text-red-400 mt-2">
+          {error}
+        </p>
+      )}
     </form>
   )
 }
 
 export const VaultTabs = ({ vaultId }: { vaultId: number }) => {
   const [uploadsVersion, setUploadsVersion] = useState(0)
+  const [urlsVersion, setUrlsVersion] = useState(0)
 
   return (
     <Card>
       <Card.Content>
-        <Tabs defaultSelectedKey="files">
+        <Tabs defaultSelectedKey="search">
           <Tabs.List aria-label="Vault contents">
-            <Tabs.Tab id="files">
-              Files
+            <Tabs.Tab id="search">
+              Search
               <Tabs.Indicator />
             </Tabs.Tab>
 
-            <Tabs.Tab id="urls">
-              URLs
+            <Tabs.Tab id="upload">
+              Upload
+              <Tabs.Indicator />
+            </Tabs.Tab>
+
+            <Tabs.Tab id="import-url">
+              Import URL
               <Tabs.Indicator />
             </Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel
-            id="files"
+            id="search"
+            className="pt-4"
+          >
+            <SearchPanel vaultId={vaultId} />
+          </Tabs.Panel>
+
+          <Tabs.Panel
+            id="upload"
             className="pt-4"
           >
             <UploadFileForm
@@ -183,20 +223,24 @@ export const VaultTabs = ({ vaultId }: { vaultId: number }) => {
               onUploaded={() => setUploadsVersion(version => version + 1)}
             />
 
-            <FileList
+            <AssetList
               key={uploadsVersion}
               vaultId={vaultId}
-              source="upload"
+              source="file"
             />
           </Tabs.Panel>
 
           <Tabs.Panel
-            id="urls"
+            id="import-url"
             className="pt-4"
           >
-            <AddUrlForm />
+            <AddUrlForm
+              vaultId={vaultId}
+              onSubmitted={() => setUrlsVersion(version => version + 1)}
+            />
 
-            <FileList
+            <AssetList
+              key={urlsVersion}
               vaultId={vaultId}
               source="url"
             />

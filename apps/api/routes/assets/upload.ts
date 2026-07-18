@@ -1,13 +1,13 @@
 import { Buffer } from 'node:buffer'
 import { and, eq } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
-import type { FileDto, UploadFileRequest } from '@platform/components.contracts'
-import { files, vaults } from '@platform/components.domain'
+import type { AssetDto, UploadFileAssetRequest } from '@platform/components.contracts'
+import { assets, vaults } from '@platform/components.domain'
 import { createR2Client } from '@platform/integrations.cloudflare'
-import { fileUploadedEvent, inngest } from '../../inngest/index.js'
-import { toFileDto } from './mappers.js'
+import { assetUploadedEvent, inngest } from '../../inngest/index.js'
+import { toAssetDto } from './mappers.js'
 
-export const filesUpload: ApiHandler<UploadFileRequest, FileDto> = async (context) => {
+export const assetsUpload: ApiHandler<UploadFileAssetRequest, AssetDto> = async (context) => {
   const accountId = context.user?.accountId
 
   if (!accountId) return context.event.response.unauthorised()
@@ -25,30 +25,28 @@ export const filesUpload: ApiHandler<UploadFileRequest, FileDto> = async (contex
 
   const body = new Uint8Array(Buffer.from(content, 'base64'))
 
-  const [created] = await context.session.db.insert(files).values({
+  const [created] = await context.session.db.insert(assets).values({
     vaultId,
-    source: 'upload',
+    source: 'file',
     name,
     contentType,
     sizeBytes: body.byteLength,
     status: 'pending',
   }).returning()
 
-  const storageKey = `accounts/${accountId}/vaults/${vaultId}/files/${created.id}`
+  const storageKey = `accounts/${accountId}/vaults/${vaultId}/assets/${created.id}`
 
-  // a failure here throws, rolling the inserted row back with the transaction
   await createR2Client().put({ key: storageKey, body, contentType })
 
-  // the file stays pending — the workflow moves it processing → ready
-  const [uploaded] = await context.session.db.update(files)
+  const [uploaded] = await context.session.db.update(assets)
     .set({ storageKey, updatedAtUTC: new Date() })
-    .where(eq(files.id, created.id))
+    .where(eq(assets.id, created.id))
     .returning()
 
-  // Start the file uploaded workflow if the session commits successfully
+  // Start the asset uploaded workflow if the session commits successfully
   context.session.on('afterCommit', async () => {
-    await inngest.send(fileUploadedEvent.create({ fileId: created.id }))
+    await inngest.send(assetUploadedEvent.create({ assetId: created.id }))
   })
 
-  return context.event.response.created(toFileDto(uploaded))
+  return context.event.response.created(toAssetDto(uploaded))
 }

@@ -1,7 +1,7 @@
 import { eq, sql } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
 import type { ListVaultsResponse } from '@platform/components.contracts'
-import { files, vaults } from '@platform/components.domain'
+import { assets, vaults } from '@platform/components.domain'
 import { toVaultDto } from './mappers.js'
 
 export const vaultsList: ApiHandler<unknown, ListVaultsResponse> = async (context) => {
@@ -12,11 +12,11 @@ export const vaultsList: ApiHandler<unknown, ListVaultsResponse> = async (contex
   const rows = await context.session.db
     .select({
       vault: vaults,
-      documentCount: sql<number>`count(${files.id}) filter (where ${files.source} = 'upload')`.mapWith(Number),
-      urlCount: sql<number>`count(${files.id}) filter (where ${files.source} = 'url')`.mapWith(Number),
+      documentCount: sql<number>`count(${assets.id}) filter (where ${assets.source} = 'upload')`.mapWith(Number),
+      urlCount: sql<number>`count(${assets.id}) filter (where ${assets.source} = 'url')`.mapWith(Number),
     })
     .from(vaults)
-    .leftJoin(files, eq(files.vaultId, vaults.id))
+    .leftJoin(assets, eq(assets.vaultId, vaults.id))
     .where(eq(vaults.accountId, accountId))
     .groupBy(vaults.id)
     .orderBy(vaults.createdAtUTC)

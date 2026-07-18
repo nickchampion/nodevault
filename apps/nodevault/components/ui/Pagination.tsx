@@ -6,12 +6,11 @@ type PaginationProperties = {
   page: number
   pageSize: number
   total: number
-  onChange: (page: number) => void
+  onChangeAction: (page: number) => void
 }
 
 type PageItem = number | 'gap-start' | 'gap-end'
 
-/** Page numbers to render: first, last, and a window around the current page. */
 const pageItems = (page: number, totalPages: number): PageItem[] => {
   if (totalPages <= 7) {
     return Array.from({ length: totalPages }, (_, index) => index + 1)
@@ -32,7 +31,7 @@ const pageItems = (page: number, totalPages: number): PageItem[] => {
 }
 
 export const Pagination = ({
-  page, pageSize, total, onChange,
+  page, pageSize, total, onChangeAction,
 }: PaginationProperties) => {
   const totalPages = Math.max(1, Math.ceil(total / pageSize))
 
@@ -44,7 +43,7 @@ export const Pagination = ({
         <HeroPagination.Item>
           <HeroPagination.Previous
             isDisabled={page <= 1}
-            onPress={() => onChange(page - 1)}
+            onPress={() => onChangeAction(page - 1)}
           >
             <HeroPagination.PreviousIcon />
           </HeroPagination.Previous>
@@ -56,7 +55,7 @@ export const Pagination = ({
               ? (
                 <HeroPagination.Link
                   isActive={item === page}
-                  onPress={() => onChange(item)}
+                  onPress={() => onChangeAction(item)}
                 >
                   {item}
                 </HeroPagination.Link>
@@ -68,7 +67,7 @@ export const Pagination = ({
         <HeroPagination.Item>
           <HeroPagination.Next
             isDisabled={page >= totalPages}
-            onPress={() => onChange(page + 1)}
+            onPress={() => onChangeAction(page + 1)}
           >
             <HeroPagination.NextIcon />
           </HeroPagination.Next>

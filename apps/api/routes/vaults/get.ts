@@ -1,7 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
 import type { GetVaultRequest, VaultDto } from '@platform/components.contracts'
-import { files, vaults } from '@platform/components.domain'
+import { assets, vaults } from '@platform/components.domain'
 import { toVaultDto } from './mappers.js'
 
 export const vaultGet: ApiHandler<GetVaultRequest, VaultDto> = async (context) => {
@@ -12,11 +12,11 @@ export const vaultGet: ApiHandler<GetVaultRequest, VaultDto> = async (context) =
   const [row] = await context.session.db
     .select({
       vault: vaults,
-      documentCount: sql<number>`count(${files.id}) filter (where ${files.source} = 'upload')`.mapWith(Number),
-      urlCount: sql<number>`count(${files.id}) filter (where ${files.source} = 'url')`.mapWith(Number),
+      documentCount: sql<number>`count(${assets.id}) filter (where ${assets.source} = 'upload')`.mapWith(Number),
+      urlCount: sql<number>`count(${assets.id}) filter (where ${assets.source} = 'url')`.mapWith(Number),
     })
     .from(vaults)
-    .leftJoin(files, eq(files.vaultId, vaults.id))
+    .leftJoin(assets, eq(assets.vaultId, vaults.id))
     .where(and(
       eq(vaults.id, context.event.payload.vaultId),
       eq(vaults.accountId, accountId),

@@ -10,6 +10,7 @@ const alias = {
   '@platform/components.postgres': path.resolve('./components/postgres/index.ts'),
   '@platform/components.utils': path.resolve('./components/utils/index.ts'),
   '@platform/components.utils.server': path.resolve('./components/utils-server/index.ts'),
+  '@platform/integrations.gemini': path.resolve('./integrations/gemini/index.ts'),
   '@platform/integrations.resend': path.resolve('./integrations/resend/index.ts'),
 }
 
@@ -37,6 +38,15 @@ export default defineConfig({
         test: {
           name: { label: 'api', color: 'blue' },
           include: ['apps/api/**/*.spec.ts'],
+          globals: true,
+          environment: 'node',
+        },
+      },
+      {
+        resolve: { alias },
+        test: {
+          name: { label: 'integrations', color: 'yellow' },
+          include: ['integrations/**/*.spec.ts'],
           globals: true,
           environment: 'node',
         },

@@ -9,7 +9,7 @@ export type ServerConfiguration = {
   origins: string[]
   environment: EnvironmentSettings
   version: string
-  neon: Neon
+  postgres: Postgres
   cloudflare: Cloudflare
   gemini: {
     apiKey: string
@@ -27,7 +27,7 @@ export type BasicAuth = {
   secret: string
 }
 
-export type Neon = {
+export type Postgres = {
   url: string
   urlUnpooled: string
   branch: string
@@ -67,7 +67,7 @@ export const server = {
     default: 'http://www.nodevault.local:8001',
     prod: 'https://www.nodevault.cloud',
   },
-  neon: {
+  postgres: {
     url: {
       encrypted: true,
       default: '0489dLDFmT1IDQXuhbYQw7IfAUB1EuhMDdZLuCz8gIOmeQ2fMqtRMjov6qY5POoBLj/khf2h1YMaJvxNh1lF5B8=',

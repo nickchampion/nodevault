@@ -1,6 +1,6 @@
 export { accountRouter } from './account/index.js'
+export { assetsRouter } from './assets/index.js'
 export { authRouter } from './auth/index.js'
 export { commsRouter } from './comms/index.js'
-export { filesRouter } from './files/index.js'
 export { systemRouter } from './system/index.js'
 export { vaultsRouter } from './vaults/index.js'

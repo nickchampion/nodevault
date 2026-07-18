@@ -36,6 +36,13 @@
       "when": 1784295630075,
       "tag": "0004_file-chunks",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1784900000000,
+      "tag": "0005_rename-files-to-assets",
+      "breakpoints": true
     }
   ]
 }

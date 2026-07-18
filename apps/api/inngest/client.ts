@@ -1,6 +1,6 @@
 import { Inngest, eventType } from 'inngest'
 import { serverConfiguration } from '@platform/components.configuration'
-import { fileUploadedEventSchema } from '@platform/components.contracts'
+import { assetFileUploadedEventSchema as assetFileUploadedEventSchema, assetUrlSubmittedEventSchema } from '@platform/components.contracts'
 
 /**
  * The Inngest client lives in its own module so functions can import it without
@@ -13,6 +13,7 @@ export const inngest = new Inngest({ id: 'nodevault', isDev: serverConfiguration
 
 /**
  * Typed event definitions: used directly as function triggers and to build validated
- * events for sending (`inngest.send(fileUploadedEvent.create({ fileId }))`).
+ * events for sending (`inngest.send(assetUploadedEvent.create({ assetId }))`).
  */
-export const fileUploadedEvent = eventType('files/file.uploaded', { schema: fileUploadedEventSchema })
+export const assetFileUploadedEvent = eventType('assets/file.uploaded', { schema: assetFileUploadedEventSchema })
+export const assetUrlSubmittedEvent = eventType('assets/url.submitted', { schema: assetUrlSubmittedEventSchema })

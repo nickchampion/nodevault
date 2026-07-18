@@ -1,4 +1,6 @@
 import * as crypto from 'node:crypto'
+import * as dns from 'node:dns/promises'
+import * as net from 'node:net'
 import fs from 'node:fs'
 
 const set = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
@@ -146,6 +148,57 @@ export const decrypt = (text: string, key: string, salt?: string) => {
     return decrypted.toString()
   } catch {
     return null
+  }
+}
+
+const isPrivateIPv4 = (ip: string): boolean => {
+  const [a, b] = ip.split('.').map(Number)
+
+  return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)
+}
+
+const isPrivateIPv6 = (ip: string): boolean => {
+  const normalised = ip.toLowerCase()
+
+  if (normalised === '::1' || normalised === '::') return true
+
+  if (normalised.startsWith('fe80:')) return true // link-local
+
+  if (normalised.startsWith('fc') || normalised.startsWith('fd')) return true // unique local fc00::/7
+
+  if (normalised.startsWith('::ffff:')) return isPrivateIPv4(normalised.slice(7)) // IPv4-mapped
+
+  return false
+}
+
+export const isPrivateAddress = (ip: string): boolean => {
+  const version = net.isIP(ip)
+
+  if (version === 4) return isPrivateIPv4(ip)
+
+  if (version === 6) return isPrivateIPv6(ip)
+
+  return true // not a valid IP — treat as unsafe
+}
+
+/**
+ * SSRF guard for server-initiated fetches of user-supplied URLs: only http(s) schemes,
+ * and every address the hostname resolves to must be public. Best-effort — a
+ * DNS-rebinding attacker can still swap the record between this check and the real
+ * fetch — but it blocks the common case (localhost, link-local metadata endpoints,
+ * RFC1918 ranges).
+ */
+export const assertPublicHttpUrl = async (url: string): Promise<void> => {
+  const parsed = new URL(url)
+
+  if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+    throw new Error(`Unsupported URL scheme: ${parsed.protocol}`)
+  }
+
+  const addresses = await dns.lookup(parsed.hostname, { all: true })
+
+  if (addresses.length === 0 || addresses.some(({ address }) => isPrivateAddress(address))) {
+    throw new Error(`URL host is not reachable: ${parsed.hostname}`)
   }
 }
 

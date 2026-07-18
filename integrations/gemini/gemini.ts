@@ -24,31 +24,42 @@ const normalise = (values: number[]): number[] => {
   return values.map(value => value / magnitude)
 }
 
+type TaskType = 'RETRIEVAL_DOCUMENT' | 'RETRIEVAL_QUERY'
+
+const embed = async (ai: GoogleGenAI, texts: string[], taskType: TaskType): Promise<number[][]> => {
+  const response = await ai.models.embedContent({
+    model: embeddingModel,
+    contents: texts,
+    config: {
+      taskType,
+      outputDimensionality: embeddingDimensions,
+    },
+  })
+
+  const embeddings = response.embeddings ?? []
+
+  if (embeddings.length !== texts.length) {
+    throw new AppError('internal', `Gemini returned ${embeddings.length} embeddings for ${texts.length} inputs`)
+  }
+
+  return embeddings.map((embedding) => {
+    if (!embedding.values?.length) throw new AppError('internal', 'Gemini returned an empty embedding')
+
+    return normalise(embedding.values)
+  })
+}
+
 export const createGeminiClient = () => {
   const ai = new GoogleGenAI({ apiKey: serverConfiguration.gemini.apiKey })
 
   return {
-    embedChunks: async (texts: string[]): Promise<number[][]> => {
-      const response = await ai.models.embedContent({
-        model: embeddingModel,
-        contents: texts,
-        config: {
-          taskType: 'RETRIEVAL_DOCUMENT',
-          outputDimensionality: embeddingDimensions,
-        },
-      })
+    embedChunks: (texts: string[]): Promise<number[][]> => embed(ai, texts, 'RETRIEVAL_DOCUMENT'),
 
-      const embeddings = response.embeddings ?? []
+    // asymmetric retrieval: search queries are embedded with a different task type than documents
+    embedQuery: async (text: string): Promise<number[]> => {
+      const [embedding] = await embed(ai, [text], 'RETRIEVAL_QUERY')
 
-      if (embeddings.length !== texts.length) {
-        throw new AppError('internal', `Gemini returned ${embeddings.length} embeddings for ${texts.length} inputs`)
-      }
-
-      return embeddings.map((embedding) => {
-        if (!embedding.values?.length) throw new AppError('internal', 'Gemini returned an empty embedding')
-
-        return normalise(embedding.values)
-      })
+      return embedding
     },
   }
 }

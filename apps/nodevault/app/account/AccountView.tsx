@@ -50,7 +50,7 @@ export const AccountView = () => {
                     </Card.Title>
 
                     <Card.Description>
-                      Your organisation
+                      Your profile
                     </Card.Description>
                   </div>
                 </div>

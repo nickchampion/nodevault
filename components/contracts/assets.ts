@@ -1,19 +1,26 @@
 import { z } from 'zod'
 
-export const fileSourceSchema = z.enum(['upload', 'url'])
-export const fileStatusSchema = z.enum(['pending', 'processing', 'ready', 'failed'])
+export const assetSourceSchema = z.enum(['file', 'url'])
+export const assetStatusSchema = z.enum(['pending', 'processing', 'ready', 'failed'])
 
-export type FileSource = z.infer<typeof fileSourceSchema>
-export type FileStatus = z.infer<typeof fileStatusSchema>
+export type AssetSource = z.infer<typeof assetSourceSchema>
+export type AssetStatus = z.infer<typeof assetStatusSchema>
 
-export const listFilesRequestSchema = z.object({
+export const deleteAssetRequestSchema = z.object({
   vaultId: z.int().positive(),
-  source: fileSourceSchema,
+  assetId: z.int().positive(),
+})
+
+export type DeleteAssetRequest = z.infer<typeof deleteAssetRequestSchema>
+
+export const listAssetsRequestSchema = z.object({
+  vaultId: z.int().positive(),
+  source: assetSourceSchema,
   page: z.int().positive().default(1),
   pageSize: z.int().positive().max(100).default(10),
 })
 
-export type ListFilesRequest = z.infer<typeof listFilesRequestSchema>
+export type ListAssetsRequest = z.infer<typeof listAssetsRequestSchema>
 
 export const supportedContentTypes = [
   'text/plain',
@@ -51,39 +58,52 @@ export const maxUploadBytes = 10 * 1024 * 1024
 // base64 inflates by 4/3 — allow enough characters to carry maxUploadBytes of binary
 const maxUploadChars = Math.ceil(maxUploadBytes / 3) * 4
 
-export const uploadFileRequestSchema = z.object({
+export const uploadFileAssetRequestSchema = z.object({
   vaultId: z.int().positive(),
   name: z.string().trim().min(1, 'File name is required').max(255),
   contentType: supportedContentTypeSchema,
   content: z.base64().min(1, 'File is empty').max(maxUploadChars, 'File must be 10MB or smaller'),
 })
 
-export type UploadFileRequest = z.infer<typeof uploadFileRequestSchema>
+export type UploadFileAssetRequest = z.infer<typeof uploadFileAssetRequestSchema>
 
-export const fileUploadedEventSchema = z.object({
-  fileId: z.int().positive(),
+export const submitUrlAssetRequestSchema = z.object({
+  vaultId: z.int().positive(),
+  url: z.url(),
 })
 
-export type FileUploadedEvent = z.infer<typeof fileUploadedEventSchema>
+export type SubmitUrlAssetRequest = z.infer<typeof submitUrlAssetRequestSchema>
 
-export const fileDtoSchema = z.object({
+export const assetFileUploadedEventSchema = z.object({
+  assetId: z.int().positive(),
+})
+
+export type AssetFileUploadedEvent = z.infer<typeof assetFileUploadedEventSchema>
+
+export const assetUrlSubmittedEventSchema = z.object({
+  assetId: z.int().positive(),
+})
+
+export type AssetUrlSubmittedEvent = z.infer<typeof assetUrlSubmittedEventSchema>
+
+export const assetDtoSchema = z.object({
   id: z.int().positive(),
-  source: fileSourceSchema,
+  source: assetSourceSchema,
   name: z.string().nullable(),
   url: z.string().nullable(),
   contentType: z.string().nullable(),
   sizeBytes: z.int().nonnegative().nullable(),
-  status: fileStatusSchema,
+  status: assetStatusSchema,
   error: z.string().nullable(),
   createdAtUTC: z.iso.datetime(),
 })
 
-export const listFilesResponseSchema = z.object({
-  files: z.array(fileDtoSchema),
+export const listAssetsResponseSchema = z.object({
+  assets: z.array(assetDtoSchema),
   total: z.int().nonnegative(),
   page: z.int().positive(),
   pageSize: z.int().positive(),
 })
 
-export type FileDto = z.infer<typeof fileDtoSchema>
-export type ListFilesResponse = z.infer<typeof listFilesResponseSchema>
+export type AssetDto = z.infer<typeof assetDtoSchema>
+export type ListAssetsResponse = z.infer<typeof listAssetsResponseSchema>
