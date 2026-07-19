@@ -8,7 +8,7 @@ import { contentTypeForFileName, maxUploadBytes } from '@platform/components.con
 import { Link2, Upload } from 'lucide-react'
 import type { SubmitEvent } from 'react'
 import { api } from '../../../../lib/api'
-import { AskPanel } from './AskPanel'
+import { ConversationChat } from '../../../../components/app/ConversationChat'
 import { AssetList } from './AssetList'
 import { SearchPanel } from './SearchPanel'
 
@@ -226,7 +226,10 @@ export const VaultTabs = ({ vaultId, onAssetChangeAction }: { vaultId: number, o
             id="ask"
             className="pt-4"
           >
-            <AskPanel vaultId={vaultId} />
+            <ConversationChat
+              vaultId={vaultId}
+              initialConversationId="latest"
+            />
           </Tabs.Panel>
 
           <Tabs.Panel

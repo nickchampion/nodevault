@@ -4,7 +4,7 @@ import { Readability } from '@mozilla/readability'
 import { assertPublicHttpUrl } from '@platform/components.utils.server'
 import { assetUrlSubmittedEvent, inngest } from '../client.js'
 import {
-  embedChunks, loadAndMarkProcessing, markFailed, markReady, storeChunks,
+  embedChunks, loadAndMarkProcessing, markFailed, markReady, mirrorToVertexSearch, storeChunks,
 } from './shared.js'
 
 const fetchTimeoutMs = 15_000
@@ -70,6 +70,8 @@ export const processUrlAsset = inngest.createFunction(
     const chunkCount = await storeChunks(step, assetId, content)
 
     await embedChunks(step, assetId, chunkCount)
+
+    await mirrorToVertexSearch(step, assetId, content, title ? { name: title } : {})
 
     await markReady(step, assetId, title ? { name: title } : {})
 

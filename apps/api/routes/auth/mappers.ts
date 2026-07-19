@@ -24,5 +24,6 @@ export const toUserDto = (user: User): UserDto => ({
 export const toAccountDto = (account: Account): AccountDto => ({
   id: account.id,
   name: account.name,
+  gcpConfigured: Boolean(account.gcpCredentials && account.gcpVerifiedAtUTC),
   createdAtUTC: toUtcIso(account.createdAtUTC),
 })

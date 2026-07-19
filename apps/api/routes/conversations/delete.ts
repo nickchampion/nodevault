@@ -16,8 +16,8 @@ export const conversationsDelete: ApiHandler<DeleteConversationRequest, OkRespon
     .innerJoin(vaults, eq(conversations.vaultId, vaults.id))
     .where(and(
       eq(conversations.id, conversationId),
-      eq(conversations.vaultId, vaultId),
       eq(vaults.accountId, accountId),
+      ...(vaultId ? [eq(conversations.vaultId, vaultId)] : []),
     ))
 
   if (!row) return context.event.response.notFound()

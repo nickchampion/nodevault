@@ -57,6 +57,13 @@
       "when": 1784408216398,
       "tag": "0007_conversations",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1784447338481,
+      "tag": "0008_account-gcp-credentials",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,8 @@ import {
   createGeminiClient, embeddingDimensions, embeddingModel,
 } from './gemini.js'
 
+const testConfig = { project: 'test-project', location: 'test-location', credentials: '{}' }
+
 const { embedContentMock, ctorMock } = vi.hoisted(() => ({
   embedContentMock: vi.fn(),
   ctorMock: vi.fn(),
@@ -28,7 +30,7 @@ describe('createGeminiClient', () => {
       embeddings: [{ values: [3, 4] }],
     })
 
-    await createGeminiClient().embedChunks(['hello world'])
+    await createGeminiClient(testConfig).embedChunks(['hello world'])
 
     expect(embedContentMock).toHaveBeenCalledWith({
       model: embeddingModel,
@@ -45,7 +47,7 @@ describe('createGeminiClient', () => {
       embeddings: [{ values: [3, 4] }],
     })
 
-    const [embedding] = await createGeminiClient().embedChunks(['hello world'])
+    const [embedding] = await createGeminiClient(testConfig).embedChunks(['hello world'])
 
     expect(embedding).toEqual([0.6, 0.8])
   })
@@ -55,7 +57,7 @@ describe('createGeminiClient', () => {
       embeddings: [{ values: [0, 0] }],
     })
 
-    const [embedding] = await createGeminiClient().embedChunks(['hello world'])
+    const [embedding] = await createGeminiClient(testConfig).embedChunks(['hello world'])
 
     expect(embedding).toEqual([0, 0])
   })
@@ -65,7 +67,7 @@ describe('createGeminiClient', () => {
       embeddings: [{ values: [1, 0] }],
     })
 
-    await expect(createGeminiClient().embedChunks(['a', 'b'])).rejects.toThrow(
+    await expect(createGeminiClient(testConfig).embedChunks(['a', 'b'])).rejects.toThrow(
       'Gemini returned 1 embeddings for 2 inputs',
     )
   })
@@ -75,7 +77,7 @@ describe('createGeminiClient', () => {
       embeddings: [{ values: [] }],
     })
 
-    await expect(createGeminiClient().embedChunks(['a'])).rejects.toThrow(
+    await expect(createGeminiClient(testConfig).embedChunks(['a'])).rejects.toThrow(
       'Gemini returned an empty embedding',
     )
   })
@@ -85,7 +87,7 @@ describe('createGeminiClient', () => {
       new Error('[403 Forbidden] Generative Language API has not been used or is disabled'),
     )
 
-    await expect(createGeminiClient().embedChunks(['a'])).rejects.toThrow(
+    await expect(createGeminiClient(testConfig).embedChunks(['a'])).rejects.toThrow(
       /Generative Language API has not been used/,
     )
   })
@@ -102,7 +104,7 @@ describe('createGeminiClient().embedQuery', () => {
       embeddings: [{ values: [3, 4] }],
     })
 
-    await createGeminiClient().embedQuery('find me something')
+    await createGeminiClient(testConfig).embedQuery('find me something')
 
     expect(embedContentMock).toHaveBeenCalledWith({
       model: embeddingModel,
@@ -119,7 +121,7 @@ describe('createGeminiClient().embedQuery', () => {
       embeddings: [{ values: [3, 4] }],
     })
 
-    const embedding = await createGeminiClient().embedQuery('find me something')
+    const embedding = await createGeminiClient(testConfig).embedQuery('find me something')
 
     expect(embedding).toEqual([0.6, 0.8])
   })

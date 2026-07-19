@@ -1,0 +1,20 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "@platform/integrations.vertexsearch",
+  "sourceRoot": "integrations/vertexsearch",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "integrations/vertexsearch/**/*.ts"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

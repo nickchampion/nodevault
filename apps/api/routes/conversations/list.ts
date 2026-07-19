@@ -1,25 +1,44 @@
-import { and, desc, eq } from 'drizzle-orm'
+import {
+  and, desc, eq, ilike, sql,
+} from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
 import type { ListConversationsRequest, ListConversationsResponse } from '@platform/components.contracts'
 import { conversations, vaults } from '@platform/components.domain'
 import { toConversationDto } from './mappers.js'
-
-const LIST_LIMIT = 50
 
 export const conversationsList: ApiHandler<ListConversationsRequest, ListConversationsResponse> = async (context) => {
   const accountId = context.user?.accountId
 
   if (!accountId) return context.event.response.unauthorised()
 
-  const { vaultId } = context.event.payload
+  const {
+    vaultId, search, page, pageSize,
+  } = context.event.payload
+
+  // escape LIKE wildcards so the search matches keywords literally
+  const pattern = search ? `%${search.replaceAll(/[\\%_]/g, String.raw`\$&`)}%` : null
 
   const rows = await context.session.db
-    .select({ conversation: conversations })
+    .select({
+      conversation: conversations,
+      vaultName: vaults.name,
+      total: sql<number>`count(*) over()`.mapWith(Number),
+    })
     .from(conversations)
     .innerJoin(vaults, eq(conversations.vaultId, vaults.id))
-    .where(and(eq(conversations.vaultId, vaultId), eq(vaults.accountId, accountId)))
-    .orderBy(desc(conversations.updatedAtUTC))
-    .limit(LIST_LIMIT)
+    .where(and(
+      eq(vaults.accountId, accountId),
+      ...(vaultId ? [eq(conversations.vaultId, vaultId)] : []),
+      ...(pattern ? [ilike(conversations.title, pattern)] : []),
+    ))
+    .orderBy(desc(conversations.updatedAtUTC), desc(conversations.id))
+    .limit(pageSize)
+    .offset((page - 1) * pageSize)
 
-  return context.event.response.ok({ conversations: rows.map(row => toConversationDto(row.conversation)) })
+  return context.event.response.ok({
+    conversations: rows.map(row => toConversationDto(row.conversation, row.vaultName)),
+    total: rows[0]?.total ?? 0,
+    page,
+    pageSize,
+  })
 }

@@ -1,6 +1,18 @@
 import { GoogleGenAI } from '@google/genai'
-import { serverConfiguration } from '@platform/components.configuration.server'
+import type { Content, GroundingMetadata } from '@google/genai'
 import { AppError } from '@platform/components.domain'
+
+/**
+ * Per-account GCP access: every client is built from the owning account's own project
+ * and (decrypted) service-account key — there are no platform-level credentials.
+ */
+export type GcpClientConfig = {
+  project: string
+  location: string
+
+  /** plaintext service-account key JSON (decrypted by the caller) */
+  credentials: string
+}
 
 export const embeddingModel = 'gemini-embedding-001'
 
@@ -54,9 +66,7 @@ const embed = async (ai: GoogleGenAI, texts: string[], taskType: TaskType): Prom
   })
 }
 
-export const createGeminiClient = () => {
-  const { project, location, credentials } = serverConfiguration.gemini
-
+export const createGeminiClient = ({ project, location, credentials }: GcpClientConfig) => {
   const credentialsJson = JSON.parse(credentials)
 
   const ai = new GoogleGenAI({
@@ -99,6 +109,34 @@ export const createGeminiClient = () => {
       })
 
       return response.text ?? ''
+    },
+
+    // multi-turn generation grounded on a Vertex AI Search data store: the model derives
+    // retrieval queries from the conversation itself, so no manual condense/retrieve step.
+    // Yields text as it streams plus any grounding metadata carried on a chunk.
+    generateGroundedAnswerStream: async function* (
+      systemInstruction: string,
+      contents: Content[],
+      datastore: string,
+      filter: string,
+      signal?: AbortSignal,
+    ): AsyncGenerator<{ text?: string, grounding?: GroundingMetadata }> {
+      const stream = await generationAi.models.generateContentStream({
+        model: generationModel,
+        contents,
+        config: {
+          systemInstruction,
+          temperature: 0.2,
+          abortSignal: signal,
+          tools: [{ retrieval: { vertexAiSearch: { datastore, filter } } }],
+        },
+      })
+
+      for await (const chunk of stream) {
+        const grounding = chunk.candidates?.[0]?.groundingMetadata
+
+        if (chunk.text || grounding) yield { text: chunk.text, grounding }
+      }
     },
 
     generateAnswerStream: async function* (systemInstruction: string, prompt: string, signal?: AbortSignal): AsyncGenerator<string> {

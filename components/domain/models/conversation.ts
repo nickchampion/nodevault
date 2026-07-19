@@ -8,7 +8,6 @@ import { vaults } from './vault.js'
 export const conversations = nodevault.table('conversations', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
   vaultId: integer('vault_id').notNull().references(() => vaults.id, { onDelete: 'cascade' }),
-  // first question of the conversation, truncated — display label only
   title: text('title').notNull(),
   createdAtUTC: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAtUTC: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
@@ -21,8 +20,6 @@ export const conversationMessages = nodevault.table('conversation_messages', {
   conversationId: integer('conversation_id').notNull().references(() => conversations.id, { onDelete: 'cascade' }),
   role: text('role').$type<ConversationRole>().notNull(),
   content: text('content').notNull(),
-  // snapshot of the sources behind an assistant answer (null for user messages) — stored
-  // as data, not foreign keys, so answers keep rendering after an asset is deleted
   citations: jsonb('citations').$type<CitationDto[]>(),
   createdAtUTC: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, table => [

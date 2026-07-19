@@ -25,6 +25,7 @@ export const vaultDtoSchema = z.object({
   name: z.string(),
   documentCount: z.int().nonnegative(),
   urlCount: z.int().nonnegative(),
+  conversationCount: z.int().nonnegative(),
   createdAtUTC: z.iso.datetime(),
 })
 

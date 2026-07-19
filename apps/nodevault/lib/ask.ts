@@ -1,5 +1,5 @@
 import { askStreamEventSchema } from '@platform/components.contracts'
-import type { AskStreamEvent } from '@platform/components.contracts'
+import type { AskMode, AskStreamEvent } from '@platform/components.contracts'
 import { appConfig } from './config'
 import { getSession } from './auth'
 
@@ -47,6 +47,7 @@ export type StreamAskArgs = {
   vaultId: number
   conversationId?: number
   question: string
+  mode: AskMode
   signal: AbortSignal
   onEvent: (event: AskStreamEvent) => void
 }
@@ -57,7 +58,7 @@ export type StreamAskArgs = {
  * and EventSource can neither POST nor send the Authorization header.
  */
 export const streamAsk = async ({
-  vaultId, conversationId, question, signal, onEvent,
+  vaultId, conversationId, question, mode, signal, onEvent,
 }: StreamAskArgs): Promise<void> => {
   const config = appConfig()
   const session = getSession()
@@ -69,7 +70,9 @@ export const streamAsk = async ({
       'content-type': 'application/json',
       ...(session?.tokens.access && { authorization: `Bearer ${session.tokens.access}` }),
     },
-    body: JSON.stringify({ vaultId, conversationId, question }),
+    body: JSON.stringify({
+      vaultId, conversationId, question, mode,
+    }),
   })
 
   if (!response.ok || !response.body) {

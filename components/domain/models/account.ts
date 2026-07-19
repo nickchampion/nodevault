@@ -17,6 +17,13 @@ export const accounts = nodevault.table('accounts', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
   name: text('name').notNull(),
   status: text('status').$type<AccountStatus>().notNull().default('active'),
+  // bring-your-own-GCP: every account supplies its own Google Cloud project — the
+  // service-account key is encrypted at rest and only decrypted server-side when a
+  // Gemini/Vertex client is built for this account
+  gcpProjectId: text('gcp_project_id'),
+  gcpLocation: text('gcp_location'),
+  gcpCredentials: text('gcp_credentials'),
+  gcpVerifiedAtUTC: timestamp('gcp_verified_at', { withTimezone: true, mode: 'date' }),
   createdAtUTC: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAtUTC: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 })

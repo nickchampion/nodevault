@@ -2,15 +2,28 @@
 
 import { useEffect, useRef, useState } from 'react'
 import {
-  Button, Input, Label, Spinner, TextField,
+  Button, Input, Label, Spinner, TextField, ToggleButton, ToggleButtonGroup, Tooltip,
 } from '@heroui/react'
 import {
   ExternalLink, FileText, Link2, MessageCirclePlus, Send,
 } from 'lucide-react'
 import type { SubmitEvent } from 'react'
-import type { CitationDto } from '@platform/components.contracts'
-import { api } from '../../../../lib/api'
-import { streamAsk } from '../../../../lib/ask'
+import type { AskMode, CitationDto, ConversationDto } from '@platform/components.contracts'
+import { api } from '../../lib/api'
+import { streamAsk } from '../../lib/ask'
+
+const askModes: { id: AskMode, label: string, description: string }[] = [
+  {
+    id: 'local',
+    label: 'Local RAG',
+    description: 'Hand-rolled pipeline: hybrid pgvector retrieval feeds matched chunks into the prompt.',
+  },
+  {
+    id: 'vertex',
+    label: 'Vertex grounding',
+    description: 'Managed pipeline: Gemini retrieves from a Vertex AI Search data store as it answers. Newly ingested assets take a few minutes to appear.',
+  },
+]
 
 type ChatMessage = {
   role: 'user' | 'assistant'
@@ -57,42 +70,80 @@ const CitationChips = ({ citations }: { citations: CitationDto[] }) => (
   </div>
 )
 
-export const AskPanel = ({ vaultId }: { vaultId: number }) => {
+type ConversationChatProperties = {
+
+  /** Vault to ask against — required unless initialConversationId is a conversation id (the vault comes from the loaded conversation). */
+  vaultId?: number
+
+  /** 'latest' resumes the vault's most recent conversation, a number opens that conversation, absent starts fresh. */
+  initialConversationId?: number | 'latest'
+
+  /** Hide the reset button on pages dedicated to a single conversation. */
+  showNewConversation?: boolean
+  onConversationLoadedAction?: (conversation: ConversationDto) => void
+}
+
+/**
+ * The vault Q&A chat: message history, citation chips, mode toggle and the streaming
+ * ask form. Used by the vault Ask tab (resuming the latest conversation) and the
+ * account Conversations page (continuing a specific one).
+ */
+export const ConversationChat = ({
+  vaultId, initialConversationId, showNewConversation = true, onConversationLoadedAction,
+}: ConversationChatProperties) => {
+  const [activeVaultId, setActiveVaultId] = useState<number | null>(vaultId ?? null)
   const [conversationId, setConversationId] = useState<number | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [mode, setMode] = useState<AskMode>('local')
   const [question, setQuestion] = useState('')
-  const [loading, setLoading] = useState(true)
+  const [loading, setLoading] = useState(initialConversationId !== undefined)
   const [streaming, setStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  // resume the most recent conversation for this vault, if there is one
   useEffect(() => {
+    if (initialConversationId === undefined) return
+
     let cancelled = false
 
     const load = async () => {
       try {
-        const { conversations } = await api.conversations.list.query({ vaultId })
+        let targetId: number | null = null
 
-        if (cancelled || conversations.length === 0) return
+        if (initialConversationId === 'latest') {
+          if (!vaultId) return
+
+          const { conversations } = await api.conversations.list.query({ vaultId })
+
+          if (cancelled || conversations.length === 0) return
+
+          targetId = conversations[0].id
+        } else {
+          targetId = initialConversationId
+        }
 
         const { conversation, messages: loaded } = await api.conversations.get.query({
-          vaultId,
-          conversationId: conversations[0].id,
+          conversationId: targetId,
         })
 
         if (cancelled) return
 
         setConversationId(conversation.id)
+        setActiveVaultId(conversation.vaultId)
         setMessages(loaded.map(message => ({
           role: message.role,
           content: message.content,
           citations: message.citations,
         })))
-      } catch {
-        // no conversation to resume — start fresh
+        onConversationLoadedAction?.(conversation)
+      } catch (error_) {
+        // resuming the latest is best-effort — start fresh; opening a specific
+        // conversation failing is worth surfacing
+        if (!cancelled && initialConversationId !== 'latest') {
+          setError((error_ as Error).message || 'Failed to load the conversation')
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -104,7 +155,9 @@ export const AskPanel = ({ vaultId }: { vaultId: number }) => {
       cancelled = true
       abortRef.current?.abort()
     }
-  }, [vaultId])
+    // onConversationLoadedAction is deliberately not a dependency — parents pass inline callbacks
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vaultId, initialConversationId])
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
@@ -121,7 +174,7 @@ export const AskPanel = ({ vaultId }: { vaultId: number }) => {
 
     const trimmed = question.trim()
 
-    if (!trimmed || streaming) return
+    if (!trimmed || streaming || activeVaultId === null) return
 
     setQuestion('')
     setError(null)
@@ -142,9 +195,10 @@ export const AskPanel = ({ vaultId }: { vaultId: number }) => {
 
     try {
       await streamAsk({
-        vaultId,
+        vaultId: activeVaultId,
         conversationId: conversationId ?? undefined,
         question: trimmed,
+        mode,
         signal: abort.signal,
         onEvent: (streamEvent) => {
           switch (streamEvent.type) {
@@ -199,18 +253,48 @@ export const AskPanel = ({ vaultId }: { vaultId: number }) => {
   return (
     <div>
       <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-200 dark:border-slate-800">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Ask questions about the documents and URLs in this vault.
-        </p>
+        <ToggleButtonGroup
+          selectionMode="single"
+          disallowEmptySelection
+          selectedKeys={new Set([mode])}
+          onSelectionChange={(keys) => {
+            const [key] = [...keys]
 
-        <Button
-          variant="ghost"
-          isDisabled={streaming || messages.length === 0}
-          onPress={startNewConversation}
+            if (key) setMode(key as AskMode)
+          }}
+          aria-label="Answer engine"
         >
-          <MessageCirclePlus className="size-4" />
-          New conversation
-        </Button>
+          {askModes.map(askMode => (
+            <Tooltip.Root
+              key={askMode.id}
+              delay={200}
+            >
+              <Tooltip.Trigger>
+                <ToggleButton
+                  id={askMode.id}
+                  className="mr-2"
+                >
+                  {askMode.label}
+                </ToggleButton>
+              </Tooltip.Trigger>
+
+              <Tooltip.Content className="break-normal">
+                {askMode.description}
+              </Tooltip.Content>
+            </Tooltip.Root>
+          ))}
+        </ToggleButtonGroup>
+
+        {showNewConversation && (
+          <Button
+            variant="ghost"
+            isDisabled={streaming || messages.length === 0}
+            onPress={startNewConversation}
+          >
+            <MessageCirclePlus className="size-4" />
+            New conversation
+          </Button>
+        )}
       </div>
 
       {loading && (
@@ -270,7 +354,7 @@ export const AskPanel = ({ vaultId }: { vaultId: number }) => {
 
           <Button
             type="submit"
-            isDisabled={!question.trim() || streaming || loading}
+            isDisabled={!question.trim() || streaming || loading || activeVaultId === null}
             isPending={streaming}
           >
             <Send className="size-4" />

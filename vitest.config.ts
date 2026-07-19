@@ -13,6 +13,7 @@ const alias = {
   '@platform/components.utils.server': path.resolve('./components/utils-server/index.ts'),
   '@platform/integrations.gemini': path.resolve('./integrations/gemini/index.ts'),
   '@platform/integrations.resend': path.resolve('./integrations/resend/index.ts'),
+  '@platform/integrations.vertexsearch': path.resolve('./integrations/vertexsearch/index.ts'),
 }
 
 export default defineConfig({

@@ -37,6 +37,9 @@ export const userDtoSchema = z.object({
 export const accountDtoSchema = z.object({
   id: z.int().positive(),
   name: z.string(),
+  // whether the account has connected (and verified) its own Google Cloud project —
+  // the app's vault features are gated on this
+  gcpConfigured: z.boolean(),
   createdAtUTC: z.iso.datetime(),
 })
 

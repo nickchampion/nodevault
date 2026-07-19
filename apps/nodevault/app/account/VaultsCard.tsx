@@ -8,7 +8,7 @@ import {
 import { createVaultRequestSchema } from '@platform/components.contracts'
 import { formatLocalDate } from '@platform/components.utils'
 import {
-  FileText, Link2, Plus, Trash2, Vault,
+  FileText, Link2, MessagesSquare, Plus, Trash2, Vault,
 } from 'lucide-react'
 import type { SubmitEvent } from 'react'
 import type { inferRouterOutputs } from '@trpc/server'
@@ -173,6 +173,11 @@ export const VaultsCard = () => {
                       <span className="flex items-center gap-1.5">
                         <Link2 className="size-4" />
                         {count(vault.urlCount, 'URL')}
+                      </span>
+
+                      <span className="flex items-center gap-1.5">
+                        <MessagesSquare className="size-4" />
+                        {count(vault.conversationCount, 'conversation')}
                       </span>
 
                       <LinkButton

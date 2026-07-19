@@ -1,8 +1,10 @@
 import { and, eq } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
 import type { DeleteAssetRequest, OkResponse } from '@platform/components.contracts'
-import { assets, vaults } from '@platform/components.domain'
+import { accounts, assets, vaults } from '@platform/components.domain'
 import { createR2Client } from '@platform/integrations.cloudflare'
+import { createVertexSearchClient } from '@platform/integrations.vertexsearch'
+import { toGcpConfig } from '../../gcp.js'
 
 export const assetsDelete: ApiHandler<DeleteAssetRequest, OkResponse> = async (context) => {
   const accountId = context.user?.accountId
@@ -31,6 +33,12 @@ export const assetsDelete: ApiHandler<DeleteAssetRequest, OkResponse> = async (c
   if (asset.storageKey) {
     await createR2Client().delete(asset.storageKey)
   }
+
+  const account = await context.session.db.query.accounts.findFirst({ where: eq(accounts.id, accountId) })
+  const gcp = account ? toGcpConfig(account) : null
+
+  // no credentials on file means nothing was ever mirrored to Vertex — skip the delete
+  if (gcp) await createVertexSearchClient(gcp).deleteAssetDocument(asset.id)
 
   return context.event.response.ok()
 }

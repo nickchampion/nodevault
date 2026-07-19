@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import {
   Alert, Button, Description, FieldError, Input, Label, Spinner, TextField,
 } from '@heroui/react'
@@ -11,7 +10,7 @@ import type { SubmitEvent } from 'react'
 import type { UpdateProfileRequest } from '@platform/components.contracts'
 import type { AuthSession } from '../../../lib/auth'
 import { api } from '../../../lib/api'
-import { getSession, isSessionValid, useAuth } from '../../../lib/auth'
+import { useAuth } from '../../../lib/auth'
 import { zodValidate } from '../../../lib/validation'
 import { PhoneInput } from '../../../components/form/PhoneInput'
 import type { FormErrors } from '../../../lib/validation'
@@ -19,15 +18,7 @@ import type { FormErrors } from '../../../lib/validation'
 const validateEditProfileForm = zodValidate(updateProfileRequestSchema)
 
 export const EditProfileForm = () => {
-  const router = useRouter()
   const { session } = useAuth()
-
-  // authenticated-only page
-  useEffect(() => {
-    if (!isSessionValid(getSession())) {
-      router.replace('/auth/login')
-    }
-  }, [router])
 
   if (!session) return null
 
@@ -41,7 +32,6 @@ export const EditProfileForm = () => {
 }
 
 const EditProfileFields = ({ session }: { session: AuthSession }) => {
-  const router = useRouter()
   const { signIn } = useAuth()
 
   const [state, setState] = useState<UpdateProfileRequest>(() => ({
@@ -52,6 +42,7 @@ const EditProfileFields = ({ session }: { session: AuthSession }) => {
   }))
   const [errors, setErrors] = useState<FormErrors>({})
   const [pending, setPending] = useState(false)
+  const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const submit = async (event: SubmitEvent) => {
@@ -64,15 +55,17 @@ const EditProfileFields = ({ session }: { session: AuthSession }) => {
     if (Object.keys(validationErrors).length > 0) return
 
     setPending(true)
+    setSaved(false)
     setError(null)
 
     try {
       const user = await api.account.updateProfile.mutate({ ...state })
 
       signIn({ ...session, user })
-      router.replace('/account')
+      setSaved(true)
     } catch (error_) {
       setError((error_ as Error).message || 'Something went wrong. Please try again.')
+    } finally {
       setPending(false)
     }
   }
@@ -167,6 +160,18 @@ const EditProfileFields = ({ session }: { session: AuthSession }) => {
         {pending ? <Spinner size="sm" /> : <Save className="size-4" />}
         Save changes
       </Button>
+
+      {saved && (
+        <Alert status="success">
+          <Alert.Indicator />
+
+          <Alert.Content>
+            <Alert.Title>Profile updated</Alert.Title>
+
+            <Alert.Description>Your changes have been saved.</Alert.Description>
+          </Alert.Content>
+        </Alert>
+      )}
 
       {error && (
         <Alert status="danger">

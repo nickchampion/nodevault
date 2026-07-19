@@ -52,7 +52,8 @@ export const LoginForm = () => {
         const response = await api.auth.verify.mutate({ code })
 
         signIn(response)
-        router.replace('/account')
+        // vaults are locked until the account's GCP project is connected — land there first
+        router.replace(response.account.gcpConfigured ? '/account' : '/account/settings')
       } catch (error_) {
         setVerifyError((error_ as Error).message || 'This sign-in link is no longer valid. Please request a new one.')
         setVerifying(false)

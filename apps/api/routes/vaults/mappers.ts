@@ -2,10 +2,17 @@ import { toUtcIso } from '@platform/components.utils'
 import type { VaultDto } from '@platform/components.contracts'
 import type { Vault } from '@platform/components.domain'
 
-export const toVaultDto = (vault: Vault, documentCount: number, urlCount: number): VaultDto => ({
+type VaultCounts = {
+  documentCount: number
+  urlCount: number
+  conversationCount: number
+}
+
+export const toVaultDto = (vault: Vault, counts: VaultCounts): VaultDto => ({
   id: vault.id,
   name: vault.name,
-  documentCount,
-  urlCount,
+  documentCount: counts.documentCount,
+  urlCount: counts.urlCount,
+  conversationCount: counts.conversationCount,
   createdAtUTC: toUtcIso(vault.createdAtUTC),
 })

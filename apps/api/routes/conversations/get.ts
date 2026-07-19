@@ -12,13 +12,13 @@ export const conversationsGet: ApiHandler<GetConversationRequest, GetConversatio
   const { vaultId, conversationId } = context.event.payload
 
   const [row] = await context.session.db
-    .select({ conversation: conversations })
+    .select({ conversation: conversations, vaultName: vaults.name })
     .from(conversations)
     .innerJoin(vaults, eq(conversations.vaultId, vaults.id))
     .where(and(
       eq(conversations.id, conversationId),
-      eq(conversations.vaultId, vaultId),
       eq(vaults.accountId, accountId),
+      ...(vaultId ? [eq(conversations.vaultId, vaultId)] : []),
     ))
 
   if (!row) return context.event.response.notFound()
@@ -29,7 +29,7 @@ export const conversationsGet: ApiHandler<GetConversationRequest, GetConversatio
   })
 
   return context.event.response.ok({
-    conversation: toConversationDto(row.conversation),
+    conversation: toConversationDto(row.conversation, row.vaultName),
     messages: messages.map(toConversationMessageDto),
   })
 }

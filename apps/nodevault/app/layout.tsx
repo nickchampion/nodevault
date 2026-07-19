@@ -1,6 +1,7 @@
 import './globals.css'
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
+import { AccountNav } from '../components/app/AccountNav'
 import { AppFooter } from '../components/app/AppFooter'
 import { AppHeader } from '../components/app/AppHeader'
 
@@ -48,6 +49,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <AppHeader />
 
         <main className="flex-1">
+          <AccountNav />
+
           {children}
         </main>
 

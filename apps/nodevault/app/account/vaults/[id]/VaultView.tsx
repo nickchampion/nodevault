@@ -25,10 +25,14 @@ export const VaultView = ({ vaultId }: { vaultId: number }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // authenticated-only page
+  // authenticated-only page; vaults stay locked until the account's GCP project is connected
   useEffect(() => {
-    if (!isSessionValid(getSession())) {
+    const current = getSession()
+
+    if (!isSessionValid(current)) {
       router.replace('/auth/login')
+    } else if (!current?.account.gcpConfigured) {
+      router.replace('/account/settings')
     }
   }, [router])
 

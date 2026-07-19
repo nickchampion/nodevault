@@ -1,6 +1,6 @@
 import {
-  ArrowRight, BellRing, BookOpenText, FileText, LogIn, MessageCircleQuestion,
-  ScanSearch, ShieldCheck,
+  ArrowRight, BellRing, BookOpenText, FileText, Link2, LogIn, MessageCircleQuestion,
+  ScanSearch, ShieldCheck, Sparkles,
 } from 'lucide-react'
 import { Container } from '../components/ui/Container'
 import { LinkButton } from '../components/ui/LinkButton'
@@ -18,7 +18,7 @@ const features = [
   },
   {
     title: 'Ask Questions, Get Answers',
-    description: 'Instead of a list of results, ask a question and get a clear answer drawn from your own documents — with sources you can check.',
+    description: 'Instead of a list of results, ask a question and get a clear answer drawn from your own documents — with sources you can check. Ask a follow-up and the conversation carries on where you left off.',
     icon: MessageCircleQuestion,
   },
   {
@@ -116,6 +116,94 @@ export default function HomePage() {
               library says about a topic. Follow the subjects that matter to you, and NodeVault
               will point out when something new you save is relevant.
             </p>
+          </div>
+        </Container>
+      </section>
+
+      <section className="py-16 sm:py-20">
+        <Container>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-14 items-center max-w-5xl mx-auto">
+            <div>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 px-3 py-1 text-xs font-semibold uppercase tracking-wide mb-4">
+                <Sparkles className="size-3.5" />
+                New
+              </span>
+
+              <h2 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight mb-4">
+                Have a conversation with your library
+              </h2>
+
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-4">
+                Ask a question in your own words and watch the answer stream in — drawn only
+                from what you&apos;ve saved, never the open internet, with the sources listed
+                right under the answer.
+              </p>
+
+              <p className="text-slate-600 dark:text-slate-300 leading-relaxed mb-8">
+                And because NodeVault remembers the conversation, you can just keep asking —
+                &quot;how much would that cost?&quot; works, because it knows what
+                &quot;that&quot; is.
+              </p>
+
+              <LinkButton
+                href="/auth/register"
+                variant="outline"
+              >
+                Try it with your own documents
+                <ArrowRight className="size-4" />
+              </LinkButton>
+            </div>
+
+            <div
+              aria-hidden="true"
+              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 space-y-3 shadow-sm"
+            >
+              <div className="flex justify-end">
+                <p className="max-w-[85%] rounded-lg bg-sky-600 text-white px-3.5 py-2 text-sm">
+                  What do my saved articles say about rising energy bills?
+                </p>
+              </div>
+
+              <div className="flex justify-start">
+                <div className="max-w-[90%] rounded-lg bg-slate-100 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 px-3.5 py-2 text-sm">
+                  <p>
+                    Two of your articles cover this. Proposed reforms would cut average household
+                    bills by around £130 a year, mainly by moving policy levies off electricity
+                    and reforming how gas is charged.
+                  </p>
+
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-700 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-300">
+                      <span className="font-medium">[1]</span>
+
+                      <Link2 className="size-3.5 shrink-0" />
+
+                      <span className="max-w-40 truncate">Radical shake-up to cut energy bills</span>
+                    </span>
+
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-700 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-300">
+                      <span className="font-medium">[2]</span>
+
+                      <FileText className="size-3.5 shrink-0" />
+
+                      <span className="max-w-40 truncate">UK risks repeat of surging bills</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <p className="max-w-[85%] rounded-lg bg-sky-600 text-white px-3.5 py-2 text-sm">
+                  How much would that cost taxpayers?
+                </p>
+              </div>
+
+              <div className="flex justify-start">
+                <p className="max-w-[90%] rounded-lg bg-slate-100 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 px-3.5 py-2 text-sm">
+                  About £3.2 billion a year, according to the same analysis&hellip;
+                </p>
+              </div>
+            </div>
           </div>
         </Container>
       </section>

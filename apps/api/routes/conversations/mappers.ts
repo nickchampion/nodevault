@@ -2,9 +2,10 @@ import { toUtcIso } from '@platform/components.utils'
 import type { ConversationDto, ConversationMessageDto } from '@platform/components.contracts'
 import type { Conversation, ConversationMessage } from '@platform/components.domain'
 
-export const toConversationDto = (conversation: Conversation): ConversationDto => ({
+export const toConversationDto = (conversation: Conversation, vaultName: string): ConversationDto => ({
   id: conversation.id,
   vaultId: conversation.vaultId,
+  vaultName,
   title: conversation.title,
   createdAtUTC: toUtcIso(conversation.createdAtUTC),
   updatedAtUTC: toUtcIso(conversation.updatedAtUTC),

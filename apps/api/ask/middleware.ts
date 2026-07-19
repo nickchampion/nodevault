@@ -5,8 +5,9 @@ import { InboundEvent } from '@platform/components.context'
 import { createAuthInfoFromToken } from '@platform/components.utils.server'
 import { isExpired } from '@platform/components.utils'
 import { askRequestSchema } from '@platform/components.contracts'
-import { conversations, vaults } from '@platform/components.domain'
+import { accounts, conversations, vaults } from '@platform/components.domain'
 import { withSession } from '../db.js'
+import { GCP_NOT_CONFIGURED_MESSAGE, toGcpConfig } from '../gcp.js'
 import { runAskPipeline } from './pipeline.js'
 import { createSseWriter } from './sse.js'
 
@@ -64,27 +65,35 @@ export const askMiddleware: Koa.Middleware = async (context, next) => {
     })
   }
 
-  const { vaultId, conversationId, question } = parsed.data
+  const {
+    vaultId, conversationId, question, mode,
+  } = parsed.data
 
-  const owned = await withSession(async (db) => {
+  const { owned, gcpConfigured } = await withSession(async (db) => {
     const vault = await db.query.vaults.findFirst({
       columns: { id: true },
       where: and(eq(vaults.id, vaultId), eq(vaults.accountId, user.accountId!)),
     })
 
-    if (!vault) return false
+    if (!vault) return { owned: false, gcpConfigured: false }
 
-    if (!conversationId) return true
+    const account = await db.query.accounts.findFirst({ where: eq(accounts.id, user.accountId!) })
+    const configured = Boolean(account && toGcpConfig(account))
+
+    if (!conversationId) return { owned: true, gcpConfigured: configured }
 
     const conversation = await db.query.conversations.findFirst({
       columns: { id: true },
       where: and(eq(conversations.id, conversationId), eq(conversations.vaultId, vaultId)),
     })
 
-    return Boolean(conversation)
+    return { owned: Boolean(conversation), gcpConfigured: configured }
   })
 
   if (!owned) return respondJson(context, 404, { message: 'Not found' })
+
+  // fail before the stream opens — the client gets a plain JSON error it can surface
+  if (!gcpConfigured) return respondJson(context, 400, { message: GCP_NOT_CONFIGURED_MESSAGE })
 
   // from here the response is a stream — Koa must not write its own response
   context.respond = false
@@ -115,7 +124,7 @@ export const askMiddleware: Koa.Middleware = async (context, next) => {
 
   try {
     await runAskPipeline({
-      vaultId, conversationId, question, writer, signal: abort.signal,
+      accountId: user.accountId!, vaultId, conversationId, question, mode, writer, signal: abort.signal,
     })
   } catch (error) {
     console.error('ask pipeline failed:', error)

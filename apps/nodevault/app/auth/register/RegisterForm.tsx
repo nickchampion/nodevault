@@ -57,7 +57,8 @@ export const RegisterForm = () => {
       const response = await api.auth.register.mutate({ ...state })
 
       signIn(response)
-      router.replace('/account')
+      // new accounts must connect their own GCP project before vaults unlock
+      router.replace('/account/settings')
     } catch (error_) {
       setError((error_ as Error).message || 'Something went wrong. Please try again.')
       setPending(false)

@@ -5,12 +5,17 @@ import type { AssetDto, UploadFileAssetRequest } from '@platform/components.cont
 import { assets, vaults } from '@platform/components.domain'
 import { createR2Client } from '@platform/integrations.cloudflare'
 import { assetUploadedEvent, inngest } from '../../inngest/index.js'
+import { gcpForAccount } from '../../gcp.js'
 import { toAssetDto } from './mappers.js'
 
 export const assetsUpload: ApiHandler<UploadFileAssetRequest, AssetDto> = async (context) => {
   const accountId = context.user?.accountId
 
   if (!accountId) return context.event.response.unauthorised()
+
+  // ingestion embeds and mirrors through the account's own GCP project — fail fast
+  // here rather than letting the background workflow die without credentials
+  await gcpForAccount(context.session.db, accountId)
 
   const {
     vaultId, name, contentType, content,

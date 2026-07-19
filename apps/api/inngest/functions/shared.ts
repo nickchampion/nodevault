@@ -4,8 +4,10 @@ import { chunkText, partition } from '@platform/components.utils'
 import { assetChunks, assets } from '@platform/components.domain'
 import type { VaultAsset } from '@platform/components.domain'
 import { createGeminiClient, embeddingBatchSize } from '@platform/integrations.gemini'
+import { createVertexSearchClient } from '@platform/integrations.vertexsearch'
 import { inngest } from '../client.js'
 import { withSession } from '../db.js'
+import { gcpForAsset, gcpForVault } from '../../gcp.js'
 
 type Step = GetStepTools<typeof inngest>
 
@@ -80,7 +82,10 @@ export const embedChunks = async (step: Step, assetId: number, chunkCount: numbe
 
       if (rows.length === 0) return
 
-      const embeddings = await createGeminiClient().embedChunks(rows.map(row => row.text))
+      // per-account GCP: embeddings run in the vault owner's own project
+      const gcp = await withSession(async db => gcpForAsset(db, assetId))
+
+      const embeddings = await createGeminiClient(gcp).embedChunks(rows.map(row => row.text))
 
       await withSession(async (db) => {
         for (const [index, row] of rows.entries()) {
@@ -91,6 +96,34 @@ export const embedChunks = async (step: Step, assetId: number, chunkCount: numbe
       })
     })
   }
+}
+
+/**
+ * Mirror the extracted text into the Vertex AI Search data store (the retrieval source
+ * for vertex-mode ask answers). The import is an idempotent upsert keyed on the asset
+ * id; the alternate retrieval stack (chunks + pgvector) is populated by storeChunks/
+ * embedChunks from the same extraction. Vertex indexing lags a few minutes behind an
+ * asset turning ready.
+ */
+export const mirrorToVertexSearch = async (step: Step, assetId: number, content: string, patch: Partial<Pick<VaultAsset, 'name'>> = {}): Promise<void> => {
+  await step.run('mirror-to-vertex-search', async () => {
+    const { row, gcp } = await withSession(async (db) => {
+      const asset = await db.query.assets.findFirst({ where: eq(assets.id, assetId) })
+
+      if (!asset) throw new Error(`Asset ${assetId} disappeared before Vertex mirror`)
+
+      return { row: asset, gcp: await gcpForVault(db, asset.vaultId) }
+    })
+
+    await createVertexSearchClient(gcp).upsertAssetDocument({
+      assetId,
+      vaultId: row.vaultId,
+      source: row.source,
+      name: patch.name ?? row.name,
+      url: row.url,
+      text: content,
+    })
+  })
 }
 
 export const markReady = async (step: Step, assetId: number, patch: Partial<Pick<VaultAsset, 'name'>> = {}): Promise<void> => {
