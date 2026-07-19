@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Alert, Card } from '@heroui/react'
+import { Alert, Card, Spinner } from '@heroui/react'
 import { Lock } from 'lucide-react'
 import Link from 'next/link'
 import {
@@ -26,6 +26,11 @@ export const AccountView = () => {
 
   if (!session) return null
 
+  // once real credentials are connected (either side), that account is locked to that
+  // provider forever — no more "choose a provider" messaging after this
+  const providerCommitted = session.account.gcpConfigured || session.account.aiProvider === 'openai'
+  const migratingToOpenAi = session.account.aiProvider === 'openai' && session.account.openaiMigrating
+
   return (
     <div>
       <PageHero
@@ -35,7 +40,7 @@ export const AccountView = () => {
       />
 
       <Container className="py-12 space-y-6">
-        {!session.account.gcpConfigured && hasVaultAccess(session) && (
+        {!providerCommitted && hasVaultAccess(session) && (
           <Alert status="accent">
             <Alert.Indicator />
 
@@ -57,7 +62,7 @@ export const AccountView = () => {
                   href="/account/settings"
                   className="font-medium underline"
                 >
-                  Connect your own GCP project
+                  Choose and connect your AI provider — Google Cloud or OpenAI
                 </Link>
                 {' '}
                 before the trial ends to keep your vaults working.
@@ -72,24 +77,49 @@ export const AccountView = () => {
             <Card>
               <Card.Content>
                 <div className="flex flex-col items-center text-center gap-4 py-10">
-                  <div className="flex items-center justify-center size-12 rounded-full bg-amber-500/10">
-                    <Lock className="size-6 text-amber-600 dark:text-amber-400" />
-                  </div>
+                  {migratingToOpenAi
+                    ? (
+                      <>
+                        <div className="flex items-center justify-center size-12 rounded-full bg-sky-500/10">
+                          <Spinner size="sm" />
+                        </div>
 
-                  <div className="space-y-1 max-w-xl">
-                    <p className="text-lg font-medium text-slate-900 dark:text-slate-100">
-                      Your 7-day free trial has ended
-                    </p>
+                        <div className="space-y-1 max-w-xl">
+                          <p className="text-lg font-medium text-slate-900 dark:text-slate-100">
+                            Migrating your vaults to OpenAI…
+                          </p>
 
-                    <p className="text-slate-500 dark:text-slate-400">
-                      To keep using vaults, connect your own Google Cloud project in Settings —
-                      your credentials are verified with a live call and stored encrypted.
-                    </p>
-                  </div>
+                          <p className="text-slate-500 dark:text-slate-400">
+                            Existing content is being re-embedded and re-indexed on your OpenAI
+                            account — this only takes a few minutes. This page will unlock
+                            automatically once it&apos;s done.
+                          </p>
+                        </div>
+                      </>
+                    )
+                    : (
+                      <>
+                        <div className="flex items-center justify-center size-12 rounded-full bg-amber-500/10">
+                          <Lock className="size-6 text-amber-600 dark:text-amber-400" />
+                        </div>
 
-                  <LinkButton href="/account/settings">
-                    Connect Google Cloud
-                  </LinkButton>
+                        <div className="space-y-1 max-w-xl">
+                          <p className="text-lg font-medium text-slate-900 dark:text-slate-100">
+                            Your 7-day free trial has ended
+                          </p>
+
+                          <p className="text-slate-500 dark:text-slate-400">
+                            To keep using vaults, choose and connect an AI provider — Google
+                            Cloud or OpenAI — in Settings. Your credentials are verified with a
+                            live call and stored encrypted.
+                          </p>
+                        </div>
+
+                        <LinkButton href="/account/settings">
+                          Connect an AI provider
+                        </LinkButton>
+                      </>
+                    )}
                 </div>
               </Card.Content>
             </Card>

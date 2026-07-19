@@ -1,9 +1,10 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Alert, Card } from '@heroui/react'
+import { Alert, Button, Card } from '@heroui/react'
 import { UserRound } from 'lucide-react'
+import type { AiProvider } from '@platform/components.nodevault.contracts'
 import {
   getSession, isSessionValid, trialDaysLeft, useAuth,
 } from '../../../lib/auth'
@@ -11,10 +12,15 @@ import { PageHero } from '../../../components/app/PageHero'
 import { Container } from '../../../components/ui/Container'
 import { EditProfileForm } from './EditProfileForm'
 import { GcpCredentialsCard } from './GcpCredentialsCard'
+import { OpenAiCredentialsCard } from './OpenAiCredentialsCard'
+import { ProviderChoice } from './ProviderChoice'
 
 export const SettingsView = () => {
   const router = useRouter()
   const { session } = useAuth()
+  // which provider's form to show before anything is actually connected — purely local
+  // until the chosen card's form is submitted, so a reload just asks again
+  const [chosenProvider, setChosenProvider] = useState<AiProvider | null>(null)
 
   // authenticated-only page
   useEffect(() => {
@@ -25,16 +31,21 @@ export const SettingsView = () => {
 
   if (!session) return null
 
+  // once real credentials are connected (either side), that account is locked to that
+  // provider forever and there's nothing left to choose
+  const providerCommitted = session.account.gcpConfigured || session.account.aiProvider === 'openai'
+  const activeProvider: AiProvider | null = providerCommitted ? session.account.aiProvider : chosenProvider
+
   return (
     <div>
       <PageHero
         eyebrow="Account"
         title="Settings"
-        description="Update your personal information and connect your own Google Cloud project."
+        description="Update your personal information and connect your AI provider."
       />
 
       <Container className="py-12 space-y-6">
-        {!session.account.gcpConfigured && (
+        {!providerCommitted && (
           trialDaysLeft(session) > 0
             ? (
               <Alert status="accent">
@@ -53,8 +64,8 @@ export const SettingsView = () => {
 
                   <Alert.Description>
                     NodeVault is free for your first 7 days, running on our Google Cloud project.
-                    Connect your own GCP project below before the trial ends to keep your vaults,
-                    search and conversations working.
+                    Choose and connect your AI provider — Google Cloud or OpenAI — below before the
+                    trial ends to keep your vaults, search and conversations working.
                   </Alert.Description>
                 </Alert.Content>
               </Alert>
@@ -67,8 +78,8 @@ export const SettingsView = () => {
                   <Alert.Title>Your free trial has ended</Alert.Title>
 
                   <Alert.Description>
-                    Vaults, search and conversations are locked until you connect your own
-                    Google Cloud project — add and verify your credentials below to unlock them.
+                    Vaults, search and conversations are locked until you choose and connect an AI
+                    provider — Google Cloud or OpenAI — below.
                   </Alert.Description>
                 </Alert.Content>
               </Alert>
@@ -101,7 +112,21 @@ export const SettingsView = () => {
             </Card.Content>
           </Card>
 
-          <GcpCredentialsCard />
+          <div className="space-y-3">
+            {!providerCommitted && activeProvider && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onPress={() => setChosenProvider(null)}
+              >
+                ← Choose a different provider
+              </Button>
+            )}
+
+            {activeProvider === null && <ProviderChoice onChooseAction={setChosenProvider} />}
+            {activeProvider === 'gemini' && <GcpCredentialsCard />}
+            {activeProvider === 'openai' && <OpenAiCredentialsCard />}
+          </div>
         </div>
       </Container>
     </div>

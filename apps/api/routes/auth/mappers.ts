@@ -25,7 +25,10 @@ export const toUserDto = (user: User): UserDto => ({
 export const toAccountDto = (account: Account): AccountDto => ({
   id: account.id,
   name: account.name,
+  aiProvider: account.aiProvider,
   gcpConfigured: Boolean(account.gcpCredentials && account.gcpVerifiedAtUTC),
   gcpTrialEndsAtUTC: toUtcIso(trialEndsAt(account)),
+  openaiConfigured: Boolean(account.openaiApiKey && account.openaiVerifiedAtUTC),
+  openaiMigrating: Boolean(account.openaiMigratingAtUTC),
   createdAtUTC: toUtcIso(account.createdAtUTC),
 })

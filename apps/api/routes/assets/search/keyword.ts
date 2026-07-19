@@ -4,7 +4,7 @@ import type { SearchStrategy } from './factory'
 
 const RESULT_LIMIT = 10
 
-export const keywordSearch: SearchStrategy = async (db, _gcp, vaultId, query) => {
+export const keywordSearch: SearchStrategy = async (db, _ai, vaultId, query) => {
   const tsQuery = sql`websearch_to_tsquery('english', ${query})`
   const rank = sql<number>`ts_rank_cd(${assetChunks.searchVector}, ${tsQuery}, 32)`
 

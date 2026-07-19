@@ -1,5 +1,10 @@
 import { z } from 'zod'
 
+/** Which AI provider an account runs on — see components/nodevault/domain/models/account.ts. */
+export const aiProviderSchema = z.enum(['gemini', 'openai'])
+
+export type AiProvider = z.infer<typeof aiProviderSchema>
+
 /**
  * Bring-your-own-GCP: each account connects its own Google Cloud project, and every
  * Gemini / Vertex AI call the platform makes for that account runs against it. The
@@ -62,3 +67,30 @@ export const accountGcpConnectedEventSchema = z.object({
 export type SetGcpCredentialsRequest = z.infer<typeof setGcpCredentialsRequestSchema>
 export type GcpCredentialsStatus = z.infer<typeof gcpCredentialsStatusSchema>
 export type AccountGcpConnectedEvent = z.infer<typeof accountGcpConnectedEventSchema>
+
+/**
+ * Bring-your-own-OpenAI: a one-way switch, only available while an account is still on
+ * the Gemini trial and hasn't connected real GCP credentials (see set-openai-key.ts).
+ * Once connected the account is locked to OpenAI forever — this same request/response
+ * pair is reused afterwards for key rotation only.
+ */
+export const setOpenAiKeyRequestSchema = z.object({
+  apiKey: z.string().min(1, 'Paste your OpenAI API key'),
+})
+
+/** Safe-to-display credential state — never includes any part of the stored key. */
+export const openaiCredentialsStatusSchema = z.object({
+  configured: z.boolean(),
+  verifiedAtUTC: z.iso.datetime().nullable(),
+  // true while migrate-to-openai is re-embedding/re-mirroring pre-switch vault content
+  migrating: z.boolean(),
+})
+
+/** Emitted when an account switches from the Gemini trial to OpenAI — fires the migration workflow. */
+export const accountOpenaiConnectedEventSchema = z.object({
+  accountId: z.int().positive(),
+})
+
+export type SetOpenAiKeyRequest = z.infer<typeof setOpenAiKeyRequestSchema>
+export type OpenAiCredentialsStatus = z.infer<typeof openaiCredentialsStatusSchema>
+export type AccountOpenaiConnectedEvent = z.infer<typeof accountOpenaiConnectedEventSchema>

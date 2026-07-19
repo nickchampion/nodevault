@@ -19,9 +19,9 @@ const askModes: { id: AskMode, label: string, description: string }[] = [
     description: 'Our own search, built from scratch: a hybrid pgvector lookup finds the closest-matching chunks and hands them to the model as context.',
   },
   {
-    id: 'vertex',
-    label: 'Google-managed',
-    description: "Google's managed search: Gemini looks up a Vertex AI Search index and grounds its answer as it responds. Newly added content can take a few minutes to appear.",
+    id: 'managed',
+    label: 'Provider-managed',
+    description: "Your connected provider's own managed search (Vertex AI Search for Google Cloud, file search for OpenAI) grounds its answer as it responds. Newly added content can take a few minutes to appear.",
   },
 ]
 

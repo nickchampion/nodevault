@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { aiProviderSchema } from './account.js'
 import { phoneSchema, userRoleSchema } from './common.js'
 
 export const loginRequestSchema = z.object({
@@ -37,11 +38,19 @@ export const userDtoSchema = z.object({
 export const accountDtoSchema = z.object({
   id: z.int().positive(),
   name: z.string(),
+  // which AI provider this account runs on — see aiProviderSchema
+  aiProvider: aiProviderSchema,
   // whether the account has connected (and verified) its own Google Cloud project
   gcpConfigured: z.boolean(),
   // new accounts run on the platform's GCP project until this date — after it, vault
-  // features are gated on gcpConfigured
+  // features are gated on gcpConfigured (only meaningful while aiProvider === 'gemini')
   gcpTrialEndsAtUTC: z.iso.datetime(),
+  // whether the account has connected (and verified) its own OpenAI key — only
+  // meaningful while aiProvider === 'openai'
+  openaiConfigured: z.boolean(),
+  // true while migrate-to-openai is re-embedding/re-mirroring pre-switch vault content —
+  // vault features are blocked until it clears, even though openaiConfigured is already true
+  openaiMigrating: z.boolean(),
   createdAtUTC: z.iso.datetime(),
 })
 

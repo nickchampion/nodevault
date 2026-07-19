@@ -3,8 +3,7 @@ import type { ApiHandler } from '@platform/components.context'
 import type { DeleteAssetRequest, OkResponse } from '@platform/components.nodevault.contracts'
 import { accounts, assets, vaults } from '@platform/components.nodevault.domain'
 import { createR2Client } from '@platform/integrations.cloudflare'
-import { createVertexSearchClient } from '@platform/integrations.vertexsearch'
-import { gcpForCleanup } from '../../gcp.js'
+import { aiClientForCleanup } from '../../ai.js'
 
 export const assetsDelete: ApiHandler<DeleteAssetRequest, OkResponse> = async (context) => {
   const accountId = context.user?.accountId
@@ -21,7 +20,7 @@ export const assetsDelete: ApiHandler<DeleteAssetRequest, OkResponse> = async (c
   if (!vault) return context.event.response.notFound()
 
   const asset = await context.session.db.query.assets.findFirst({
-    columns: { id: true, storageKey: true },
+    columns: { id: true, storageKey: true, openaiFileId: true },
     where: and(eq(assets.id, assetId), eq(assets.vaultId, vaultId)),
   })
 
@@ -37,9 +36,9 @@ export const assetsDelete: ApiHandler<DeleteAssetRequest, OkResponse> = async (c
   const account = await context.session.db.query.accounts.findFirst({ where: eq(accounts.id, accountId) })
 
   // own credentials when set, platform's otherwise — trial-era mirrors live in the platform store
-  const gcp = account ? gcpForCleanup(account) : null
+  const ai = account ? aiClientForCleanup(context.session.db, account) : null
 
-  if (gcp) await createVertexSearchClient(gcp).deleteAssetDocument(asset.id)
+  if (ai) await ai.deleteAssetMirror(asset.id, asset.openaiFileId)
 
   return context.event.response.ok()
 }

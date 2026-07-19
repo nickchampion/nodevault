@@ -4,7 +4,7 @@ import { Readability } from '@mozilla/readability'
 import { assertPublicHttpUrl } from '@platform/components.utils.server'
 import { assetUrlSubmittedEvent, inngest } from '../client.js'
 import {
-  embedChunks, loadAndMarkProcessing, markFailed, markReady, matchTopics, mirrorToVertexSearch, storeChunks,
+  embedChunks, loadAndMarkProcessing, markFailed, markReady, matchTopics, mirrorToManagedIndex, storeChunks,
 } from './shared.js'
 
 const fetchTimeoutMs = 15_000
@@ -36,9 +36,9 @@ const extractUrlContent = async (url: string): Promise<{ title: string | null, c
 /**
  * assets/url.submitted → fetch the page, extract the readable article text (Readability —
  * the same extraction Firefox Reader View uses, so nav/ads/footer boilerplate is
- * stripped), chunk, embed with Gemini and store vectors in asset_chunks, then mark the
- * asset ready. Shares every step past content extraction with process-file-asset.ts via
- * shared.ts.
+ * stripped), chunk, embed with the account's AI provider and store vectors in
+ * asset_chunks, then mark the asset ready. Shares every step past content extraction
+ * with process-file-asset.ts via shared.ts.
  */
 export const processUrlAsset = inngest.createFunction(
   {
@@ -71,7 +71,7 @@ export const processUrlAsset = inngest.createFunction(
 
     await embedChunks(step, assetId, chunkCount)
 
-    await mirrorToVertexSearch(step, assetId, content, title ? { name: title } : {})
+    await mirrorToManagedIndex(step, assetId, content, title ? { name: title } : {})
 
     await markReady(step, assetId, title ? { name: title } : {})
 

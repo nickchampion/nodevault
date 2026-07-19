@@ -7,7 +7,7 @@ import type { SupportedContentType } from '@platform/components.nodevault.contra
 import { createR2Client } from '@platform/integrations.cloudflare'
 import { assetFileUploadedEvent, inngest } from '../client.js'
 import {
-  embedChunks, loadAndMarkProcessing, markFailed, markReady, matchTopics, mirrorToVertexSearch, storeChunks,
+  embedChunks, loadAndMarkProcessing, markFailed, markReady, matchTopics, mirrorToManagedIndex, storeChunks,
 } from './shared.js'
 
 const extractFileContent = async (bytes: Uint8Array<ArrayBuffer>, contentType: SupportedContentType): Promise<string> => {
@@ -33,11 +33,11 @@ const extractFileContent = async (bytes: Uint8Array<ArrayBuffer>, contentType: S
 }
 
 /**
- * assets/asset.uploaded → download from R2, extract text, chunk, embed with Gemini and
- * store vectors in asset_chunks, then mark the asset ready. Every step is its own unit
- * of work and idempotent (chunks are replaced wholesale), so retries are safe. Any
- * exhausted failure marks the asset failed via onFailure. Shares every step past content
- * extraction with process-url-asset.ts via shared.ts.
+ * assets/asset.uploaded → download from R2, extract text, chunk, embed with the
+ * account's AI provider and store vectors in asset_chunks, then mark the asset ready.
+ * Every step is its own unit of work and idempotent (chunks are replaced wholesale), so
+ * retries are safe. Any exhausted failure marks the asset failed via onFailure. Shares
+ * every step past content extraction with process-url-asset.ts via shared.ts.
  */
 export const processFileAsset = inngest.createFunction(
   {
@@ -76,7 +76,7 @@ export const processFileAsset = inngest.createFunction(
 
     await embedChunks(step, assetId, chunkCount)
 
-    await mirrorToVertexSearch(step, assetId, content)
+    await mirrorToManagedIndex(step, assetId, content)
 
     await markReady(step, assetId)
 

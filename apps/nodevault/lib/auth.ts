@@ -49,10 +49,18 @@ export const trialDaysLeft = (session: AuthSession | null): number => {
   return Math.max(0, Math.ceil((new Date(endsAt).getTime() - Date.now()) / 86_400_000))
 }
 
-/** Vault features are usable with the account's own GCP credentials or an active trial. */
-export const hasVaultAccess = (session: AuthSession | null): boolean => (
-  Boolean(session?.account.gcpConfigured) || trialDaysLeft(session) > 0
-)
+/**
+ * Vault features are usable with the account's connected provider: for a Gemini-track
+ * account, its own GCP credentials or an active trial; for an OpenAI-track account, its
+ * own verified key (there's no trial once switched).
+ */
+export const hasVaultAccess = (session: AuthSession | null): boolean => {
+  if (!session) return false
+
+  if (session.account.aiProvider === 'openai') return session.account.openaiConfigured && !session.account.openaiMigrating
+
+  return session.account.gcpConfigured || trialDaysLeft(session) > 0
+}
 
 const writeSession = (session: AuthSession | null) => {
   document.cookie = session

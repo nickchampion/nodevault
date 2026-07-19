@@ -1,0 +1,20 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "@platform/integrations.openai",
+  "sourceRoot": "integrations/openai",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "integrations/openai/**/*.ts"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

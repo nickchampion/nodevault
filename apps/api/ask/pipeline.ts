@@ -1,16 +1,13 @@
 import { eq, inArray, sql } from 'drizzle-orm'
-import type { Content } from '@google/genai'
 import { conversationMessages, conversations, assets } from '@platform/components.nodevault.domain'
 import type { ConversationMessage } from '@platform/components.nodevault.domain'
-import { createGeminiClient } from '@platform/integrations.gemini'
-import type { GcpClientConfig } from '@platform/integrations.gemini'
-import { assetIdFromDocumentPath, createVertexSearchClient, vaultFilter } from '@platform/integrations.vertexsearch'
 import type { AskMode, CitationDto } from '@platform/components.nodevault.contracts'
+import type { AiClient } from '../ai.js'
+import { aiClientForAccount } from '../ai.js'
 import { withSession } from '../db.js'
-import { gcpForAccount } from '../gcp.js'
 import { hybridChunkCandidates } from '../routes/assets/search/candidates.js'
 import {
-  answerPrompt, answerSystemPrompt, condensePrompt, vertexAnswerSystemPrompt,
+  answerPrompt, answerSystemPrompt, condensePrompt, managedAnswerSystemPrompt,
 } from './prompts.js'
 import type { SseWriter } from './sse.js'
 
@@ -18,8 +15,6 @@ const TITLE_MAX_LENGTH = 80
 const RAG_CHUNK_LIMIT = 8
 const HISTORY_LIMIT = 10
 const NO_SOURCES_ANSWER = "I couldn't find anything in this vault relevant to that question."
-
-type GeminiClient = ReturnType<typeof createGeminiClient>
 
 export type AskPipelineArgs = {
   accountId: number
@@ -32,8 +27,7 @@ export type AskPipelineArgs = {
 }
 
 type GenerationArgs = {
-  gemini: GeminiClient
-  gcp: GcpClientConfig
+  ai: AiClient
   vaultId: number
   history: ConversationMessage[]
   question: string
@@ -54,8 +48,7 @@ type Generated = { answer: string, citations: CitationDto[] }
 export const runAskPipeline = async ({
   accountId, vaultId, conversationId, question, mode, writer, signal,
 }: AskPipelineArgs): Promise<void> => {
-  const gcp = await withSession(async db => gcpForAccount(db, accountId))
-  const gemini = createGeminiClient(gcp)
+  const ai = await withSession(async db => aiClientForAccount(db, accountId))
 
   const { conversation, userMessage, history } = await withSession(async (db) => {
     const existing = conversationId
@@ -96,9 +89,9 @@ export const runAskPipeline = async ({
   if (signal.aborted) return
 
   const args: GenerationArgs = {
-    gemini, gcp, vaultId, history, question, writer, signal,
+    ai, vaultId, history, question, writer, signal,
   }
-  const generated = mode === 'vertex' ? await generateVertexAnswer(args) : await generateLocalAnswer(args)
+  const generated = mode === 'managed' ? await generateManagedAnswer(args) : await generateLocalAnswer(args)
 
   // client went away mid-generation: persist nothing further
   if (!generated || signal.aborted) return
@@ -127,11 +120,11 @@ export const runAskPipeline = async ({
 
 /** Hand-rolled RAG: condense the question, retrieve pgvector chunks, ground the prompt manually. */
 const generateLocalAnswer = async ({
-  gemini, vaultId, history, question, writer, signal,
+  ai, vaultId, history, question, writer, signal,
 }: GenerationArgs): Promise<Generated | null> => {
-  const condensed = await condenseQuestion(gemini, history, question)
+  const condensed = await condenseQuestion(ai, history, question)
 
-  const queryEmbedding = await gemini.embedQuery(condensed)
+  const queryEmbedding = await ai.embedQuery(condensed)
   const chunks = await withSession(async db => hybridChunkCandidates(db, vaultId, condensed, queryEmbedding, RAG_CHUNK_LIMIT))
 
   const citations: CitationDto[] = chunks.map((chunk, index) => ({
@@ -156,7 +149,7 @@ const generateLocalAnswer = async ({
   let answer = ''
 
   try {
-    const stream = gemini.generateAnswerStream(answerSystemPrompt, answerPrompt(chunks, history, question), signal)
+    const stream = ai.generateAnswerStream(answerSystemPrompt, answerPrompt(chunks, history, question), signal)
 
     for await (const text of stream) {
       answer += text
@@ -172,29 +165,20 @@ const generateLocalAnswer = async ({
 }
 
 /**
- * Managed retrieval: the conversation goes to Gemini as multi-turn contents with the
- * Vertex AI Search grounding tool scoped to this vault — the model derives its own
- * retrieval queries, so there is no condense or retrieve step. Citations are rebuilt
- * from the grounding metadata's document names (asset-<id>) and enriched from the DB.
+ * Managed retrieval: the conversation goes to the account's provider (Gemini + Vertex
+ * AI Search, or OpenAI + a vector store) with a grounding/file_search tool scoped to
+ * this vault — the model derives its own retrieval queries, so there is no condense or
+ * retrieve step. Citations are rebuilt from the grounded asset ids the adapter reports
+ * and enriched from the DB.
  */
-const generateVertexAnswer = async ({
-  gemini, gcp, vaultId, history, question, writer, signal,
+const generateManagedAnswer = async ({
+  ai, vaultId, history, question, writer, signal,
 }: GenerationArgs): Promise<Generated | null> => {
-  const contents: Content[] = [
-    ...history.map(message => ({
-      role: message.role === 'user' ? 'user' : 'model',
-      parts: [{ text: message.content }],
-    })),
-    { role: 'user', parts: [{ text: question }] },
-  ]
-
-  const { dataStorePath } = createVertexSearchClient(gcp)
-
   let answer = ''
   const groundedAssetIds: number[] = []
 
   try {
-    const stream = gemini.generateGroundedAnswerStream(vertexAnswerSystemPrompt, contents, dataStorePath, vaultFilter(vaultId), signal)
+    const stream = ai.generateManagedAnswerStream(managedAnswerSystemPrompt, history, question, vaultId, signal)
 
     for await (const part of stream) {
       if (part.text) {
@@ -202,12 +186,10 @@ const generateVertexAnswer = async ({
         writer.send({ type: 'token', text: part.text })
       }
 
-      const groundingChunks = part.grounding?.groundingChunks ?? []
+      const newlyGrounded = part.groundedAssetIds ?? []
 
-      for (const chunk of groundingChunks) {
-        const assetId = assetIdFromDocumentPath(chunk.retrievedContext?.documentName)
-
-        if (assetId && !groundedAssetIds.includes(assetId)) groundedAssetIds.push(assetId)
+      for (const assetId of newlyGrounded) {
+        if (!groundedAssetIds.includes(assetId)) groundedAssetIds.push(assetId)
       }
     }
   } catch (error) {
@@ -264,11 +246,11 @@ const citationsForAssets = async (assetIds: number[]): Promise<CitationDto[]> =>
  * a standalone query using the conversation. First questions skip the extra LLM call,
  * and any condensation failure falls back to the raw question.
  */
-const condenseQuestion = async (gemini: GeminiClient, history: ConversationMessage[], question: string): Promise<string> => {
+const condenseQuestion = async (ai: AiClient, history: ConversationMessage[], question: string): Promise<string> => {
   if (history.length === 0) return question
 
   try {
-    const generated = await gemini.generateText(condensePrompt(history, question))
+    const generated = await ai.generateText(condensePrompt(history, question))
     const condensed = generated.trim()
 
     return condensed || question

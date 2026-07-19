@@ -40,6 +40,11 @@ export const assets = nodevault.table('assets', {
   url: text('url'),
   // R2 object key for uploads; null for scraped URLs
   storageKey: text('storage_key'),
+  // OpenAI vector-store file id from the last mirror upsert — OpenAI assigns this
+  // opaquely (unlike Vertex's deterministic per-asset document id), so it has to be
+  // round-tripped through storage to find/replace/delete the file next time. Null for
+  // Gemini-track accounts.
+  openaiFileId: text('openai_file_id'),
   contentType: text('content_type'),
   sizeBytes: bigint('size_bytes', { mode: 'number' }),
   status: text('status').$type<AssetStatus>().notNull().default('pending'),

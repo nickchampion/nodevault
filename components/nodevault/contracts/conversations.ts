@@ -14,8 +14,8 @@ export const citationDtoSchema = z.object({
   assetName: z.string().nullable(),
   assetUrl: z.string().nullable(),
   source: assetSourceSchema,
-  // position of the grounding chunk within the asset — null for vertex-mode answers,
-  // where retrieval happens inside Vertex AI Search and no local chunk exists
+  // position of the grounding chunk within the asset — null for managed-mode answers,
+  // where retrieval happens inside the provider's managed store and no local chunk exists
   chunkIndex: z.int().nonnegative().nullable(),
 })
 
@@ -83,9 +83,10 @@ export const deleteConversationRequestSchema = getConversationRequestSchema
 export type DeleteConversationRequest = z.infer<typeof deleteConversationRequestSchema>
 
 // which retrieval stack answers the question: 'local' is the hand-rolled RAG pipeline
-// (pgvector hybrid retrieval + prompt stuffing), 'vertex' grounds Gemini on the managed
-// Vertex AI Search data store
-export const askModeSchema = z.enum(['local', 'vertex'])
+// (pgvector hybrid retrieval + prompt stuffing), 'managed' grounds generation on the
+// account's managed retrieval store — Vertex AI Search for Gemini accounts, an OpenAI
+// vector store (file_search) for OpenAI accounts
+export const askModeSchema = z.enum(['local', 'managed'])
 
 export type AskMode = z.infer<typeof askModeSchema>
 

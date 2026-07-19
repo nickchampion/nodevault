@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
 import type { SearchVaultRequest, SearchVaultResponse } from '@platform/components.nodevault.contracts'
 import { vaults } from '@platform/components.nodevault.domain'
-import { gcpForAccount } from '../../../gcp.js'
+import { aiClientForAccount } from '../../../ai.js'
 import { resolveSearchStrategy } from './factory.js'
 
 export const assetsSearch: ApiHandler<SearchVaultRequest, SearchVaultResponse> = async (context) => {
@@ -19,10 +19,10 @@ export const assetsSearch: ApiHandler<SearchVaultRequest, SearchVaultResponse> =
 
   if (!vault) return context.event.response.notFound()
 
-  const gcp = await gcpForAccount(context.session.db, accountId)
+  const ai = await aiClientForAccount(context.session.db, accountId)
 
   const search = resolveSearchStrategy(type)
-  const results = await search(context.session.db, gcp, vaultId, query)
+  const results = await search(context.session.db, ai, vaultId, query)
 
   return context.event.response.ok({ type, results })
 }

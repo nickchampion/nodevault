@@ -1,5 +1,5 @@
 import {
-  ArrowRight, BellRing, BookOpenText, FileText, Link2, LogIn, MessageCircleQuestion,
+  ArrowRight, BellRing, BookOpenText, Cloud, FileText, Link2, LogIn, MessageCircleQuestion,
   ScanSearch, ShieldCheck, Sparkles,
 } from 'lucide-react'
 import { Container } from '../components/ui/Container'
@@ -114,8 +114,61 @@ export default function HomePage() {
               That means you can find things by describing them in your own words, ask questions
               and get straight answers drawn from your own content, and see what your whole
               library says about a topic. Follow the subjects that matter to you, and NodeVault
-              will point out when something new you save is relevant.
+              will point out when something new you save is relevant. It runs entirely on the AI
+              provider you choose — Google Cloud or OpenAI — so it&apos;s never locked to one vendor.
             </p>
+          </div>
+        </Container>
+      </section>
+
+      <section className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-900/40">
+        <Container>
+          <div className="max-w-2xl mx-auto text-center mb-10">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-4">
+              Runs on your AI provider
+            </h2>
+
+            <p className="text-slate-600 dark:text-slate-300 text-lg leading-relaxed">
+              NodeVault doesn&apos;t lock you into one AI vendor. Choose Google Cloud or OpenAI
+              when you connect your account, and every embedding, search and answer runs on
+              your own credentials from there on.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-2xl mx-auto">
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+              <div className="flex items-center justify-center size-10 rounded-lg bg-sky-500/10 shrink-0">
+                <Cloud className="size-5 text-sky-600 dark:text-sky-400" />
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white text-sm mb-1">
+                  Google Cloud
+                </h3>
+
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-snug">
+                  Gemini and Vertex AI Search. Free for your first 7 days before you connect
+                  your own project.
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 flex items-center gap-4">
+              <div className="flex items-center justify-center size-10 rounded-lg bg-emerald-500/10 shrink-0">
+                <Sparkles className="size-5 text-emerald-600 dark:text-emerald-400" />
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-slate-900 dark:text-white text-sm mb-1">
+                  OpenAI
+                </h3>
+
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-snug">
+                  Bring your own OpenAI API key — no trial required, and nothing to migrate
+                  away from later.
+                </p>
+              </div>
+            </div>
           </div>
         </Container>
       </section>

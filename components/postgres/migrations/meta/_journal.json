@@ -71,6 +71,13 @@
       "when": 1784455059401,
       "tag": "0009_add-topics",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1784460805879,
+      "tag": "0010_add-openai-provider",
+      "breakpoints": true
     }
   ]
 }

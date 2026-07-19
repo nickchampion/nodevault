@@ -4,7 +4,7 @@ import type { AssetDto, SubmitUrlAssetRequest } from '@platform/components.nodev
 import { AppError, assets, vaults } from '@platform/components.nodevault.domain'
 import { assertPublicHttpUrl } from '@platform/components.utils.server'
 import { assetUrlSubmittedEvent, inngest } from '../../inngest/index.js'
-import { gcpForAccount } from '../../gcp.js'
+import { aiClientForAccount } from '../../ai.js'
 import { toAssetDto } from './mappers.js'
 
 export const assetsSubmitUrl: ApiHandler<SubmitUrlAssetRequest, AssetDto> = async (context) => {
@@ -12,9 +12,9 @@ export const assetsSubmitUrl: ApiHandler<SubmitUrlAssetRequest, AssetDto> = asyn
 
   if (!accountId) return context.event.response.unauthorised()
 
-  // ingestion embeds and mirrors through the account's own GCP project — fail fast
+  // ingestion embeds and mirrors through the account's own AI provider — fail fast
   // here rather than letting the background workflow die without credentials
-  await gcpForAccount(context.session.db, accountId)
+  await aiClientForAccount(context.session.db, accountId)
 
   const { vaultId, url } = context.event.payload
 

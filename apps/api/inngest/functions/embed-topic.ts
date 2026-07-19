@@ -1,9 +1,8 @@
 import { eq } from 'drizzle-orm'
-import { createGeminiClient } from '@platform/integrations.gemini'
 import { topics, users } from '@platform/components.nodevault.domain'
 import { topicCreatedEvent, inngest } from '../client.js'
 import { withSession } from '../db.js'
-import { gcpForAccount } from '../../gcp.js'
+import { aiClientForAccount } from '../../ai.js'
 
 const markTopicFailed = async (topicId: number, message: string): Promise<void> => {
   await withSession(async db => db.update(topics)
@@ -12,8 +11,8 @@ const markTopicFailed = async (topicId: number, message: string): Promise<void> 
 }
 
 /**
- * topics/topic.created → embed the saved topic phrase with Gemini (the account's own
- * project, same as asset ingestion) and store the vector so process-url-asset.ts /
+ * topics/topic.created → embed the saved topic phrase with the account's own AI
+ * provider (same as asset ingestion) and store the vector so process-url-asset.ts /
  * process-file-asset.ts can match new content against it via matchTopics in shared.ts.
  */
 export const embedTopic = inngest.createFunction(
@@ -50,8 +49,8 @@ export const embedTopic = inngest.createFunction(
     if (!topic) return { topicId, skipped: true }
 
     await step.run('embed-and-store', async () => {
-      const gcp = await withSession(async db => gcpForAccount(db, topic.accountId))
-      const embedding = await createGeminiClient(gcp).embedQuery(topic.text)
+      const ai = await withSession(async db => aiClientForAccount(db, topic.accountId))
+      const embedding = await ai.embedQuery(topic.text)
 
       await withSession(async db => db.update(topics)
         .set({

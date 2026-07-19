@@ -19,6 +19,7 @@
       "@platform/components.utils.server": ["../../components/utils-server/index.ts"],
       "@platform/integrations.cloudflare": ["../../integrations/cloudflare/index.ts"],
       "@platform/integrations.gemini": ["../../integrations/gemini/index.ts"],
+      "@platform/integrations.openai": ["../../integrations/openai/index.ts"],
       "@platform/integrations.resend": ["../../integrations/resend/index.ts"],
       "@platform/integrations.vertexsearch": ["../../integrations/vertexsearch/index.ts"]
     }

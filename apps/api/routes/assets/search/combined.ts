@@ -1,12 +1,11 @@
-import { createGeminiClient } from '@platform/integrations.gemini'
 import type { SearchResultDto } from '@platform/components.nodevault.contracts'
 import type { SearchStrategy } from './factory.js'
 import { CANDIDATE_LIMIT, hybridChunkCandidates } from './candidates.js'
 
 const RESULT_LIMIT = 10
 
-export const combinedSearch: SearchStrategy = async (db, gcp, vaultId, query) => {
-  const queryEmbedding = await createGeminiClient(gcp).embedQuery(query)
+export const combinedSearch: SearchStrategy = async (db, ai, vaultId, query) => {
+  const queryEmbedding = await ai.embedQuery(query)
   const candidates = await hybridChunkCandidates(db, vaultId, query, queryEmbedding, CANDIDATE_LIMIT)
 
   // candidates arrive relevance-ordered, so the first chunk seen per asset is its best

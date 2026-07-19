@@ -7,12 +7,11 @@ import {
   assetChunks, assets, topicMatches, topics, users, vaults,
 } from '@platform/components.nodevault.domain'
 import type { VaultAsset } from '@platform/components.nodevault.domain'
-import { createGeminiClient, embeddingBatchSize } from '@platform/integrations.gemini'
-import { createVertexSearchClient } from '@platform/integrations.vertexsearch'
+import { embeddingBatchSize } from '@platform/integrations.gemini'
 import { createResendClient } from '@platform/integrations.resend'
 import { inngest } from '../client.js'
 import { withSession } from '../db.js'
-import { gcpForAsset, gcpForVault } from '../../gcp.js'
+import { aiClientForAsset, aiClientForVault } from '../../ai.js'
 
 type Step = GetStepTools<typeof inngest>
 
@@ -63,9 +62,9 @@ export const storeChunks = async (step: Step, assetId: number, content: string):
 })
 
 /**
- * One step per batch: a Gemini rate limit only retries its own batch, and completed
+ * One step per batch: a provider rate limit only retries its own batch, and completed
  * batches are memoised across retries. The select and the update each get their own
- * session, kept deliberately separate either side of the Gemini call so no DB
+ * session, kept deliberately separate either side of the embedding call so no DB
  * transaction — and pooled connection — sits open across a slow external request.
  */
 export const embedChunks = async (step: Step, assetId: number, chunkCount: number): Promise<void> => {
@@ -87,10 +86,10 @@ export const embedChunks = async (step: Step, assetId: number, chunkCount: numbe
 
       if (rows.length === 0) return
 
-      // per-account GCP: embeddings run in the vault owner's own project
-      const gcp = await withSession(async db => gcpForAsset(db, assetId))
+      // per-account AI provider: embeddings run through whichever provider the vault owner is on
+      const ai = await withSession(async db => aiClientForAsset(db, assetId))
 
-      const embeddings = await createGeminiClient(gcp).embedChunks(rows.map(row => row.text))
+      const embeddings = await ai.embedChunks(rows.map(row => row.text))
 
       await withSession(async (db) => {
         for (const [index, row] of rows.entries()) {
@@ -104,23 +103,24 @@ export const embedChunks = async (step: Step, assetId: number, chunkCount: numbe
 }
 
 /**
- * Mirror the extracted text into the Vertex AI Search data store (the retrieval source
- * for vertex-mode ask answers). The import is an idempotent upsert keyed on the asset
- * id; the alternate retrieval stack (chunks + pgvector) is populated by storeChunks/
- * embedChunks from the same extraction. Vertex indexing lags a few minutes behind an
- * asset turning ready.
+ * Mirror the extracted text into the account's managed retrieval store (Vertex AI
+ * Search for Gemini accounts, an OpenAI vector store for OpenAI accounts) — the
+ * retrieval source for managed-mode ask answers. The upsert is idempotent, keyed on the
+ * asset id; the alternate retrieval stack (chunks + pgvector) is populated by
+ * storeChunks/embedChunks from the same extraction. Indexing can lag a few minutes
+ * behind an asset turning ready.
  */
-export const mirrorToVertexSearch = async (step: Step, assetId: number, content: string, patch: Partial<Pick<VaultAsset, 'name'>> = {}): Promise<void> => {
-  await step.run('mirror-to-vertex-search', async () => {
-    const { row, gcp } = await withSession(async (db) => {
+export const mirrorToManagedIndex = async (step: Step, assetId: number, content: string, patch: Partial<Pick<VaultAsset, 'name'>> = {}): Promise<void> => {
+  await step.run('mirror-to-managed-index', async () => {
+    const { row, ai } = await withSession(async (db) => {
       const asset = await db.query.assets.findFirst({ where: eq(assets.id, assetId) })
 
-      if (!asset) throw new Error(`Asset ${assetId} disappeared before Vertex mirror`)
+      if (!asset) throw new Error(`Asset ${assetId} disappeared before managed-index mirror`)
 
-      return { row: asset, gcp: await gcpForVault(db, asset.vaultId) }
+      return { row: asset, ai: await aiClientForVault(db, asset.vaultId) }
     })
 
-    await createVertexSearchClient(gcp).upsertAssetDocument({
+    await ai.mirrorAsset({
       assetId,
       vaultId: row.vaultId,
       source: row.source,
