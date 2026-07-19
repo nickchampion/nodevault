@@ -79,6 +79,7 @@ DATABASE_URL=postgres://user:pass@host:5432/db pnpm run db
 
 ## Troubleshooting
 
+- **Migrations after some point never seem to run, but `db`/`db:neon` still print "migrations applied successfully"**: check `meta/_journal.json` for a `when` value that isn't strictly increasing (or is future-dated). Drizzle's migrator reads the single most recent `created_at` from the target database's `drizzle.__drizzle_migrations` table once, then compares every migration file's `when` against that one fixed value for the whole run — it never re-checks per file. A single bad (e.g. hand-edited) timestamp silently blocks every migration generated after it, forever, with no error. `pnpm run db` and `pnpm run db:neon` now run `db:verify-journal` first, which fails fast on this (strictly-increasing, not-future-dated check) — but if you're diagnosing an already-affected database, you have to fix the **database's** `created_at` rows too (not just the journal file) via a manual `UPDATE drizzle.__drizzle_migrations set created_at = ... where id = ...`, then re-run the migrate command so the previously-skipped files actually apply.
 - **"No schema changes, nothing to migrate 😴"** from `db:generate`: the schema and migration history already match — there's nothing to diff. If you expected a change, check the model file is exported from `components/nodevault/domain/models/index.ts` (drizzle-kit reads the glob, but the app's runtime schema comes from the barrel — keep them in sync).
 - **Reset the local dev database** (throwaway data only):
 

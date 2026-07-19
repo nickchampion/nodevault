@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { MessagesSquare, Settings, Vault } from 'lucide-react'
+import {
+  Bell, MessagesSquare, Settings, Vault,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useAuth } from '../../lib/auth'
 import { Container } from '../ui/Container'
@@ -21,6 +23,7 @@ const items: AccountNavItem[] = [
     href: '/account', label: 'Vaults', icon: Vault, exact: true,
   },
   { href: '/account/conversations', label: 'Conversations', icon: MessagesSquare },
+  { href: '/account/alerts', label: 'Alerts', icon: Bell },
   { href: '/account/settings', label: 'Settings', icon: Settings },
 ]
 

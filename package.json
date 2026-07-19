@@ -4,9 +4,10 @@
   "license": "MIT",
   "scripts": {
     "build": "./.platform/build/build.sh",
-    "db": "drizzle-kit migrate",
-    "db:neon": "drizzle-kit migrate --config=drizzle.neon.config.ts",
+    "db": "pnpm run db:verify-journal && drizzle-kit migrate",
+    "db:neon": "pnpm run db:verify-journal && drizzle-kit migrate --config=drizzle.neon.config.ts",
     "db:generate": "drizzle-kit generate",
+    "db:verify-journal": "node components/postgres/verify-journal.mjs",
     "db:studio": "drizzle-kit studio",
     "compile": "tsc --noEmit",
     "lint": "nx run-many --target=lint --all --fix",

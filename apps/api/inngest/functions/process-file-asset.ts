@@ -7,7 +7,7 @@ import type { SupportedContentType } from '@platform/components.nodevault.contra
 import { createR2Client } from '@platform/integrations.cloudflare'
 import { assetFileUploadedEvent, inngest } from '../client.js'
 import {
-  embedChunks, loadAndMarkProcessing, markFailed, markReady, mirrorToVertexSearch, storeChunks,
+  embedChunks, loadAndMarkProcessing, markFailed, markReady, matchTopics, mirrorToVertexSearch, storeChunks,
 } from './shared.js'
 
 const extractFileContent = async (bytes: Uint8Array<ArrayBuffer>, contentType: SupportedContentType): Promise<string> => {
@@ -79,6 +79,8 @@ export const processFileAsset = inngest.createFunction(
     await mirrorToVertexSearch(step, assetId, content)
 
     await markReady(step, assetId)
+
+    await matchTopics(step, assetId)
 
     return { assetId, chunkCount }
   },
