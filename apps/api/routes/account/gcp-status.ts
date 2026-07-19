@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
-import type { GcpCredentialsStatus } from '@platform/components.contracts'
-import { accounts } from '@platform/components.domain'
+import type { GcpCredentialsStatus } from '@platform/components.nodevault.contracts'
+import { accounts } from '@platform/components.nodevault.domain'
 import { toGcpStatusDto } from './mappers.js'
 
 export const accountGcpStatus: ApiHandler<void, GcpCredentialsStatus> = async (context) => {

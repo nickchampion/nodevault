@@ -1,6 +1,6 @@
 import { GoogleGenAI } from '@google/genai'
 import type { Content, GroundingMetadata } from '@google/genai'
-import { AppError } from '@platform/components.domain'
+import { AppError } from '@platform/components.nodevault.domain'
 
 /**
  * Per-account GCP access: every client is built from the owning account's own project

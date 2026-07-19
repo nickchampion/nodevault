@@ -10,7 +10,7 @@ import { formatLocalDate } from '@platform/components.utils'
 import {
   MessagesSquare, Search, Trash2, Vault,
 } from 'lucide-react'
-import type { ConversationDto, ListConversationsResponse, VaultDto } from '@platform/components.contracts'
+import type { ConversationDto, ListConversationsResponse, VaultDto } from '@platform/components.nodevault.contracts'
 import { getSession, isSessionValid, useAuth } from '../../../lib/auth'
 import { api } from '../../../lib/api'
 import { PageHero } from '../../../components/app/PageHero'

@@ -1,5 +1,5 @@
 import { execute, publicProcedure, router } from '@platform/components.api'
-import { contactRequestSchema, okResponseSchema } from '@platform/components.contracts'
+import { contactRequestSchema, okResponseSchema } from '@platform/components.nodevault.contracts'
 import { commsContact } from './contact.js'
 
 export const commsRouter = router({

@@ -20,7 +20,7 @@ pnpm run inngest  # Inngest Dev Server UI on http://localhost:8288, auto-discove
 
 ## Event naming & typing
 
-Events are named `domain/noun.verb` in past tense for facts, imperative for commands: `content/item.submitted`, `content/item.vectorised`. Define event payloads with zod schemas in `@platform/components.contracts` (they are part of the system's shared vocabulary) and register them on the client with `EventSchemas` so `event.data` is typed:
+Events are named `domain/noun.verb` in past tense for facts, imperative for commands: `content/item.submitted`, `content/item.vectorised`. Define event payloads with zod schemas in `@platform/components.nodevault.contracts` (they are part of the system's shared vocabulary) and register them on the client with `EventSchemas` so `event.data` is typed:
 
 ```typescript
 import { EventSchemas, Inngest } from 'inngest'

@@ -11,7 +11,7 @@ import {
   searchVaultResponseSchema,
   submitUrlAssetRequestSchema,
   uploadFileAssetRequestSchema,
-} from '@platform/components.contracts'
+} from '@platform/components.nodevault.contracts'
 import { assetsDelete } from './delete.js'
 import { assetsDownload } from './download.js'
 import { assetsList } from './list.js'

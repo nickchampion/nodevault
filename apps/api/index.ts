@@ -1,7 +1,7 @@
 import { serverConfiguration } from '@platform/components.configuration.server'
 import { Api } from '@platform/components.api'
 import { PgSession } from '@platform/components.postgres'
-import { schema } from '@platform/components.domain'
+import { schema } from '@platform/components.nodevault.domain'
 import { pool } from './db.js'
 import { appRouter } from './router.js'
 import { inngestMiddleware } from './inngest/middleware.js'

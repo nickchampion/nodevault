@@ -4,7 +4,9 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Alert, Card } from '@heroui/react'
 import { UserRound } from 'lucide-react'
-import { getSession, isSessionValid, useAuth } from '../../../lib/auth'
+import {
+  getSession, isSessionValid, trialDaysLeft, useAuth,
+} from '../../../lib/auth'
 import { PageHero } from '../../../components/app/PageHero'
 import { Container } from '../../../components/ui/Container'
 import { EditProfileForm } from './EditProfileForm'
@@ -33,18 +35,44 @@ export const SettingsView = () => {
 
       <Container className="py-12 space-y-6">
         {!session.account.gcpConfigured && (
-          <Alert status="warning">
-            <Alert.Indicator />
+          trialDaysLeft(session) > 0
+            ? (
+              <Alert status="accent">
+                <Alert.Indicator />
 
-            <Alert.Content>
-              <Alert.Title>Connect your Google Cloud project to get started</Alert.Title>
+                <Alert.Content>
+                  <Alert.Title>
+                    Free trial —
+                    {' '}
+                    {trialDaysLeft(session)}
+                    {' '}
+                    {trialDaysLeft(session) === 1 ? 'day' : 'days'}
+                    {' '}
+                    left
+                  </Alert.Title>
 
-              <Alert.Description>
-                NodeVault runs entirely on your own GCP project — vaults, search and conversations stay
-                locked until your credentials are added and verified below.
-              </Alert.Description>
-            </Alert.Content>
-          </Alert>
+                  <Alert.Description>
+                    NodeVault is free for your first 7 days, running on our Google Cloud project.
+                    Connect your own GCP project below before the trial ends to keep your vaults,
+                    search and conversations working.
+                  </Alert.Description>
+                </Alert.Content>
+              </Alert>
+            )
+            : (
+              <Alert status="warning">
+                <Alert.Indicator />
+
+                <Alert.Content>
+                  <Alert.Title>Your free trial has ended</Alert.Title>
+
+                  <Alert.Description>
+                    Vaults, search and conversations are locked until you connect your own
+                    Google Cloud project — add and verify your credentials below to unlock them.
+                  </Alert.Description>
+                </Alert.Content>
+              </Alert>
+            )
         )}
 
         {/* side by side on wide screens; the cards stack on smaller ones */}

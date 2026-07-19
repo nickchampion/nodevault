@@ -120,7 +120,7 @@ npx tsc --noEmit      # type check
 pnpm run lint         # lint with autofix
 ```
 
-Migrations: edit the schema in `components/domain/models/`, then `pnpm run db:generate --name=<change>` and `pnpm run db`. See `docs/migrations.md`.
+Migrations: edit the schema in `components/nodevault/domain/models/`, then `pnpm run db:generate --name=<change>` and `pnpm run db`. See `docs/migrations.md`.
 
 ### Configuration
 

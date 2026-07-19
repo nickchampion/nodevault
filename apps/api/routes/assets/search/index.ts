@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
-import type { SearchVaultRequest, SearchVaultResponse } from '@platform/components.contracts'
-import { vaults } from '@platform/components.domain'
+import type { SearchVaultRequest, SearchVaultResponse } from '@platform/components.nodevault.contracts'
+import { vaults } from '@platform/components.nodevault.domain'
 import { gcpForAccount } from '../../../gcp.js'
 import { resolveSearchStrategy } from './factory.js'
 

@@ -2,8 +2,8 @@ import { eq } from 'drizzle-orm'
 import { AuthInfo, type ApiHandler } from '@platform/components.context'
 import { createAuthTokenForUser } from '@platform/components.utils.server'
 import { createResendClient } from '@platform/integrations.resend'
-import type { RegisterRequest, VerifyLoginResponse } from '@platform/components.contracts'
-import { accounts, users } from '@platform/components.domain'
+import type { RegisterRequest, VerifyLoginResponse } from '@platform/components.nodevault.contracts'
+import { accounts, users } from '@platform/components.nodevault.domain'
 import { toAccountDto, toUserDto } from './mappers.js'
 
 export const authRegister: ApiHandler<RegisterRequest, VerifyLoginResponse> = async (context) => {

@@ -4,10 +4,10 @@ import { useState } from 'react'
 import {
   Alert, Button, Description, FieldError, Input, Label, Spinner, TextField,
 } from '@heroui/react'
-import { updateProfileRequestSchema } from '@platform/components.contracts'
+import { updateProfileRequestSchema } from '@platform/components.nodevault.contracts'
 import { Save } from 'lucide-react'
 import type { SubmitEvent } from 'react'
-import type { UpdateProfileRequest } from '@platform/components.contracts'
+import type { UpdateProfileRequest } from '@platform/components.nodevault.contracts'
 import type { AuthSession } from '../../../lib/auth'
 import { api } from '../../../lib/api'
 import { useAuth } from '../../../lib/auth'

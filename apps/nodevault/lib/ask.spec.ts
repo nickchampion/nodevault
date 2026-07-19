@@ -1,4 +1,4 @@
-import type { AskStreamEvent } from '@platform/components.contracts'
+import type { AskStreamEvent } from '@platform/components.nodevault.contracts'
 import { createSseParser } from './ask'
 
 describe('createSseParser', () => {

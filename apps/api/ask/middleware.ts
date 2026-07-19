@@ -4,10 +4,10 @@ import { serverConfiguration } from '@platform/components.configuration.server'
 import { InboundEvent } from '@platform/components.context'
 import { createAuthInfoFromToken } from '@platform/components.utils.server'
 import { isExpired } from '@platform/components.utils'
-import { askRequestSchema } from '@platform/components.contracts'
-import { accounts, conversations, vaults } from '@platform/components.domain'
+import { askRequestSchema } from '@platform/components.nodevault.contracts'
+import { accounts, conversations, vaults } from '@platform/components.nodevault.domain'
 import { withSession } from '../db.js'
-import { GCP_NOT_CONFIGURED_MESSAGE, toGcpConfig } from '../gcp.js'
+import { GCP_TRIAL_EXPIRED_MESSAGE, hasGcpAccess } from '../gcp.js'
 import { runAskPipeline } from './pipeline.js'
 import { createSseWriter } from './sse.js'
 
@@ -69,31 +69,31 @@ export const askMiddleware: Koa.Middleware = async (context, next) => {
     vaultId, conversationId, question, mode,
   } = parsed.data
 
-  const { owned, gcpConfigured } = await withSession(async (db) => {
+  const { owned, gcpUsable } = await withSession(async (db) => {
     const vault = await db.query.vaults.findFirst({
       columns: { id: true },
       where: and(eq(vaults.id, vaultId), eq(vaults.accountId, user.accountId!)),
     })
 
-    if (!vault) return { owned: false, gcpConfigured: false }
+    if (!vault) return { owned: false, gcpUsable: false }
 
     const account = await db.query.accounts.findFirst({ where: eq(accounts.id, user.accountId!) })
-    const configured = Boolean(account && toGcpConfig(account))
+    const usable = Boolean(account && hasGcpAccess(account))
 
-    if (!conversationId) return { owned: true, gcpConfigured: configured }
+    if (!conversationId) return { owned: true, gcpUsable: usable }
 
     const conversation = await db.query.conversations.findFirst({
       columns: { id: true },
       where: and(eq(conversations.id, conversationId), eq(conversations.vaultId, vaultId)),
     })
 
-    return { owned: Boolean(conversation), gcpConfigured: configured }
+    return { owned: Boolean(conversation), gcpUsable: usable }
   })
 
   if (!owned) return respondJson(context, 404, { message: 'Not found' })
 
   // fail before the stream opens — the client gets a plain JSON error it can surface
-  if (!gcpConfigured) return respondJson(context, 400, { message: GCP_NOT_CONFIGURED_MESSAGE })
+  if (!gcpUsable) return respondJson(context, 400, { message: GCP_TRIAL_EXPIRED_MESSAGE })
 
   // from here the response is a stream — Koa must not write its own response
   context.respond = false

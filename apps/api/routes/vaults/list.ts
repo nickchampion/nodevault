@@ -1,7 +1,7 @@
 import { eq, sql } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
-import type { ListVaultsResponse } from '@platform/components.contracts'
-import { assets, conversations, vaults } from '@platform/components.domain'
+import type { ListVaultsResponse } from '@platform/components.nodevault.contracts'
+import { assets, conversations, vaults } from '@platform/components.nodevault.domain'
 import { toVaultDto } from './mappers.js'
 
 export const vaultsList: ApiHandler<unknown, ListVaultsResponse> = async (context) => {

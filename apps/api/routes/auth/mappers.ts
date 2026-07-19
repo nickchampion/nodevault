@@ -1,6 +1,7 @@
 import { toUtcIso } from '@platform/components.utils'
-import type { AccountDto, UserDto } from '@platform/components.contracts'
-import type { Account, User } from '@platform/components.domain'
+import type { AccountDto, UserDto } from '@platform/components.nodevault.contracts'
+import type { Account, User } from '@platform/components.nodevault.domain'
+import { trialEndsAt } from '../../gcp.js'
 
 /**
  * Database rows never cross the API boundary: every response field is picked
@@ -25,5 +26,6 @@ export const toAccountDto = (account: Account): AccountDto => ({
   id: account.id,
   name: account.name,
   gcpConfigured: Boolean(account.gcpCredentials && account.gcpVerifiedAtUTC),
+  gcpTrialEndsAtUTC: toUtcIso(trialEndsAt(account)),
   createdAtUTC: toUtcIso(account.createdAtUTC),
 })

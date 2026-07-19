@@ -14,7 +14,7 @@ The product flow: user submits a URL or uploads a file → an Inngest workflow f
 
 ## Schema (Drizzle)
 
-Follow the repo convention: tables in `components/domain/models/` (e.g. `content.ts`), camelCase properties → snake_case columns, timestamps as `timestamptz` in `mode: 'date'`. Drizzle has native pgvector support:
+Follow the repo convention: tables in `components/nodevault/domain/models/` (e.g. `content.ts`), camelCase properties → snake_case columns, timestamps as `timestamptz` in `mode: 'date'`. Drizzle has native pgvector support:
 
 ```typescript
 import { index, pgTable, text, uuid, vector } from 'drizzle-orm/pg-core'
@@ -59,7 +59,7 @@ const results = await context.session.db
   .limit(10)
 ```
 
-Search is a normal read-only tRPC procedure — contract schemas in `components/contracts/`, DTO mapping per repo convention (never return the embedding column).
+Search is a normal read-only tRPC procedure — contract schemas in `components/nodevault/contracts/`, DTO mapping per repo convention (never return the embedding column).
 
 ## Source extraction
 

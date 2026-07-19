@@ -6,7 +6,7 @@ import {
   timestamp,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
-import type { UserRole } from '@platform/components.contracts'
+import type { UserRole } from '@platform/components.nodevault.contracts'
 
 export type AccountStatus = 'active' | 'deleted'
 export type UserStatus = 'active' | 'deleted'

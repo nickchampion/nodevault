@@ -2,8 +2,8 @@ import {
   and, desc, eq, ilike, sql,
 } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
-import type { ListConversationsRequest, ListConversationsResponse } from '@platform/components.contracts'
-import { conversations, vaults } from '@platform/components.domain'
+import type { ListConversationsRequest, ListConversationsResponse } from '@platform/components.nodevault.contracts'
+import { conversations, vaults } from '@platform/components.nodevault.domain'
 import { toConversationDto } from './mappers.js'
 
 export const conversationsList: ApiHandler<ListConversationsRequest, ListConversationsResponse> = async (context) => {

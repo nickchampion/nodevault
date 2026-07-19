@@ -1,7 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
-import type { CreateVaultRequest, VaultDto } from '@platform/components.contracts'
-import { vaults } from '@platform/components.domain'
+import type { CreateVaultRequest, VaultDto } from '@platform/components.nodevault.contracts'
+import { vaults } from '@platform/components.nodevault.domain'
 import { gcpForAccount } from '../../gcp.js'
 import { toVaultDto } from './mappers.js'
 
@@ -10,8 +10,8 @@ export const vaultCreate: ApiHandler<CreateVaultRequest, VaultDto> = async (cont
 
   if (!accountId) return context.event.response.unauthorised()
 
-  // vaults are unusable without the account's own GCP project — refuse creation until
-  // credentials are connected and verified (throws a 400 pointing at Settings)
+  // vaults need GCP access (own credentials, or the platform's during the trial) —
+  // refuse creation once the trial has ended (throws a 400 pointing at Settings)
   await gcpForAccount(context.session.db, accountId)
 
   const name = context.event.payload.name.trim()

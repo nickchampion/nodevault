@@ -1,11 +1,7 @@
 import pg from 'pg'
 
 export type PostgresOptions = {
-
-  /** Connection string, e.g. postgres://user:pass@host:5432/db */
   url: string
-
-  /** Maximum pool size per process */
   poolSize?: number
 }
 

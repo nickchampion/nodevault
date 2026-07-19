@@ -1,8 +1,8 @@
 import { Buffer } from 'node:buffer'
 import { and, eq } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
-import type { DownloadAssetRequest, DownloadAssetResponse } from '@platform/components.contracts'
-import { assets, vaults } from '@platform/components.domain'
+import type { DownloadAssetRequest, DownloadAssetResponse } from '@platform/components.nodevault.contracts'
+import { assets, vaults } from '@platform/components.nodevault.domain'
 import { createR2Client } from '@platform/integrations.cloudflare'
 
 export const assetsDownload: ApiHandler<DownloadAssetRequest, DownloadAssetResponse> = async (context) => {

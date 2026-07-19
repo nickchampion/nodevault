@@ -4,7 +4,7 @@ import { Suspense, useRef, useState } from 'react'
 import {
   Button, Card, Input, Label, Tabs, TextField,
 } from '@heroui/react'
-import { contentTypeForFileName, maxUploadBytes } from '@platform/components.contracts'
+import { contentTypeForFileName, maxUploadBytes } from '@platform/components.nodevault.contracts'
 import { Link2, Upload } from 'lucide-react'
 import type { SubmitEvent } from 'react'
 import { api } from '../../../../lib/api'

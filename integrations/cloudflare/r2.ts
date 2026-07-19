@@ -1,5 +1,5 @@
 import { serverConfiguration } from '@platform/components.configuration.server'
-import { AppError } from '@platform/components.domain'
+import { AppError } from '@platform/components.nodevault.domain'
 
 export type PutObjectOptions = {
   key: string

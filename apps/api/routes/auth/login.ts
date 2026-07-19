@@ -5,8 +5,8 @@ import { expiresInSeconds } from '@platform/components.utils'
 import { serverConfiguration } from '@platform/components.configuration.server'
 import { base64Encode, encrypt } from '@platform/components.utils.server'
 import { createResendClient } from '@platform/integrations.resend'
-import type { LoginRequest, OkResponse } from '@platform/components.contracts'
-import { loginTokens, users } from '@platform/components.domain'
+import type { LoginRequest, OkResponse } from '@platform/components.nodevault.contracts'
+import { loginTokens, users } from '@platform/components.nodevault.domain'
 
 const TOKEN_TTL_SECONDS = 10 * 60
 

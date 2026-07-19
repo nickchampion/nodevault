@@ -1,7 +1,7 @@
 {
-  "name": "@platform/components.contracts",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "components/contracts",
+  "name": "@platform/components.nodevault.domain",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "components/nodevault/domain",
   "projectType": "library",
   "targets": {
     "lint": {
@@ -11,7 +11,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "components/contracts/**/*.ts"
+          "components/nodevault/domain/**/*.ts"
         ]
       }
     }

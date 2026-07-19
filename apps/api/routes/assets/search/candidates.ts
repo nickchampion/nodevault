@@ -1,9 +1,9 @@
 import {
   and, cosineDistance, desc, eq, isNotNull, sql,
 } from 'drizzle-orm'
-import { assetChunks, assets } from '@platform/components.domain'
+import { assetChunks, assets } from '@platform/components.nodevault.domain'
 import type { DatabaseClient } from '@platform/components.context'
-import type { AssetSource } from '@platform/components.contracts'
+import type { AssetSource } from '@platform/components.nodevault.contracts'
 
 export const CANDIDATE_LIMIT = 50
 

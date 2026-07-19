@@ -1,10 +1,11 @@
 import { eq } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
-import type { GcpCredentialsStatus, SetGcpCredentialsRequest } from '@platform/components.contracts'
-import { accounts } from '@platform/components.domain'
+import type { GcpCredentialsStatus, SetGcpCredentialsRequest } from '@platform/components.nodevault.contracts'
+import { accounts } from '@platform/components.nodevault.domain'
 import { createGeminiClient } from '@platform/integrations.gemini'
 import { createVertexSearchClient, dataStoreId } from '@platform/integrations.vertexsearch'
-import { encryptGcpCredentials } from '../../gcp.js'
+import { accountGcpConnectedEvent, inngest } from '../../inngest/index.js'
+import { encryptGcpCredentials, invalidateGcpAccount, toGcpConfig } from '../../gcp.js'
 import { toGcpStatusDto } from './mappers.js'
 
 const MESSAGE_LIMIT = 400
@@ -22,7 +23,9 @@ const reason = (error: unknown): string => {
  * `nodevault-assets` store) — so a saved credential is a working credential. Both probes
  * run before the first DB statement, keeping the request transaction from holding a
  * connection across slow external calls. The key is encrypted before it touches the
- * database and is never returned to the client.
+ * database and is never returned to the client. The first successful connection (trial →
+ * own credentials) triggers the migrate-vertex-documents workflow to move the account's
+ * trial-era Vertex Search documents into its own data store.
  */
 export const accountSetGcpCredentials: ApiHandler<SetGcpCredentialsRequest, GcpCredentialsStatus> = async (context) => {
   const accountId = context.user?.accountId
@@ -54,6 +57,14 @@ export const accountSetGcpCredentials: ApiHandler<SetGcpCredentialsRequest, GcpC
     )
   }
 
+  const existing = await context.session.db.query.accounts.findFirst({ where: eq(accounts.id, accountId) })
+
+  if (!existing) return context.event.response.notFound()
+
+  // first connection = the account was running on the platform's project until now, so
+  // its Vertex documents live in the platform data store and need migrating over
+  const firstConnection = !toGcpConfig(existing)
+
   const [account] = await context.session.db
     .update(accounts)
     .set({
@@ -66,7 +77,17 @@ export const accountSetGcpCredentials: ApiHandler<SetGcpCredentialsRequest, GcpC
     .where(eq(accounts.id, accountId))
     .returning()
 
-  if (!account) return context.event.response.notFound()
+  // evict only once the new credentials are committed — a rollback must not leave the
+  // cache cleared and then repopulated from the old row mid-transaction
+  context.session.on('afterCommit', async () => {
+    await invalidateGcpAccount(accountId)
+  })
+
+  if (firstConnection) {
+    context.session.on('afterCommit', async () => {
+      await inngest.send(accountGcpConnectedEvent.create({ accountId }))
+    })
+  }
 
   return context.event.response.ok(toGcpStatusDto(account))
 }

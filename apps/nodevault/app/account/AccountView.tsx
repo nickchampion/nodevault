@@ -2,9 +2,12 @@
 
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Card } from '@heroui/react'
+import { Alert, Card } from '@heroui/react'
 import { Lock } from 'lucide-react'
-import { getSession, isSessionValid, useAuth } from '../../lib/auth'
+import Link from 'next/link'
+import {
+  getSession, hasVaultAccess, isSessionValid, trialDaysLeft, useAuth,
+} from '../../lib/auth'
 import { PageHero } from '../../components/app/PageHero'
 import { Container } from '../../components/ui/Container'
 import { LinkButton } from '../../components/ui/LinkButton'
@@ -31,8 +34,39 @@ export const AccountView = () => {
         description="Your vaults — group your documents and web pages, then search and ask questions."
       />
 
-      <Container className="py-12">
-        {session.account.gcpConfigured
+      <Container className="py-12 space-y-6">
+        {!session.account.gcpConfigured && hasVaultAccess(session) && (
+          <Alert status="accent">
+            <Alert.Indicator />
+
+            <Alert.Content>
+              <Alert.Title>
+                Free trial —
+                {' '}
+                {trialDaysLeft(session)}
+                {' '}
+                {trialDaysLeft(session) === 1 ? 'day' : 'days'}
+                {' '}
+                left
+              </Alert.Title>
+
+              <Alert.Description>
+                You&apos;re currently running on our Google Cloud project.
+                {' '}
+                <Link
+                  href="/account/settings"
+                  className="font-medium underline"
+                >
+                  Connect your own GCP project
+                </Link>
+                {' '}
+                before the trial ends to keep your vaults working.
+              </Alert.Description>
+            </Alert.Content>
+          </Alert>
+        )}
+
+        {hasVaultAccess(session)
           ? <VaultsCard />
           : (
             <Card>
@@ -44,12 +78,12 @@ export const AccountView = () => {
 
                   <div className="space-y-1 max-w-xl">
                     <p className="text-lg font-medium text-slate-900 dark:text-slate-100">
-                      Vaults are locked until you connect Google Cloud
+                      Your 7-day free trial has ended
                     </p>
 
                     <p className="text-slate-500 dark:text-slate-400">
-                      NodeVault runs embeddings, search and conversations in your own GCP project.
-                      Add your credentials in Settings — they are verified with a live call and stored encrypted.
+                      To keep using vaults, connect your own Google Cloud project in Settings —
+                      your credentials are verified with a live call and stored encrypted.
                     </p>
                   </div>
 

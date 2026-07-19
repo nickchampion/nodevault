@@ -6,7 +6,7 @@ import {
   listVaultsResponseSchema,
   okResponseSchema,
   vaultDtoSchema,
-} from '@platform/components.contracts'
+} from '@platform/components.nodevault.contracts'
 import { vaultCreate } from './create.js'
 import { vaultDelete } from './delete.js'
 import { vaultGet } from './get.js'

@@ -1,5 +1,5 @@
 import { createGeminiClient } from '@platform/integrations.gemini'
-import type { SearchResultDto } from '@platform/components.contracts'
+import type { SearchResultDto } from '@platform/components.nodevault.contracts'
 import type { SearchStrategy } from './factory.js'
 import { CANDIDATE_LIMIT, hybridChunkCandidates } from './candidates.js'
 

@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
 import { createResendClient } from '@platform/integrations.resend'
-import type { UpdateProfileRequest, UserDto } from '@platform/components.contracts'
-import { users } from '@platform/components.domain'
+import type { UpdateProfileRequest, UserDto } from '@platform/components.nodevault.contracts'
+import { users } from '@platform/components.nodevault.domain'
 import { toUserDto } from '../auth/mappers.js'
 
 export const accountUpdateProfile: ApiHandler<UpdateProfileRequest, UserDto> = async (context) => {

@@ -1,6 +1,8 @@
 import { Inngest, eventType } from 'inngest'
 import { serverConfiguration } from '@platform/components.configuration.server'
-import { assetFileUploadedEventSchema as assetFileUploadedEventSchema, assetUrlSubmittedEventSchema } from '@platform/components.contracts'
+import {
+  accountGcpConnectedEventSchema, assetFileUploadedEventSchema, assetUrlSubmittedEventSchema,
+} from '@platform/components.nodevault.contracts'
 
 /**
  * The Inngest client lives in its own module so functions can import it without
@@ -17,3 +19,4 @@ export const inngest = new Inngest({ id: 'nodevault', isDev: serverConfiguration
  */
 export const assetFileUploadedEvent = eventType('assets/file.uploaded', { schema: assetFileUploadedEventSchema })
 export const assetUrlSubmittedEvent = eventType('assets/url.submitted', { schema: assetUrlSubmittedEventSchema })
+export const accountGcpConnectedEvent = eventType('account/gcp.connected', { schema: accountGcpConnectedEventSchema })

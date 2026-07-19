@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
-import type { DeleteConversationRequest, OkResponse } from '@platform/components.contracts'
-import { conversations, vaults } from '@platform/components.domain'
+import type { DeleteConversationRequest, OkResponse } from '@platform/components.nodevault.contracts'
+import { conversations, vaults } from '@platform/components.nodevault.domain'
 
 export const conversationsDelete: ApiHandler<DeleteConversationRequest, OkResponse> = async (context) => {
   const accountId = context.user?.accountId

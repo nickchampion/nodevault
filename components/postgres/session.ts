@@ -1,7 +1,7 @@
 import type pg from 'pg'
 import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
 import type { DatabaseClient, Session, SessionEvents, SessionEvent } from '@platform/components.context'
-import { AppError, schema } from '@platform/components.domain'
+import { AppError, schema } from '@platform/components.nodevault.domain'
 
 /**
  * Postgres-backed unit-of-work session, one per request Context.

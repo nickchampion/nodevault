@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
-import type { GetConversationRequest, GetConversationResponse } from '@platform/components.contracts'
-import { conversationMessages, conversations, vaults } from '@platform/components.domain'
+import type { GetConversationRequest, GetConversationResponse } from '@platform/components.nodevault.contracts'
+import { conversationMessages, conversations, vaults } from '@platform/components.nodevault.domain'
 import { toConversationDto, toConversationMessageDto } from './mappers.js'
 
 export const conversationsGet: ApiHandler<GetConversationRequest, GetConversationResponse> = async (context) => {

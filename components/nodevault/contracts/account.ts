@@ -51,7 +51,14 @@ export const gcpCredentialsStatusSchema = z.object({
   projectId: z.string().nullable(),
   location: z.string().nullable(),
   verifiedAtUTC: z.iso.datetime().nullable(),
+  trialEndsAtUTC: z.iso.datetime(),
+})
+
+/** Emitted when an account first connects its own GCP project (trial → own credentials). */
+export const accountGcpConnectedEventSchema = z.object({
+  accountId: z.int().positive(),
 })
 
 export type SetGcpCredentialsRequest = z.infer<typeof setGcpCredentialsRequestSchema>
 export type GcpCredentialsStatus = z.infer<typeof gcpCredentialsStatusSchema>
+export type AccountGcpConnectedEvent = z.infer<typeof accountGcpConnectedEventSchema>

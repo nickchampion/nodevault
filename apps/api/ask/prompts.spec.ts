@@ -1,4 +1,4 @@
-import type { ConversationMessage } from '@platform/components.domain'
+import type { ConversationMessage } from '@platform/components.nodevault.domain'
 import type { ChunkCandidate } from '../routes/assets/search/candidates.js'
 import { answerPrompt, condensePrompt } from './prompts.js'
 

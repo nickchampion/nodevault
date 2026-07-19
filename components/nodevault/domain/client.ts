@@ -8,7 +8,7 @@ import type {} from '@platform/components.context'
  * Give `context.session.db` the concrete Drizzle type for the workspace schema. The
  * Session interface declares `db: DatabaseClient` (empty, ORM-agnostic); this
  * augmentation is what makes `session.db.query.users...` fully typed in any project
- * that imports @platform/components.domain — no per-app redefinition needed.
+ * that imports @platform/components.nodevault.domain — no per-app redefinition needed.
  */
 declare module '@platform/components.context' {
   // eslint-disable-next-line @typescript-eslint/no-empty-object-type

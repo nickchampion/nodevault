@@ -1,4 +1,4 @@
-import { QuerySettings, QuerySettingsSortBy } from '@platform/components.domain'
+import { QuerySettings, QuerySettingsSortBy } from '@platform/components.nodevault.domain'
 import { Response, type ResponseValue } from '../../api/types/response.js'
 import type { AuthTokens } from './auth.js'
 

@@ -10,7 +10,9 @@ import {
 } from 'lucide-react'
 import type { inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '@platform/apps.api'
-import { getSession, isSessionValid, useAuth } from '../../../../lib/auth'
+import {
+  getSession, hasVaultAccess, isSessionValid, useAuth,
+} from '../../../../lib/auth'
 import { api } from '../../../../lib/api'
 import { PageHero } from '../../../../components/app/PageHero'
 import { Container } from '../../../../components/ui/Container'
@@ -25,13 +27,13 @@ export const VaultView = ({ vaultId }: { vaultId: number }) => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  // authenticated-only page; vaults stay locked until the account's GCP project is connected
+  // authenticated-only page; vaults lock when the trial has ended without own GCP credentials
   useEffect(() => {
     const current = getSession()
 
     if (!isSessionValid(current)) {
       router.replace('/auth/login')
-    } else if (!current?.account.gcpConfigured) {
+    } else if (!hasVaultAccess(current)) {
       router.replace('/account/settings')
     }
   }, [router])

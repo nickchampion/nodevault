@@ -1,5 +1,5 @@
 import { serverConfiguration } from '@platform/components.configuration.server'
-import { normalizeError } from '@platform/components.domain'
+import { normalizeError } from '@platform/components.nodevault.domain'
 import type { Context } from '../index.js'
 import type { IMiddleware } from '../types/index.js'
 

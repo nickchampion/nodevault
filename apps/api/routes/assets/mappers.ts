@@ -1,6 +1,6 @@
 import { toUtcIso } from '@platform/components.utils'
-import type { AssetDto } from '@platform/components.contracts'
-import type { VaultAsset } from '@platform/components.domain'
+import type { AssetDto } from '@platform/components.nodevault.contracts'
+import type { VaultAsset } from '@platform/components.nodevault.domain'
 
 export const toAssetDto = (asset: VaultAsset): AssetDto => ({
   id: asset.id,

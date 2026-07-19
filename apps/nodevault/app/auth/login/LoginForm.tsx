@@ -6,11 +6,13 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import {
   Alert, Button, Card, FieldError, Input, Label, Spinner, TextField,
 } from '@heroui/react'
-import { loginRequestSchema } from '@platform/components.contracts'
+import { loginRequestSchema } from '@platform/components.nodevault.contracts'
 import { Mail, MailCheck } from 'lucide-react'
 import type { SubmitEvent } from 'react'
 import { api } from '../../../lib/api'
-import { getSession, isSessionValid, useAuth } from '../../../lib/auth'
+import {
+  getSession, hasVaultAccess, isSessionValid, useAuth,
+} from '../../../lib/auth'
 import { zodValidate } from '../../../lib/validation'
 import type { FormErrors } from '../../../lib/validation'
 
@@ -52,8 +54,8 @@ export const LoginForm = () => {
         const response = await api.auth.verify.mutate({ code })
 
         signIn(response)
-        // vaults are locked until the account's GCP project is connected — land there first
-        router.replace(response.account.gcpConfigured ? '/account' : '/account/settings')
+        // once the trial has ended without own GCP credentials, land on Settings to reconnect
+        router.replace(hasVaultAccess(response) ? '/account' : '/account/settings')
       } catch (error_) {
         setVerifyError((error_ as Error).message || 'This sign-in link is no longer valid. Please request a new one.')
         setVerifying(false)

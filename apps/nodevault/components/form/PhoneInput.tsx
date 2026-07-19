@@ -1,8 +1,8 @@
 'use client'
 
 import { Input, ListBox, Select } from '@heroui/react'
-import { Countries } from '@platform/components.contracts'
-import type { Phone } from '@platform/components.contracts'
+import { Countries } from '@platform/components.nodevault.contracts'
+import type { Phone } from '@platform/components.nodevault.contracts'
 
 export type PhoneValue = Phone | undefined
 

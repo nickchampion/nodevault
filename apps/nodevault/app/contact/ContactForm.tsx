@@ -4,7 +4,7 @@ import { useState } from 'react'
 import {
   Alert, Button, Card, Description, FieldError, Input, Label, Spinner, TextArea, TextField,
 } from '@heroui/react'
-import { contactRequestSchema } from '@platform/components.contracts'
+import { contactRequestSchema } from '@platform/components.nodevault.contracts'
 import { Check, Send } from 'lucide-react'
 import type { SubmitEvent } from 'react'
 import type { inferRouterInputs } from '@trpc/server'

@@ -5,11 +5,11 @@ import Link from 'next/link'
 import {
   Alert, Button, Card, Description, FieldError, Input, Label, Spinner, TextArea, TextField,
 } from '@heroui/react'
-import { setGcpCredentialsRequestSchema } from '@platform/components.contracts'
+import { setGcpCredentialsRequestSchema } from '@platform/components.nodevault.contracts'
 import { formatLocalDate } from '@platform/components.utils'
 import { Cloud, Save, ShieldCheck } from 'lucide-react'
 import type { SubmitEvent } from 'react'
-import type { GcpCredentialsStatus, SetGcpCredentialsRequest } from '@platform/components.contracts'
+import type { GcpCredentialsStatus, SetGcpCredentialsRequest } from '@platform/components.nodevault.contracts'
 import { api } from '../../../lib/api'
 import { useAuth } from '../../../lib/auth'
 import { zodValidate } from '../../../lib/validation'
@@ -130,7 +130,7 @@ export const GcpCredentialsCard = () => {
             </Card.Title>
 
             <Card.Description>
-              NodeVault runs on your own GCP project for embeddings, Gemini and Vertex AI Search
+              After your free 7-day trial, NodeVault runs on your own GCP project for embeddings, Gemini and Vertex AI Search
             </Card.Description>
           </div>
         </div>

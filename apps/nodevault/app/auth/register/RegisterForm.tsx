@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation'
 import {
   Alert, Button, Description, FieldError, Input, Label, Spinner, TextField,
 } from '@heroui/react'
-import { registerRequestSchema } from '@platform/components.contracts'
+import { registerRequestSchema } from '@platform/components.nodevault.contracts'
 import { UserPlus } from 'lucide-react'
 import type { SubmitEvent } from 'react'
-import type { RegisterRequest } from '@platform/components.contracts'
+import type { RegisterRequest } from '@platform/components.nodevault.contracts'
 import { api } from '../../../lib/api'
 import { getSession, isSessionValid, useAuth } from '../../../lib/auth'
 import { zodValidate } from '../../../lib/validation'
@@ -57,8 +57,8 @@ export const RegisterForm = () => {
       const response = await api.auth.register.mutate({ ...state })
 
       signIn(response)
-      // new accounts must connect their own GCP project before vaults unlock
-      router.replace('/account/settings')
+      // new accounts start a 7-day trial on the platform's GCP project — straight to vaults
+      router.replace('/account')
     } catch (error_) {
       setError((error_ as Error).message || 'Something went wrong. Please try again.')
       setPending(false)

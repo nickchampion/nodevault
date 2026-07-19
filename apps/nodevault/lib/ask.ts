@@ -1,5 +1,5 @@
-import { askStreamEventSchema } from '@platform/components.contracts'
-import type { AskMode, AskStreamEvent } from '@platform/components.contracts'
+import { askStreamEventSchema } from '@platform/components.nodevault.contracts'
+import type { AskMode, AskStreamEvent } from '@platform/components.nodevault.contracts'
 import { appConfig } from './config'
 import { getSession } from './auth'
 

@@ -1,5 +1,5 @@
 import { and, desc, eq, sql } from 'drizzle-orm'
-import { assetChunks, assets } from '@platform/components.domain'
+import { assetChunks, assets } from '@platform/components.nodevault.domain'
 import type { SearchStrategy } from './factory'
 
 const RESULT_LIMIT = 10

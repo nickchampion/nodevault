@@ -8,7 +8,7 @@ import {
   ExternalLink, FileText, Link2, MessageCirclePlus, Send,
 } from 'lucide-react'
 import type { SubmitEvent } from 'react'
-import type { AskMode, CitationDto, ConversationDto } from '@platform/components.contracts'
+import type { AskMode, CitationDto, ConversationDto } from '@platform/components.nodevault.contracts'
 import { api } from '../../lib/api'
 import { streamAsk } from '../../lib/ask'
 

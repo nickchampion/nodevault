@@ -44,7 +44,7 @@ export default function GcpHelpPage() {
       <PageHero
         eyebrow="Help"
         title="Set up Google Cloud for NodeVault"
-        description="NodeVault runs entirely on your own Google Cloud project — your documents are embedded, indexed and answered with your own Gemini and Vertex AI quota. This guide walks you from a brand-new Google Cloud account to working credentials."
+        description="New accounts get 7 days free on our Google Cloud project. After that, NodeVault runs entirely on your own — your documents are embedded, indexed and answered with your own Gemini and Vertex AI quota. This guide walks you from a brand-new Google Cloud account to working credentials."
       />
 
       <Container className="py-12">

@@ -3,11 +3,12 @@ import { defineConfig } from 'vitest/config'
 
 const alias = {
   '@platform/components.api': path.resolve('./components/api/index.ts'),
+  '@platform/components.cache': path.resolve('./components/cache/index.ts'),
   '@platform/components.configuration': path.resolve('./components/configuration/index.ts'),
   '@platform/components.configuration.server': path.resolve('./components/configuration/server.ts'),
   '@platform/components.context': path.resolve('./components/context/index.ts'),
-  '@platform/components.contracts': path.resolve('./components/contracts/index.ts'),
-  '@platform/components.domain': path.resolve('./components/domain/index.ts'),
+  '@platform/components.nodevault.contracts': path.resolve('./components/nodevault/contracts/index.ts'),
+  '@platform/components.nodevault.domain': path.resolve('./components/nodevault/domain/index.ts'),
   '@platform/components.postgres': path.resolve('./components/postgres/index.ts'),
   '@platform/components.utils': path.resolve('./components/utils/index.ts'),
   '@platform/components.utils.server': path.resolve('./components/utils-server/index.ts'),

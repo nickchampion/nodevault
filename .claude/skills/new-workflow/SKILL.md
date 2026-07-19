@@ -7,13 +7,13 @@ description: End-to-end checklist for adding a user-driven Inngest workflow to t
 
 Follow this order; each step compiles/tests independently. Load the `inngest` skill (and `vector-pipeline` if the workflow touches embeddings) before writing code.
 
-## 1. Contracts first (`components/contracts/<domain>.ts`)
+## 1. Contracts first (`components/nodevault/contracts/<domain>.ts`)
 
 - Request/response zod schemas for the triggering endpoint (e.g. submit URL / request upload) and the status query. Export inferred types.
 - The Inngest event payload schema lives here too — it's shared vocabulary.
 - Dates are `z.iso.datetime()`; status enums as `z.enum([...])`.
 
-## 2. Storage (`components/domain/models/`)
+## 2. Storage (`components/nodevault/domain/models/`)
 
 - Add/extend tables with a `status` column (`pending | processing | ready | failed`) and an error-detail column.
 - `pnpm run db:generate --name=<change>`, review the SQL, `pnpm run db`.

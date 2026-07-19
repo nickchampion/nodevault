@@ -1,4 +1,4 @@
-import { AppError } from '@platform/components.domain'
+import { AppError } from '@platform/components.nodevault.domain'
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 

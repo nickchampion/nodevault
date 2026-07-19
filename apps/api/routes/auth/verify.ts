@@ -2,8 +2,8 @@ import { and, eq, gt } from 'drizzle-orm'
 import { AuthInfo, type ApiHandler } from '@platform/components.context'
 import { base64Decode, createAuthTokenForUser, decrypt } from '@platform/components.utils.server'
 import { serverConfiguration } from '@platform/components.configuration.server'
-import { AppError, accounts, loginTokens, users } from '@platform/components.domain'
-import type { VerifyLoginResponse, VerifyRequest } from '@platform/components.contracts'
+import { AppError, accounts, loginTokens, users } from '@platform/components.nodevault.domain'
+import type { VerifyLoginResponse, VerifyRequest } from '@platform/components.nodevault.contracts'
 import { toAccountDto, toUserDto } from './mappers.js'
 
 const TOKEN_ID_PATTERN = /^\d+$/

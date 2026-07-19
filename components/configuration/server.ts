@@ -4,6 +4,14 @@ import { build, type EnvironmentSettings } from '@platform/components.configurat
 import { server as baseline } from './configuration.js'
 import type { ServerConfiguration as ServerConfig } from './configuration.js'
 
+export type {
+  CacheEngines,
+  CacheSettings,
+  CacheTimeouts,
+  RedisSettings,
+  ServerConfiguration,
+} from './configuration.js'
+
 let environment: EnvironmentSettings
 
 try {

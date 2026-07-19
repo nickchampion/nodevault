@@ -1,4 +1,4 @@
-import { AppError } from '@platform/components.domain'
+import { AppError } from '@platform/components.nodevault.domain'
 
 /**
  * Type of `session.db` — the ORM database handle. Deliberately empty here so this

@@ -61,7 +61,7 @@ The API is a tRPC router hosted on Koa, but business logic lives in ApiHandlers.
 
 ```typescript
 import type { ApiHandler } from '@platform/components.context'
-import type { LoginRequest, OkResponse } from '@platform/components.contracts'
+import type { LoginRequest, OkResponse } from '@platform/components.nodevault.contracts'
 
 export const authLogin: ApiHandler<LoginRequest, OkResponse> = async (context) => {
   const body = context.event.payload  // typed as LoginRequest (validated procedure input)
@@ -70,7 +70,7 @@ export const authLogin: ApiHandler<LoginRequest, OkResponse> = async (context) =
 }
 ```
 
-Handlers are grouped by domain in `apps/api/routes/`. Each subdirectory's `index.ts` defines that domain's router, wiring handlers onto tRPC procedures via the `execute()` bridge from `@platform/components.api`. Input and output schemas come from `@platform/components.contracts`; every procedure declares `.output()` so responses are validated (and excess fields stripped) at runtime:
+Handlers are grouped by domain in `apps/api/routes/`. Each subdirectory's `index.ts` defines that domain's router, wiring handlers onto tRPC procedures via the `execute()` bridge from `@platform/components.api`. Input and output schemas come from `@platform/components.nodevault.contracts`; every procedure declares `.output()` so responses are validated (and excess fields stripped) at runtime:
 
 ```typescript
 // apps/api/routes/auth/index.ts
@@ -121,15 +121,15 @@ Durable background workflows run on Inngest. The client and all functions live i
 
 ## Database (Postgres + Drizzle)
 
-The schema is defined in TypeScript in `components/domain/models/`, one file per domain area (exported from `@platform/components.domain`, both as named tables/types and as the `schema` namespace) — it is the single source of truth for storage, shared by every server-side project (API, event handlers, background workers). Importing table definitions is safe anywhere server-side (`drizzle-orm/pg-core` is metadata only — no driver attached), but the **frontend must not import it** — clients consume `@platform/components.contracts` only. Property names are camelCase (e.g. `createdAtUTC`), mapped to snake_case columns. Row types are inferred (`type User = typeof users.$inferSelect`) — there are no model classes.
+The schema is defined in TypeScript in `components/nodevault/domain/models/`, one file per domain area (exported from `@platform/components.nodevault.domain`, both as named tables/types and as the `schema` namespace) — it is the single source of truth for storage, shared by every server-side project (API, event handlers, background workers). Importing table definitions is safe anywhere server-side (`drizzle-orm/pg-core` is metadata only — no driver attached), but the **frontend must not import it** — clients consume `@platform/components.nodevault.contracts` only. Property names are camelCase (e.g. `createdAtUTC`), mapped to snake_case columns. Row types are inferred (`type User = typeof users.$inferSelect`) — there are no model classes.
 
-Rows never cross the HTTP boundary: responses are DTOs defined in `@platform/components.contracts`, built by explicit mapper functions colocated with the routes (e.g. `routes/auth/mappers.ts`, `toUserDto(user)`). Mappers pick fields explicitly (new columns stay private until deliberately exposed) and convert `Date` → UTC ISO string (`toUtcIso`). The procedure's `.output()` schema enforces the contract at runtime.
+Rows never cross the HTTP boundary: responses are DTOs defined in `@platform/components.nodevault.contracts`, built by explicit mapper functions colocated with the routes (e.g. `routes/auth/mappers.ts`, `toUserDto(user)`). Mappers pick fields explicitly (new columns stay private until deliberately exposed) and convert `Date` → UTC ISO string (`toUtcIso`). The procedure's `.output()` schema enforces the contract at runtime.
 
 `context.session` is a `PgSession` from `@platform/components.postgres`. Query through Drizzle via `context.session.db`:
 
 ```typescript
 import { and, eq, gt } from 'drizzle-orm'
-import { users, loginTokens } from '@platform/components.domain'
+import { users, loginTokens } from '@platform/components.nodevault.domain'
 
 const user = await context.session.db.query.users.findFirst({ where: eq(users.email, email) })
 const [row] = await context.session.db.insert(loginTokens).values({ ... }).returning()
@@ -137,13 +137,13 @@ const [row] = await context.session.db.insert(loginTokens).values({ ... }).retur
 await context.session.queryOne<T>('SELECT ...', [params])
 ```
 
-`session.db` is typed via a module augmentation in `components/domain/client.ts` (`DatabaseClient extends NodePgDatabase<typeof schema>`), loaded automatically whenever `@platform/components.domain` is imported — any server-side project gets the typed client for free. The context component itself stays ORM-agnostic.
+`session.db` is typed via a module augmentation in `components/nodevault/domain/client.ts` (`DatabaseClient extends NodePgDatabase<typeof schema>`), loaded automatically whenever `@platform/components.nodevault.domain` is imported — any server-side project gets the typed client for free. The context component itself stays ORM-agnostic.
 
 **Unit of work = one transaction around the handler.** The context middleware calls `session.begin()` before any mutating handler (POST/PUT/PATCH/DELETE) runs and commits after it completes; every statement — Drizzle or raw — routes through the session and joins that transaction. A thrown error, a 4xx response, or `context.session.veto = true` rolls the whole transaction back. Handlers never manage transactions themselves (don't use `db.transaction()`). Read-only handlers run against the pool; one that genuinely needs a transaction can call `context.session.begin()` itself.
 
 Conventions:
 
-- **Migrations**: edit the schema in `components/domain/models/`, then `pnpm run db:generate --name=<change>` (emits SQL to `components/postgres/migrations/` — review it) and `pnpm run db` to apply. Custom SQL (backfills etc.): `pnpm run db:generate --custom --name=<change>`. Never hand-edit applied migrations. `pnpm run db:studio` opens a data browser. Full guide: `docs/migrations.md`.
+- **Migrations**: edit the schema in `components/nodevault/domain/models/`, then `pnpm run db:generate --name=<change>` (emits SQL to `components/postgres/migrations/` — review it) and `pnpm run db` to apply. Custom SQL (backfills etc.): `pnpm run db:generate --custom --name=<change>`. Never hand-edit applied migrations. `pnpm run db:studio` opens a data browser. Full guide: `docs/migrations.md`.
 - No optimistic-concurrency/version machinery: transactions + row locks cover in-request atomicity. Prefer atomic statements for check-and-act (e.g. `update ... where used = false ... returning`)
 - Unique violations (23505) are mapped to a 409 conflict with a message derived from the constraint name — name constraints accordingly (e.g. `users_email_unique`)
 - `begin()` is lazy: the connection is only checked out on the first statement, and only held until commit/rollback
@@ -153,7 +153,7 @@ Connection config lives in `serverConfiguration.postgres` (dev default `postgres
 
 ## Adding a New API Endpoint
 
-1. Add zod request + response schemas to `components/contracts/<domain>.ts` (export inferred types too)
+1. Add zod request + response schemas to `components/nodevault/contracts/<domain>.ts` (export inferred types too)
 2. Create the handler in `apps/api/routes/<domain>/`; if it returns data, map rows to contract DTOs in `routes/<domain>/mappers.ts`
 3. Add a procedure to the domain router in `apps/api/routes/<domain>/index.ts`: `publicProcedure.input(requestSchema).output(responseSchema).mutation(execute(handler))` (`.query()` for reads). For a new domain, create the subdirectory with its router and merge it into the appRouter in `apps/api/router.ts`
 4. The frontend picks the new procedure up automatically through the `AppRouter` type — no client generation. For client-side form validation, reuse the contract schema via `zodValidate()` (see `apps/nodevault/lib/validation.ts`)
@@ -198,15 +198,15 @@ context.log.error(...)
 
 Three layers, with strict dependency direction (`api → domain → contracts ← nodevault` — the frontend touches contracts only):
 
-- **Storage** (`components/domain/models/`): Drizzle tables + inferred row types, shared across server-side projects via `@platform/components.domain` (which also carries the `DatabaseClient` augmentation typing `session.db`); never imported by the frontend.
-- **Contracts** (`@platform/components.contracts`): zod request/response schemas, inferred DTO types, and shared vocabulary (`Phone`, `Countries`, `UserRole`, `AuthTokens`). Client-safe (zod only, no node imports) — the frontend imports these at runtime for form validation; the API uses them for `.input()`/`.output()`.
+- **Storage** (`components/nodevault/domain/models/`): Drizzle tables + inferred row types, shared across server-side projects via `@platform/components.nodevault.domain` (which also carries the `DatabaseClient` augmentation typing `session.db`); never imported by the frontend.
+- **Contracts** (`@platform/components.nodevault.contracts`): zod request/response schemas, inferred DTO types, and shared vocabulary (`Phone`, `Countries`, `UserRole`, `AuthTokens`). Client-safe (zod only, no node imports) — the frontend imports these at runtime for form validation; the API uses them for `.input()`/`.output()`.
 - **Mappers** (`apps/api/routes/<domain>/mappers.ts`): pure functions turning rows into DTOs. Explicit field picking is the point — never spread a row into a response.
 
 Dates in contracts are ISO strings (`z.iso.datetime()`); mappers convert with `toUtcIso()`.
 
 ## Errors
 
-Throw `AppError` from `@platform/components.domain` with a kind (`'auth' | 'forbidden' | 'validation' | 'not-found' | 'conflict' | 'internal'`) — the kind derives the HTTP status. `normalizeError()` wraps unknown thrown values. The tRPC error formatter surfaces `data.validation` (array of `{ path, message }`) for both zod input failures and handler `badRequest` responses.
+Throw `AppError` from `@platform/components.nodevault.domain` with a kind (`'auth' | 'forbidden' | 'validation' | 'not-found' | 'conflict' | 'internal'`) — the kind derives the HTTP status. `normalizeError()` wraps unknown thrown values. The tRPC error formatter surfaces `data.validation` (array of `{ path, message }`) for both zod input failures and handler `badRequest` responses.
 
 ## Configuration
 

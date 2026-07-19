@@ -1,5 +1,5 @@
 import { createMD5Hash } from '@platform/components.utils.server'
-import type { AppError } from '@platform/components.domain'
+import type { AppError } from '@platform/components.nodevault.domain'
 import type { FileContent } from './file.js'
 import type { StandardResponse, ValidationError } from './validation.js'
 

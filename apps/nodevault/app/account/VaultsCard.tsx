@@ -5,7 +5,7 @@ import Link from 'next/link'
 import {
   Alert, Button, Card, FieldError, Input, Label, Spinner, TextField,
 } from '@heroui/react'
-import { createVaultRequestSchema } from '@platform/components.contracts'
+import { createVaultRequestSchema } from '@platform/components.nodevault.contracts'
 import { formatLocalDate } from '@platform/components.utils'
 import {
   FileText, Link2, MessagesSquare, Plus, Trash2, Vault,

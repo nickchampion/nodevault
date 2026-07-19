@@ -1,5 +1,5 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["./**/*.ts", "../../vue-shim.d.ts", "../../components/domain/base-model.ts"],
+  "include": ["./**/*.ts", "../../vue-shim.d.ts"],
   "exclude": ["node_modules"]
 }

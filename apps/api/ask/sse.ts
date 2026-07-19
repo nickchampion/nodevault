@@ -1,5 +1,5 @@
 import type { ServerResponse } from 'node:http'
-import type { AskStreamEvent } from '@platform/components.contracts'
+import type { AskStreamEvent } from '@platform/components.nodevault.contracts'
 
 export type SseWriter = {
   send: (event: AskStreamEvent) => void

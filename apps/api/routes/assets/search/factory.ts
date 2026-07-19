@@ -1,6 +1,6 @@
-import type { SearchType } from '@platform/components.contracts'
+import type { SearchType } from '@platform/components.nodevault.contracts'
 import type { DatabaseClient } from '@platform/components.context'
-import type { SearchResultDto } from '@platform/components.contracts'
+import type { SearchResultDto } from '@platform/components.nodevault.contracts'
 import type { GcpClientConfig } from '@platform/integrations.gemini'
 import { combinedSearch } from './combined.js'
 import { keywordSearch } from './keyword.js'

@@ -1,4 +1,4 @@
-import { normalizeError } from '@platform/components.domain'
+import { normalizeError } from '@platform/components.nodevault.domain'
 import type { EventHandler, ApiRouteHandler, IMiddleware, Middleware } from './types/index.js'
 import { contextMiddleware } from './middleware/index.js'
 import type { Context } from './index.js'

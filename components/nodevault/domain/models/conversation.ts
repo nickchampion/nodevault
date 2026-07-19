@@ -1,7 +1,7 @@
 import {
   index, integer, jsonb, text, timestamp,
 } from 'drizzle-orm/pg-core'
-import type { CitationDto, ConversationRole } from '@platform/components.contracts'
+import type { CitationDto, ConversationRole } from '@platform/components.nodevault.contracts'
 import { nodevault } from './account.js'
 import { vaults } from './vault.js'
 

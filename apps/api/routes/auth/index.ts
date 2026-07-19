@@ -5,7 +5,7 @@ import {
   registerRequestSchema,
   verifyLoginResponseSchema,
   verifyRequestSchema,
-} from '@platform/components.contracts'
+} from '@platform/components.nodevault.contracts'
 import { authLogin } from './login.js'
 import { authRegister } from './register.js'
 import { authVerify } from './verify.js'

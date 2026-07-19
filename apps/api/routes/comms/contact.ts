@@ -1,7 +1,7 @@
 import type { ApiHandler } from '@platform/components.context'
 import { serverConfiguration } from '@platform/components.configuration.server'
 import { createResendClient } from '@platform/integrations.resend'
-import type { ContactRequest, OkResponse } from '@platform/components.contracts'
+import type { ContactRequest, OkResponse } from '@platform/components.nodevault.contracts'
 
 const escapeHtml = (value: string): string => value
   .replaceAll('&', '&amp;')

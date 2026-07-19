@@ -6,7 +6,7 @@ import {
   listConversationsRequestSchema,
   listConversationsResponseSchema,
   okResponseSchema,
-} from '@platform/components.contracts'
+} from '@platform/components.nodevault.contracts'
 import { conversationsDelete } from './delete.js'
 import { conversationsGet } from './get.js'
 import { conversationsList } from './list.js'

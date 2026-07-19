@@ -1,6 +1,6 @@
 import { serverConfiguration } from '@platform/components.configuration.server'
 import { createPool, PgSession } from '@platform/components.postgres'
-import { schema } from '@platform/components.domain'
+import { schema } from '@platform/components.nodevault.domain'
 import type { DatabaseClient } from '@platform/components.context'
 
 // one pool per process, shared by the request lifecycle and Inngest functions

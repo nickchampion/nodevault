@@ -1,7 +1,7 @@
 {
-  "name": "@platform/components.domain",
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "components/domain",
+  "name": "@platform/components.cache",
+  "sourceRoot": "components/cache",
   "projectType": "library",
   "targets": {
     "lint": {
@@ -11,7 +11,7 @@
       ],
       "options": {
         "lintFilePatterns": [
-          "components/domain/**/*.ts"
+          "components/cache/**/*.ts"
         ]
       }
     }

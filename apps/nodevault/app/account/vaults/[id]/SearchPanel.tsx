@@ -9,7 +9,7 @@ import {
   Download, ExternalLink, FileText, Link2, Search,
 } from 'lucide-react'
 import type { SubmitEvent } from 'react'
-import type { SearchType } from '@platform/components.contracts'
+import type { SearchType } from '@platform/components.nodevault.contracts'
 import type { inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '@platform/apps.api'
 import { api } from '../../../../lib/api'

@@ -1,7 +1,7 @@
 import { and, desc, eq, sql } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
-import type { ListAssetsRequest, ListAssetsResponse } from '@platform/components.contracts'
-import { assets, vaults } from '@platform/components.domain'
+import type { ListAssetsRequest, ListAssetsResponse } from '@platform/components.nodevault.contracts'
+import { assets, vaults } from '@platform/components.nodevault.domain'
 import { toAssetDto } from './mappers.js'
 
 export const assetsList: ApiHandler<ListAssetsRequest, ListAssetsResponse> = async (context) => {
