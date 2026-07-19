@@ -15,13 +15,13 @@ import { streamAsk } from '../../lib/ask'
 const askModes: { id: AskMode, label: string, description: string }[] = [
   {
     id: 'local',
-    label: 'Local RAG',
-    description: 'Hand-rolled pipeline: hybrid pgvector retrieval feeds matched chunks into the prompt.',
+    label: 'Self-hosted',
+    description: 'Our own search, built from scratch: a hybrid pgvector lookup finds the closest-matching chunks and hands them to the model as context.',
   },
   {
     id: 'vertex',
-    label: 'Vertex grounding',
-    description: 'Managed pipeline: Gemini retrieves from a Vertex AI Search data store as it answers. Newly ingested assets take a few minutes to appear.',
+    label: 'Google-managed',
+    description: "Google's managed search: Gemini looks up a Vertex AI Search index and grounds its answer as it responds. Newly added content can take a few minutes to appear.",
   },
 ]
 

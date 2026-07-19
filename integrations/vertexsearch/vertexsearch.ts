@@ -1,4 +1,5 @@
 import { DataStoreServiceClient, DocumentServiceClient } from '@google-cloud/discoveryengine'
+import { serverConfiguration } from '@platform/components.configuration.server'
 
 // Vertex AI Search data stores live in multi-regions (global/us/eu), separate from the
 // regional Vertex endpoint used for embeddings. Every account's own GCP project must
@@ -8,8 +9,6 @@ export const dataStoreId = 'nodevault-assets'
 
 export type VertexSearchConfig = {
   project: string
-
-  /** plaintext service-account key JSON (decrypted by the caller) */
   credentials: string
 }
 
@@ -24,17 +23,20 @@ export type AssetDocument = {
   text: string
 }
 
-const documentId = (assetId: number) => `asset-${assetId}`
+const environmentPrefix = () => serverConfiguration.environment.environment
+
+const documentId = (assetId: number) => `${environmentPrefix()}-asset-${assetId}`
+const environmentVaultId = (vaultId: number) => `${environmentPrefix()}-${vaultId}`
 
 /** Parses an assetId back out of a Vertex document resource name (grounding metadata round-trip). */
 export const assetIdFromDocumentPath = (path: string | undefined): number | undefined => {
-  const match = path?.match(/\/documents\/asset-(\d+)$/)
+  const match = path?.match(/\/documents\/(?:\w+-)?asset-(\d+)$/)
 
   return match ? Number(match[1]) : undefined
 }
 
-/** Search filter isolating a single vault's documents. */
-export const vaultFilter = (vaultId: number): string => `vaultId: ANY("${vaultId}")`
+/** Search filter isolating a single vault's documents, scoped to the current environment. */
+export const vaultFilter = (vaultId: number): string => `vaultId: ANY("${environmentVaultId(vaultId)}")`
 
 /**
  * Client for the Vertex AI Search (Discovery Engine) data store that mirrors vault
@@ -77,7 +79,7 @@ export const createVertexSearchClient = ({ project, credentials }: VertexSearchC
             id: documentId(asset.assetId),
             structData: {
               fields: {
-                vaultId: { stringValue: String(asset.vaultId) },
+                vaultId: { stringValue: environmentVaultId(asset.vaultId) },
                 assetId: { stringValue: String(asset.assetId) },
                 source: { stringValue: asset.source },
                 ...(asset.name && { name: { stringValue: asset.name } }),
