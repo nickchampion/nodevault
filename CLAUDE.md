@@ -49,7 +49,7 @@ integrations/
   resend/       Transactional email client
 ```
 
-NX manages tasks. Each component and app has a `project.json`. Package aliases are declared in the root `tsconfig.json` `paths` and resolved at runtime via `tsx` (API) or the app's own `tsconfig.json` `paths` (Next.js — kept in sync with the root aliases).
+NX manages tasks. Each component and app has a `project.json`. Package aliases are declared once in the root `tsconfig.json` `paths` and resolved at runtime via `tsx` (API) or tsconfig inheritance (Next.js — the app's `tsconfig.json` extends the root and must not declare its own `paths`, since a child `paths` replaces the root map wholesale).
 
 ## Path Aliases
 
