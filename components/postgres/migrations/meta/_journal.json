@@ -40,15 +40,22 @@
     {
       "idx": 5,
       "version": "7",
-      "when": 1784900000000,
+      "when": 1784358282000,
       "tag": "0005_rename-files-to-assets",
       "breakpoints": true
     },
     {
       "idx": 6,
       "version": "7",
-      "when": 1784900000001,
+      "when": 1784391481000,
       "tag": "0006_asset-chunks-search-vector",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1784408216398,
+      "tag": "0007_conversations",
       "breakpoints": true
     }
   ]

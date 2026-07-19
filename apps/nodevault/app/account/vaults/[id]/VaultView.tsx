@@ -32,6 +32,16 @@ export const VaultView = ({ vaultId }: { vaultId: number }) => {
     }
   }, [router])
 
+  const refreshVault = async () => {
+    try {
+      const response = await api.vaults.get.query({ vaultId })
+
+      setVault(response)
+    } catch (error_) {
+      setError((error_ as Error).message || 'Failed to load the vault')
+    }
+  }
+
   useEffect(() => {
     let cancelled = false
 
@@ -139,7 +149,7 @@ export const VaultView = ({ vaultId }: { vaultId: number }) => {
                 </div>
               </dl>
 
-              <VaultTabs vaultId={vault.id} />
+              <VaultTabs vaultId={vault.id} onAssetChangeAction={refreshVault} />
             </>
           )}
         </div>

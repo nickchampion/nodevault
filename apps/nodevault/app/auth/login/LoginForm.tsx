@@ -8,7 +8,7 @@ import {
 } from '@heroui/react'
 import { loginRequestSchema } from '@platform/components.contracts'
 import { Mail, MailCheck } from 'lucide-react'
-import type { FormEvent } from 'react'
+import type { SubmitEvent } from 'react'
 import { api } from '../../../lib/api'
 import { getSession, isSessionValid, useAuth } from '../../../lib/auth'
 import { zodValidate } from '../../../lib/validation'
@@ -62,7 +62,7 @@ export const LoginForm = () => {
     void verify()
   }, [code, router, signIn])
 
-  const submit = async (event: FormEvent) => {
+  const submit = async (event: SubmitEvent) => {
     event.preventDefault()
 
     const validationErrors = validateLoginForm({ email })

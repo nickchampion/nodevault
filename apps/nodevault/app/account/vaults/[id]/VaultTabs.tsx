@@ -1,13 +1,14 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { Suspense, useRef, useState } from 'react'
 import {
   Button, Card, Input, Label, Tabs, TextField,
 } from '@heroui/react'
 import { contentTypeForFileName, maxUploadBytes } from '@platform/components.contracts'
 import { Link2, Upload } from 'lucide-react'
-import type { FormEvent } from 'react'
+import type { SubmitEvent } from 'react'
 import { api } from '../../../../lib/api'
+import { AskPanel } from './AskPanel'
 import { AssetList } from './AssetList'
 import { SearchPanel } from './SearchPanel'
 
@@ -41,7 +42,7 @@ const UploadFileForm = ({ vaultId, onUploaded }: { vaultId: number, onUploaded: 
     setFile(selected)
   }
 
-  const submit = async (event: FormEvent) => {
+  const submit = async (event: SubmitEvent) => {
     event.preventDefault()
 
     if (!file || uploading) return
@@ -125,7 +126,7 @@ const AddUrlForm = ({ vaultId, onSubmitted }: { vaultId: number, onSubmitted: ()
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const submit = async (event: FormEvent) => {
+  const submit = async (event: SubmitEvent) => {
     event.preventDefault()
 
     if (!url.trim() || submitting) return
@@ -182,7 +183,7 @@ const AddUrlForm = ({ vaultId, onSubmitted }: { vaultId: number, onSubmitted: ()
   )
 }
 
-export const VaultTabs = ({ vaultId }: { vaultId: number }) => {
+export const VaultTabs = ({ vaultId, onAssetChangeAction }: { vaultId: number, onAssetChangeAction: () => void }) => {
   const [uploadsVersion, setUploadsVersion] = useState(0)
   const [urlsVersion, setUrlsVersion] = useState(0)
 
@@ -193,6 +194,11 @@ export const VaultTabs = ({ vaultId }: { vaultId: number }) => {
           <Tabs.List aria-label="Vault contents">
             <Tabs.Tab id="search">
               Search
+              <Tabs.Indicator />
+            </Tabs.Tab>
+
+            <Tabs.Tab id="ask">
+              Ask
               <Tabs.Indicator />
             </Tabs.Tab>
 
@@ -211,7 +217,16 @@ export const VaultTabs = ({ vaultId }: { vaultId: number }) => {
             id="search"
             className="pt-4"
           >
-            <SearchPanel vaultId={vaultId} />
+            <Suspense>
+              <SearchPanel vaultId={vaultId} />
+            </Suspense>
+          </Tabs.Panel>
+
+          <Tabs.Panel
+            id="ask"
+            className="pt-4"
+          >
+            <AskPanel vaultId={vaultId} />
           </Tabs.Panel>
 
           <Tabs.Panel
@@ -220,7 +235,10 @@ export const VaultTabs = ({ vaultId }: { vaultId: number }) => {
           >
             <UploadFileForm
               vaultId={vaultId}
-              onUploaded={() => setUploadsVersion(version => version + 1)}
+              onUploaded={() => {
+                setUploadsVersion(version => version + 1)
+                onAssetChangeAction()
+              }}
             />
 
             <AssetList
@@ -236,7 +254,10 @@ export const VaultTabs = ({ vaultId }: { vaultId: number }) => {
           >
             <AddUrlForm
               vaultId={vaultId}
-              onSubmitted={() => setUrlsVersion(version => version + 1)}
+              onSubmitted={() => {
+                setUrlsVersion(version => version + 1)
+                onAssetChangeAction()
+              }}
             />
 
             <AssetList

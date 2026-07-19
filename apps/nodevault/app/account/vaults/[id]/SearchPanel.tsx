@@ -1,13 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import {
   Button, Input, Label, Spinner, TextField, ToggleButton, ToggleButtonGroup, Tooltip,
 } from '@heroui/react'
 import {
   Download, ExternalLink, FileText, Link2, Search,
 } from 'lucide-react'
-import type { FormEvent } from 'react'
+import type { SubmitEvent } from 'react'
 import type { SearchType } from '@platform/components.contracts'
 import type { inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '@platform/apps.api'
@@ -35,7 +36,7 @@ const downloadAsset = async (vaultId: number, result: SearchResultDto) => {
 const searchModes: { id: SearchType, label: string, description: string }[] = [
   {
     id: 'combined',
-    label: 'Combined',
+    label: 'Semantic',
     description: 'Blends keyword and semantic matching for the best all-round results. Recommended for most searches.',
   },
   {
@@ -43,21 +44,15 @@ const searchModes: { id: SearchType, label: string, description: string }[] = [
     label: 'Keyword match',
     description: 'Matches exact words, names, codes, and acronyms using full-text search.',
   },
-  {
-    id: 'semantic',
-    label: 'Semantic search',
-    description: 'Finds conceptually related content even when the exact words don’t match.',
-  },
-  {
-    id: 'agentic',
-    label: 'Agentic query',
-    description: 'Multi-step, AI-assisted search that can reason across documents. Coming soon.',
-  },
 ]
 
 export const SearchPanel = ({ vaultId }: { vaultId: number }) => {
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParameters = useSearchParams()
+
   const [type, setType] = useState<SearchType>('combined')
-  const [query, setQuery] = useState('')
+  const [query, setQuery] = useState(() => searchParameters.get('q') ?? '')
   const [results, setResults] = useState<SearchResultDto[] | null>(null)
   const [searching, setSearching] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -77,16 +72,12 @@ export const SearchPanel = ({ vaultId }: { vaultId: number }) => {
     }
   }
 
-  const submit = async (event: FormEvent) => {
-    event.preventDefault()
-
-    if (!query.trim() || searching) return
-
+  const runSearch = useCallback(async (searchQuery: string, searchType: SearchType) => {
     setSearching(true)
     setError(null)
 
     try {
-      const response = await api.assets.search.query({ vaultId, query: query.trim(), type })
+      const response = await api.assets.search.query({ vaultId, query: searchQuery, type: searchType })
 
       setResults(response.results)
     } catch (error_) {
@@ -95,6 +86,28 @@ export const SearchPanel = ({ vaultId }: { vaultId: number }) => {
     } finally {
       setSearching(false)
     }
+  }, [vaultId])
+
+  const initialQuery = searchParameters.get('q')
+  const searchStarted = useRef(false)
+
+  useEffect(() => {
+    if (!initialQuery?.trim() || searchStarted.current) return
+
+    searchStarted.current = true
+    void runSearch(initialQuery.trim(), type)
+  }, [initialQuery, runSearch, type])
+
+  const submit = async (event: SubmitEvent) => {
+    event.preventDefault()
+
+    const trimmed = query.trim()
+
+    if (!trimmed || searching) return
+
+    router.replace(`${pathname}?q=${encodeURIComponent(trimmed)}`, { scroll: false })
+
+    await runSearch(trimmed, type)
   }
 
   return (
@@ -118,7 +131,10 @@ export const SearchPanel = ({ vaultId }: { vaultId: number }) => {
           {searchModes.map(mode => (
             <Tooltip.Root key={mode.id} delay={200}>
               <Tooltip.Trigger>
-                <ToggleButton id={mode.id}>
+                <ToggleButton
+                  id={mode.id}
+                  className="mr-2"
+                >
                   {mode.label}
                 </ToggleButton>
               </Tooltip.Trigger>

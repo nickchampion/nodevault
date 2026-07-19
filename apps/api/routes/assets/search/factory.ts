@@ -1,15 +1,14 @@
 import type { SearchType } from '@platform/components.contracts'
-import { agenticSearch } from './agentic.js'
+import type { DatabaseClient } from '@platform/components.context'
+import type { SearchResultDto } from '@platform/components.contracts'
 import { combinedSearch } from './combined.js'
 import { keywordSearch } from './keyword.js'
-import { semanticSearch } from './semantic.js'
-import type { SearchStrategy } from './types.js'
+
+export type SearchStrategy = (db: DatabaseClient, vaultId: number, query: string) => Promise<SearchResultDto[]>
 
 const strategies: Record<SearchType, SearchStrategy> = {
   combined: combinedSearch,
   keyword: keywordSearch,
-  semantic: semanticSearch,
-  agentic: agenticSearch,
 }
 
-export const getSearchStrategy = (type: SearchType): SearchStrategy => strategies[type]
+export const resolveSearchStrategy = (type: SearchType): SearchStrategy => strategies[type]

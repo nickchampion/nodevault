@@ -7,7 +7,7 @@ import {
 } from '@heroui/react'
 import { updateProfileRequestSchema } from '@platform/components.contracts'
 import { Save } from 'lucide-react'
-import type { FormEvent } from 'react'
+import type { SubmitEvent } from 'react'
 import type { UpdateProfileRequest } from '@platform/components.contracts'
 import type { AuthSession } from '../../../lib/auth'
 import { api } from '../../../lib/api'
@@ -54,7 +54,7 @@ const EditProfileFields = ({ session }: { session: AuthSession }) => {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const submit = async (event: FormEvent) => {
+  const submit = async (event: SubmitEvent) => {
     event.preventDefault()
 
     const validationErrors = validateEditProfileForm(state)

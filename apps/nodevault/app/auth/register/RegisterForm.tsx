@@ -8,7 +8,7 @@ import {
 } from '@heroui/react'
 import { registerRequestSchema } from '@platform/components.contracts'
 import { UserPlus } from 'lucide-react'
-import type { FormEvent } from 'react'
+import type { SubmitEvent } from 'react'
 import type { RegisterRequest } from '@platform/components.contracts'
 import { api } from '../../../lib/api'
 import { getSession, isSessionValid, useAuth } from '../../../lib/auth'
@@ -41,7 +41,7 @@ export const RegisterForm = () => {
     }
   }, [router])
 
-  const submit = async (event: FormEvent) => {
+  const submit = async (event: SubmitEvent) => {
     event.preventDefault()
 
     const validationErrors = validateRegisterForm(state)

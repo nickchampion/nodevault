@@ -5,6 +5,7 @@ import { schema } from '@platform/components.domain'
 import { pool } from './db.js'
 import { appRouter } from './router.js'
 import { inngestMiddleware } from './inngest/middleware.js'
+import { askMiddleware } from './ask/middleware.js'
 
 /**
  * Local/production web server hosting the application tRPC router. Procedures are
@@ -16,7 +17,7 @@ const start = async () => {
       host: serverConfiguration.dev ? 'api.nodevault.local' : undefined,
       port: 8002,
       sessionFactory: () => new PgSession(pool, schema),
-      middleware: [inngestMiddleware],
+      middleware: [inngestMiddleware, askMiddleware],
     },
     appRouter,
     serverConfiguration.origins,

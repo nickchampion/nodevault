@@ -4,6 +4,11 @@ import { AppError } from '@platform/components.domain'
 
 export const embeddingModel = 'gemini-embedding-001'
 
+export const generationModel = 'gemini-2.5-flash'
+
+// small/fast model for utility calls (query condensation) — quality matters less than latency
+export const condensationModel = 'gemini-2.5-flash-lite'
+
 // 768 keeps vectors comfortably under pgvector's 2000-dimension HNSW index limit
 export const embeddingDimensions = 768
 
@@ -52,11 +57,23 @@ const embed = async (ai: GoogleGenAI, texts: string[], taskType: TaskType): Prom
 export const createGeminiClient = () => {
   const { project, location, credentials } = serverConfiguration.gemini
 
+  const credentialsJson = JSON.parse(credentials)
+
   const ai = new GoogleGenAI({
     vertexai: true,
     project,
     location,
-    googleAuthOptions: { credentials: JSON.parse(credentials) },
+    googleAuthOptions: { credentials: credentialsJson },
+  })
+
+  // generation models aren't published on every regional Vertex endpoint (europe-west2
+  // 404s for gemini-2.5-*) — generation goes through the global endpoint instead, while
+  // embeddings stay on the configured region
+  const generationAi = new GoogleGenAI({
+    vertexai: true,
+    project,
+    location: 'global',
+    googleAuthOptions: { credentials: credentialsJson },
   })
 
   return {
@@ -67,6 +84,37 @@ export const createGeminiClient = () => {
       const [embedding] = await embed(ai, [text], 'RETRIEVAL_QUERY')
 
       return embedding
+    },
+
+    // small non-streamed utility call (e.g. condensing a follow-up question into a
+    // standalone search query) — thinking disabled for latency
+    generateText: async (prompt: string): Promise<string> => {
+      const response = await generationAi.models.generateContent({
+        model: condensationModel,
+        contents: prompt,
+        config: {
+          temperature: 0,
+          thinkingConfig: { thinkingBudget: 0 },
+        },
+      })
+
+      return response.text ?? ''
+    },
+
+    generateAnswerStream: async function* (systemInstruction: string, prompt: string, signal?: AbortSignal): AsyncGenerator<string> {
+      const stream = await generationAi.models.generateContentStream({
+        model: generationModel,
+        contents: prompt,
+        config: {
+          systemInstruction,
+          temperature: 0.2,
+          abortSignal: signal,
+        },
+      })
+
+      for await (const chunk of stream) {
+        if (chunk.text) yield chunk.text
+      }
     },
   }
 }

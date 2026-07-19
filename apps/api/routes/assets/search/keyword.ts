@@ -1,14 +1,11 @@
 import { and, desc, eq, sql } from 'drizzle-orm'
 import { assetChunks, assets } from '@platform/components.domain'
-import type { SearchStrategy } from './types.js'
+import type { SearchStrategy } from './factory'
 
 const RESULT_LIMIT = 10
 
 export const keywordSearch: SearchStrategy = async (db, vaultId, query) => {
   const tsQuery = sql`websearch_to_tsquery('english', ${query})`
-
-  // normalization option 32 rescales rank to rank/(rank+1), bounding it to [0, 1) — otherwise
-  // ts_rank_cd is unbounded and can exceed 1 for strong multi-term matches
   const rank = sql<number>`ts_rank_cd(${assetChunks.searchVector}, ${tsQuery}, 32)`
 
   const bestChunkPerAsset = db.$with('best_chunk_per_asset').as(

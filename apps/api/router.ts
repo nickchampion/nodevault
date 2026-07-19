@@ -1,6 +1,6 @@
 import { router } from '@platform/components.api'
 import {
-  accountRouter, assetsRouter, authRouter, commsRouter, systemRouter, vaultsRouter,
+  accountRouter, assetsRouter, authRouter, commsRouter, conversationsRouter, systemRouter, vaultsRouter,
 } from './routes/index.js'
 
 /**
@@ -16,6 +16,7 @@ export const appRouter = router({
   assets: assetsRouter,
   auth: authRouter,
   comms: commsRouter,
+  conversations: conversationsRouter,
   system: systemRouter,
   vaults: vaultsRouter,
 })

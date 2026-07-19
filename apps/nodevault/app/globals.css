@@ -1,12 +1,8 @@
 @import "tailwindcss";
 @import "@heroui/styles";
 
-/* Class-based dark mode (toggled by @heroui/react's useTheme, which sets
-   .light/.dark on <html>) instead of Tailwind's default media-query strategy. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Blue-and-white site, in both themes: a light, airy sky-blue palette by
-   default, and its deep navy counterpart when dark mode is switched on. */
 :root {
   --background: oklch(100% 0 0); /* white */
   --accent: oklch(58.5% 0.176 253.5); /* tailwind sky-600 — enough contrast on white */
@@ -15,19 +11,20 @@
   --field-border: oklch(92.8% 0.013 255.508); /* tailwind slate-200 */
 }
 
+.button,
+.toggle-button,
+.card,
+.tabs__tab,
+.tabs__indicator {
+  border-radius: 8px !important;
+}
+
 .dark {
   --background: oklch(12.9% 0.042 264.695); /* tailwind slate-950 */
   --accent: oklch(68.5% 0.169 237.323); /* tailwind sky-500 */
   --accent-foreground: var(--white);
   --field-border-width: 1px;
   --field-border: oklch(27.9% 0.041 260.031); /* tailwind slate-800 */
-
-  /* HeroUI's default dark surfaces are near-neutral grays (hue ~285-286, low
-     chroma) that read as brown/olive against this site's saturated blue
-     background. Retint them with the same blue hue family (~257-266),
-     stepping up the tailwind slate scale by lightness so the existing
-     depth ordering (background < surface/field < tabs track < selected
-     segment) is preserved. */
   --surface: oklch(20.8% 0.042 265.755); /* tailwind slate-900 — cards */
   --field-background: oklch(20.8% 0.042 265.755); /* tailwind slate-900 — inputs, textareas */
   --default: oklch(27.9% 0.041 260.031); /* tailwind slate-800 — tabs track */

@@ -1,7 +1,7 @@
 import { z } from 'zod'
 import { assetSourceSchema } from './assets.js'
 
-export const searchTypeSchema = z.enum(['combined', 'keyword', 'semantic', 'agentic'])
+export const searchTypeSchema = z.enum(['combined', 'keyword'])
 
 export type SearchType = z.infer<typeof searchTypeSchema>
 

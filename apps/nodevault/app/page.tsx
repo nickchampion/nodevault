@@ -1,5 +1,5 @@
 import {
-  ArrowRight, BellRing, BookOpenText, Check, FileText, LogIn, MessageCircleQuestion,
+  ArrowRight, BellRing, BookOpenText, FileText, LogIn, MessageCircleQuestion,
   ScanSearch, ShieldCheck,
 } from 'lucide-react'
 import { Container } from '../components/ui/Container'
@@ -53,24 +53,9 @@ const steps = [
   },
 ]
 
-const freeFeatures = [
-  'Up to 100 documents or links',
-  'PDF, Word, txt and more',
-  'Save web pages by link',
-  'Search, questions and summaries',
-]
-
-const proFeatures = [
-  'Unlimited documents and links',
-  'Everything in Free',
-  'Priority processing',
-  'Email support',
-]
-
 export default function HomePage() {
   return (
     <div>
-      {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-sky-100/60 via-white to-white dark:from-sky-950/60 dark:via-slate-950 dark:to-slate-950 py-20 sm:py-28">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(14,165,233,0.15),_transparent_60%)]" />
 
@@ -116,7 +101,6 @@ export default function HomePage() {
         </Container>
       </section>
 
-      {/* What it is */}
       <section className="py-16 sm:py-20">
         <Container>
           <div className="max-w-3xl mx-auto text-center">
@@ -136,7 +120,6 @@ export default function HomePage() {
         </Container>
       </section>
 
-      {/* Features */}
       <section className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-900/40">
         <Container>
           <div className="text-center mb-10">
@@ -170,7 +153,6 @@ export default function HomePage() {
         </Container>
       </section>
 
-      {/* How it works */}
       <section className="py-16 sm:py-20">
         <Container>
           <div className="text-center mb-10">
@@ -204,98 +186,6 @@ export default function HomePage() {
         </Container>
       </section>
 
-      {/* Pricing */}
-      <section className="py-16 sm:py-20 bg-slate-50 dark:bg-slate-900/40">
-        <Container>
-          <div className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-              Simple pricing
-            </h2>
-
-            <p className="text-slate-500 dark:text-slate-400">
-              Start free. Upgrade when your library grows.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 max-w-3xl mx-auto">
-            <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-8 border border-slate-200 dark:border-slate-800">
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
-                Free
-              </h3>
-
-              <p className="text-4xl font-bold text-slate-900 dark:text-white mb-1">
-                £0
-              </p>
-
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                forever
-              </p>
-
-              <ul className="space-y-3 mb-8">
-                {freeFeatures.map(item => (
-                  <li
-                    key={item}
-                    className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-300"
-                  >
-                    <Check className="size-4 text-sky-600 dark:text-sky-400 shrink-0" />
-
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <LinkButton
-                href="/auth/register"
-                variant="outline"
-                fullWidth
-              >
-                Get started
-              </LinkButton>
-            </div>
-
-            <div className="bg-slate-50 dark:bg-slate-900 rounded-xl p-8 border-2 border-sky-500 relative">
-              <span className="absolute -top-3 left-8 bg-sky-500/100 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                For growing libraries
-              </span>
-
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-1">
-                Pro
-              </h3>
-
-              <p className="text-4xl font-bold text-slate-900 dark:text-white mb-1">
-                £15
-                <span className="text-base font-medium text-slate-500 dark:text-slate-400"> / month</span>
-              </p>
-
-              <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
-                one plan, no tiers
-              </p>
-
-              <ul className="space-y-3 mb-8">
-                {proFeatures.map(item => (
-                  <li
-                    key={item}
-                    className="flex items-center gap-2.5 text-sm text-slate-600 dark:text-slate-300"
-                  >
-                    <Check className="size-4 text-sky-600 dark:text-sky-400 shrink-0" />
-
-                    {item}
-                  </li>
-                ))}
-              </ul>
-
-              <LinkButton
-                href="/auth/register"
-                fullWidth
-              >
-                Go Pro
-              </LinkButton>
-            </div>
-          </div>
-        </Container>
-      </section>
-
-      {/* CTA */}
       <section className="py-16 sm:py-20">
         <Container>
           <div className="max-w-3xl mx-auto text-center">

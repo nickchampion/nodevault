@@ -12,7 +12,7 @@ export const vaultGet: ApiHandler<GetVaultRequest, VaultDto> = async (context) =
   const [row] = await context.session.db
     .select({
       vault: vaults,
-      documentCount: sql<number>`count(${assets.id}) filter (where ${assets.source} = 'upload')`.mapWith(Number),
+      documentCount: sql<number>`count(${assets.id}) filter (where ${assets.source} = 'file')`.mapWith(Number),
       urlCount: sql<number>`count(${assets.id}) filter (where ${assets.source} = 'url')`.mapWith(Number),
     })
     .from(vaults)
