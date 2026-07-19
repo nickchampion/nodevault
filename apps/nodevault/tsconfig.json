@@ -4,7 +4,24 @@
     "lib": ["ES2022", "dom", "dom.iterable", "webworker"],
     "jsx": "preserve",
     "types": ["node", "react", "react-dom"],
-    "plugins": [{ "name": "next" }]
+    "plugins": [{ "name": "next" }],
+    "paths": {
+      "@platform/apps.api": ["../../apps/api/router.ts"],
+      "@platform/components.api": ["../../components/api/index.ts"],
+      "@platform/components.cache": ["../../components/cache/index.ts"],
+      "@platform/components.configuration": ["../../components/configuration/index.ts"],
+      "@platform/components.configuration.server": ["../../components/configuration/server.ts"],
+      "@platform/components.nodevault.contracts": ["../../components/nodevault/contracts/index.ts"],
+      "@platform/components.nodevault.domain": ["../../components/nodevault/domain/index.ts"],
+      "@platform/components.postgres": ["../../components/postgres/index.ts"],
+      "@platform/components.context": ["../../components/context/index.ts"],
+      "@platform/components.utils": ["../../components/utils/index.ts"],
+      "@platform/components.utils.server": ["../../components/utils-server/index.ts"],
+      "@platform/integrations.cloudflare": ["../../integrations/cloudflare/index.ts"],
+      "@platform/integrations.gemini": ["../../integrations/gemini/index.ts"],
+      "@platform/integrations.resend": ["../../integrations/resend/index.ts"],
+      "@platform/integrations.vertexsearch": ["../../integrations/vertexsearch/index.ts"]
+    }
   },
   "include": [
     "next-env.d.ts",

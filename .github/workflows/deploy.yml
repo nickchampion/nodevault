@@ -77,20 +77,20 @@ jobs:
         run: pnpm tsc --noEmit
 
       - name: Build API
-        if: steps.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[force]')
         env:
           NODEVAULT: ${{ secrets.NODEVAULT_CONFIGURATION }}
         run: pnpm nx build @platform/apps.api
 
       - name: Build Next.js (nodevault)
-        if: steps.changes.outputs.nodevault == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.changes.outputs.nodevault == 'true' || github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[force]')
         env:
           NEXT_PUBLIC_ENVIRONMENT: prod
           NEXT_PUBLIC_VERSION: ${{ github.sha }}
         run: pnpm nx build-cf @platform/apps.nodevault
 
       - name: Postgres Migration Neon
-        if: steps.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[force]')
         env:
           NEXT_PUBLIC_ENVIRONMENT: prod
           NEXT_PUBLIC_VERSION: ${{ github.sha }}
@@ -98,11 +98,11 @@ jobs:
         run: pnpm run db:neon
 
       - name: Setup flyctl
-        if: steps.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[force]')
         uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy API to Fly.io
-        if: steps.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.changes.outputs.api == 'true' || github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[force]')
         continue-on-error: true
         working-directory: apps/api
         env:
@@ -110,7 +110,7 @@ jobs:
         run: flyctl deploy --local-only
 
       - name: Deploy nodevault to Cloudflare Workers
-        if: steps.changes.outputs.nodevault == 'true' || github.event_name == 'workflow_dispatch'
+        if: steps.changes.outputs.nodevault == 'true' || github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[force]')
         working-directory: apps/nodevault
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
