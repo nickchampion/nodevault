@@ -1,0 +1,29 @@
+# fly.toml app configuration file generated for nodevault on 2026-07-19T09:52:22Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'nodevault'
+primary_region = 'lhr'
+
+[build]
+  dockerfile = 'Dockerfile'
+
+[http_service]
+  auto_start_machines = true
+  auto_stop_machines = true
+  force_https = true
+  internal_port = 8002
+  min_machines_running = 0
+
+[[vm]]
+  memory = '1gb'
+  size = 'shared-cpu-2x'
+
+[[vm]]
+  cpu_kind = 'shared'
+  cpus = 2
+  memory = '2gb'
+  memory_mb = 2048
+  processes = ['app']
+  size = 'shared-cpu-2x'
