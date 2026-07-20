@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm'
 import { topics, users } from '@platform/components.nodevault.domain'
 import { topicCreatedEvent, inngest } from '../client.js'
-import { withSession } from '../db.js'
-import { aiClientForAccount } from '../../ai.js'
+import { withSession } from '../../utils/db.js'
+import { aiClientForAccount } from '../../utils/ai/client.js'
 
 const markTopicFailed = async (topicId: number, message: string): Promise<void> => {
   await withSession(async db => db.update(topics)
@@ -10,11 +10,6 @@ const markTopicFailed = async (topicId: number, message: string): Promise<void> 
     .where(eq(topics.id, topicId)))
 }
 
-/**
- * topics/topic.created → embed the saved topic phrase with the account's own AI
- * provider (same as asset ingestion) and store the vector so process-url-asset.ts /
- * process-file-asset.ts can match new content against it via matchTopics in shared.ts.
- */
 export const embedTopic = inngest.createFunction(
   {
     id: 'embed-topic',
@@ -30,10 +25,8 @@ export const embedTopic = inngest.createFunction(
         where: eq(topics.id, topicId),
       })
 
-      // the creating transaction commits after the event is sent — retry until visible
       if (!row) throw new Error(`Topic ${topicId} is not visible yet`)
 
-      // duplicate delivery of an already-embedded topic — nothing to do
       if (row.status === 'ready') return null
 
       const owner = await db.query.users.findFirst({

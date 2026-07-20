@@ -3,8 +3,10 @@ import type { ApiHandler } from '@platform/components.context'
 import type { OpenAiCredentialsStatus, SetOpenAiKeyRequest } from '@platform/components.nodevault.contracts'
 import { accounts } from '@platform/components.nodevault.domain'
 import { createOpenAiClient } from '@platform/integrations.openai'
-import { encryptOpenAiKey, invalidateAiAccount } from '../../ai.js'
-import { toGcpConfig } from '../../gcp.js'
+import { serverConfiguration } from '@platform/components.configuration.server'
+import { encrypt } from '@platform/components.utils.server'
+import { invalidateAiAccount } from '../../utils/ai/client.js'
+import { toGcpConfig } from '../../utils/ai/gcp.js'
 import { accountOpenaiConnectedEvent, inngest } from '../../inngest/index.js'
 import { toOpenAiStatusDto } from './mappers.js'
 
@@ -81,7 +83,7 @@ export const accountSetOpenAiKey: ApiHandler<SetOpenAiKeyRequest, OpenAiCredenti
     .update(accounts)
     .set({
       aiProvider: 'openai',
-      openaiApiKey: encryptOpenAiKey(apiKey),
+      openaiApiKey: encrypt(apiKey, serverConfiguration.environment.key, serverConfiguration.environment.salt),
       openaiVerifiedAtUTC: new Date(),
       openaiVectorStoreId: vectorStoreId,
       openaiMigratingAtUTC: isFirstConnection ? new Date() : existing.openaiMigratingAtUTC,
@@ -90,8 +92,6 @@ export const accountSetOpenAiKey: ApiHandler<SetOpenAiKeyRequest, OpenAiCredenti
     .where(eq(accounts.id, accountId))
     .returning()
 
-  // evict only once the new credentials are committed — a rollback must not leave the
-  // cache cleared and then repopulated from the old row mid-transaction
   context.session.on('afterCommit', async () => {
     await invalidateAiAccount(accountId)
   })

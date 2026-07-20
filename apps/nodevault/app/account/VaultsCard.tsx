@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import {
-  Alert, Button, Card, FieldError, Input, Label, Spinner, TextField,
+  Alert, Button, Card, FieldError, Input, Label, Spinner, Tabs, TextField,
 } from '@heroui/react'
-import { createVaultRequestSchema } from '@platform/components.nodevault.contracts'
+import { createVaultFromRssRequestSchema, createVaultRequestSchema, maxRssItems } from '@platform/components.nodevault.contracts'
 import { formatLocalDate } from '@platform/components.utils'
 import {
-  FileText, Link2, MessagesSquare, Plus, Trash2, Vault,
+  FileText, Link2, MessagesSquare, Plus, Rss, Trash2, Vault,
 } from 'lucide-react'
 import type { SubmitEvent } from 'react'
 import type { inferRouterOutputs } from '@trpc/server'
@@ -22,6 +22,7 @@ import type { FormErrors } from '../../lib/validation'
 type VaultDto = inferRouterOutputs<AppRouter>['vaults']['list']['vaults'][number]
 
 const validateVaultForm = zodValidate(createVaultRequestSchema)
+const validateRssForm = zodValidate(createVaultFromRssRequestSchema)
 
 const count = (value: number, noun: string) => `${value} ${noun}${value === 1 ? '' : 's'}`
 
@@ -32,6 +33,10 @@ export const VaultsCard = () => {
   const [errors, setErrors] = useState<FormErrors>({})
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [feedUrl, setFeedUrl] = useState('')
+  const [rssErrors, setRssErrors] = useState<FormErrors>({})
+  const [rssPending, setRssPending] = useState(false)
+  const [rssError, setRssError] = useState<string | null>(null)
   const [pendingDelete, setPendingDelete] = useState<VaultDto | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [deleteError, setDeleteError] = useState<string | null>(null)
@@ -79,6 +84,30 @@ export const VaultsCard = () => {
       setError((error_ as Error).message || 'Failed to create the vault. Please try again.')
     } finally {
       setPending(false)
+    }
+  }
+
+  const submitRss = async (event: SubmitEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    const validationErrors = validateRssForm({ feedUrl })
+
+    setRssErrors(validationErrors)
+
+    if (Object.keys(validationErrors).length > 0) return
+
+    setRssPending(true)
+    setRssError(null)
+
+    try {
+      const vault = await api.vaults.createFromRss.mutate({ feedUrl })
+
+      setVaults([...vaults, vault])
+      setFeedUrl('')
+    } catch (error_) {
+      setRssError((error_ as Error).message || 'Failed to create the vault from that feed. Please try again.')
+    } finally {
+      setRssPending(false)
     }
   }
 
@@ -150,17 +179,32 @@ export const VaultsCard = () => {
                     className="flex items-center justify-between gap-4 py-3"
                   >
                     <div>
-                      <Link
-                        href={`/account/vaults/${vault.id}`}
-                        className="text-slate-900 dark:text-slate-100 font-medium hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
-                      >
-                        {vault.name}
-                      </Link>
+                      <div className="flex items-center gap-1.5">
+                        <Link
+                          href={`/account/vaults/${vault.id}`}
+                          className="text-slate-900 dark:text-slate-100 font-medium hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
+                        >
+                          {vault.name}
+                        </Link>
+
+                        {vault.rssFeedUrl && (
+                          <Rss
+                            className="size-3.5 text-orange-500 dark:text-orange-400 shrink-0"
+                            aria-label="Synced from an RSS feed"
+                          />
+                        )}
+                      </div>
 
                       <p className="text-sm text-slate-500 dark:text-slate-400">
                         Created
                         {' '}
                         {formatLocalDate(vault.createdAtUTC, 'dd MMM yyyy')}
+                        {vault.rssFeedUrl && vault.rssLastPolledAtUTC && (
+                          <>
+                            {' · Last checked '}
+                            {formatLocalDate(vault.rssLastPolledAtUTC, 'dd MMM yyyy')}
+                          </>
+                        )}
                       </p>
                     </div>
 
@@ -218,49 +262,123 @@ export const VaultsCard = () => {
           </Alert>
         )}
 
-        <form
-          className="flex items-start gap-3 pt-4 mt-2 border-t border-slate-200 dark:border-slate-800"
-          noValidate
-          onSubmit={submit}
-        >
-          <TextField
-            isRequired
-            isInvalid={Boolean(errors.name)}
-            value={name}
-            onChange={setName}
-            className="flex-1"
-            aria-label="Vault name"
-          >
-            <Label className="sr-only">Vault name</Label>
+        <div className="pt-4 mt-2 border-t border-slate-200 dark:border-slate-800">
+          <Tabs defaultSelectedKey="new">
+            <Tabs.List aria-label="Create a vault">
+              <Tabs.Tab id="new">
+                New vault
+                <Tabs.Indicator />
+              </Tabs.Tab>
 
-            <Input placeholder="New vault name" />
+              <Tabs.Tab id="rss">
+                From RSS feed
+                <Tabs.Indicator />
+              </Tabs.Tab>
+            </Tabs.List>
 
-            <FieldError>{errors.name}</FieldError>
-          </TextField>
+            <Tabs.Panel
+              id="new"
+              className="pt-4"
+            >
+              <form
+                className="flex items-start gap-3"
+                noValidate
+                onSubmit={submit}
+              >
+                <TextField
+                  isRequired
+                  isInvalid={Boolean(errors.name)}
+                  value={name}
+                  onChange={setName}
+                  className="flex-1"
+                  aria-label="Vault name"
+                >
+                  <Label className="sr-only">Vault name</Label>
 
-          <Button
-            type="submit"
-            isPending={pending}
-          >
-            {pending ? <Spinner size="sm" /> : <Plus className="size-4" />}
-            Create vault
-          </Button>
-        </form>
+                  <Input placeholder="New vault name" />
 
-        {error && (
-          <Alert
-            status="danger"
-            className="mt-4"
-          >
-            <Alert.Indicator />
+                  <FieldError>{errors.name}</FieldError>
+                </TextField>
 
-            <Alert.Content>
-              <Alert.Title>Something went wrong</Alert.Title>
+                <Button
+                  type="submit"
+                  isPending={pending}
+                >
+                  {pending ? <Spinner size="sm" /> : <Plus className="size-4" />}
+                  Create vault
+                </Button>
+              </form>
 
-              <Alert.Description>{error}</Alert.Description>
-            </Alert.Content>
-          </Alert>
-        )}
+              {error && (
+                <Alert
+                  status="danger"
+                  className="mt-4"
+                >
+                  <Alert.Indicator />
+
+                  <Alert.Content>
+                    <Alert.Title>Something went wrong</Alert.Title>
+
+                    <Alert.Description>{error}</Alert.Description>
+                  </Alert.Content>
+                </Alert>
+              )}
+            </Tabs.Panel>
+
+            <Tabs.Panel
+              id="rss"
+              className="pt-4"
+            >
+              <form
+                className="flex items-start gap-3"
+                noValidate
+                onSubmit={submitRss}
+              >
+                <TextField
+                  isRequired
+                  isInvalid={Boolean(rssErrors.feedUrl)}
+                  value={feedUrl}
+                  onChange={setFeedUrl}
+                  className="flex-1"
+                  aria-label="RSS feed URL"
+                >
+                  <Label className="sr-only">RSS feed URL</Label>
+
+                  <Input placeholder="https://example.substack.com/feed" />
+
+                  <FieldError>{rssErrors.feedUrl}</FieldError>
+                </TextField>
+
+                <Button
+                  type="submit"
+                  isPending={rssPending}
+                >
+                  {rssPending ? <Spinner size="sm" /> : <Rss className="size-4" />}
+                  Create vault
+                </Button>
+              </form>
+
+              <p className="text-sm text-slate-500 dark:text-slate-400 mt-2">
+                {`Imports the ${maxRssItems} most recent articles and checks for new ones weekly.`}
+              </p>
+
+              {rssError && (
+                <Alert
+                  status="danger"
+                  className="mt-4"
+                >
+                  <Alert.Indicator />
+
+                  <Alert.Content>
+                    <Alert.Title>Something went wrong</Alert.Title>
+
+                    <Alert.Description>{rssError}</Alert.Description>
+                  </Alert.Content>
+                </Alert>
+              )}
+            </Tabs.Panel>
+          </Tabs>
+        </div>
       </Card.Content>
     </Card>
   )

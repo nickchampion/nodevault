@@ -14,5 +14,7 @@ export const toVaultDto = (vault: Vault, counts: VaultCounts): VaultDto => ({
   documentCount: counts.documentCount,
   urlCount: counts.urlCount,
   conversationCount: counts.conversationCount,
+  rssFeedUrl: vault.rssFeedUrl,
+  rssLastPolledAtUTC: vault.rssLastPolledAtUTC ? toUtcIso(vault.rssLastPolledAtUTC) : null,
   createdAtUTC: toUtcIso(vault.createdAtUTC),
 })

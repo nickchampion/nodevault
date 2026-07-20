@@ -33,13 +33,6 @@ const extractUrlContent = async (url: string): Promise<{ title: string | null, c
   return { title: article.title || null, content: article.textContent }
 }
 
-/**
- * assets/url.submitted → fetch the page, extract the readable article text (Readability —
- * the same extraction Firefox Reader View uses, so nav/ads/footer boilerplate is
- * stripped), chunk, embed with the account's AI provider and store vectors in
- * asset_chunks, then mark the asset ready. Shares every step past content extraction
- * with process-file-asset.ts via shared.ts.
- */
 export const processUrlAsset = inngest.createFunction(
   {
     id: 'process-url-asset',
@@ -60,8 +53,6 @@ export const processUrlAsset = inngest.createFunction(
     if (!asset) return { assetId, skipped: true }
 
     const { title, content } = await step.run('fetch-and-extract', async () => {
-      // re-checked here (not just at submission time) to close the gap a DNS-rebinding
-      // attacker could exploit between submission and this workflow actually fetching
       await assertPublicHttpUrl(asset.url)
 
       return extractUrlContent(asset.url)

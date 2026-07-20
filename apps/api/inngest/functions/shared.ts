@@ -10,19 +10,11 @@ import type { VaultAsset } from '@platform/components.nodevault.domain'
 import { embeddingBatchSize } from '@platform/integrations.gemini'
 import { createResendClient } from '@platform/integrations.resend'
 import { inngest } from '../client.js'
-import { withSession } from '../db.js'
-import { aiClientForAsset, aiClientForVault } from '../../ai.js'
+import { withSession } from '../../utils/db.js'
+import { aiClientForAsset, aiClientForVault } from '../../utils/ai/client.js'
 
 type Step = GetStepTools<typeof inngest>
 
-/**
- * Load the asset row and mark it processing, both in one session — there's nothing slow
- * between the read and the write, so one transaction keeps it atomic and saves a round
- * trip over two. `validate` throws for a row this workflow can't handle (bad content
- * type, missing URL, ...) and otherwise returns whatever the extraction step needs.
- * Returns null for an asset already marked ready (duplicate event delivery) so the
- * caller can skip the rest of the run.
- */
 export const loadAndMarkProcessing = <T>(
   step: Step,
   assetId: number,
@@ -30,10 +22,8 @@ export const loadAndMarkProcessing = <T>(
 ) => step.run('load-and-validate', () => withSession(async (db) => {
   const row = await db.query.assets.findFirst({ where: eq(assets.id, assetId) })
 
-  // the creating transaction commits after the event is sent — retry until the row is visible
   if (!row) throw new Error(`Asset ${assetId} is not visible yet`)
 
-  // duplicate delivery of an already processed asset — nothing to do
   if (row.status === 'ready') return null
 
   const validated = validate(row)
@@ -45,7 +35,6 @@ export const loadAndMarkProcessing = <T>(
   return validated
 }))
 
-/** Replace an asset's chunks wholesale so retries and re-runs stay idempotent. */
 export const storeChunks = async (step: Step, assetId: number, content: string): Promise<number> => step.run('store-chunks', async () => {
   const chunks = chunkText(content)
   const rows = chunks.map((text, chunkIndex) => ({ assetId, chunkIndex, text }))
@@ -61,12 +50,6 @@ export const storeChunks = async (step: Step, assetId: number, content: string):
   return chunks.length
 })
 
-/**
- * One step per batch: a provider rate limit only retries its own batch, and completed
- * batches are memoised across retries. The select and the update each get their own
- * session, kept deliberately separate either side of the embedding call so no DB
- * transaction — and pooled connection — sits open across a slow external request.
- */
 export const embedChunks = async (step: Step, assetId: number, chunkCount: number): Promise<void> => {
   const batches = Math.ceil(chunkCount / embeddingBatchSize)
 
@@ -86,9 +69,7 @@ export const embedChunks = async (step: Step, assetId: number, chunkCount: numbe
 
       if (rows.length === 0) return
 
-      // per-account AI provider: embeddings run through whichever provider the vault owner is on
       const ai = await withSession(async db => aiClientForAsset(db, assetId))
-
       const embeddings = await ai.embedChunks(rows.map(row => row.text))
 
       await withSession(async (db) => {
@@ -139,18 +120,12 @@ export const markReady = async (step: Step, assetId: number, patch: Partial<Pick
     .where(eq(assets.id, assetId))))
 }
 
-/** Shared by both functions' onFailure — runs outside the step/replay machinery, so no step.run. */
 export const markFailed = async (assetId: number, message: string): Promise<void> => {
   await withSession(async db => db.update(assets)
     .set({ status: 'failed', error: message.slice(0, 1000), updatedAtUTC: new Date() })
     .where(eq(assets.id, assetId)))
 }
 
-// a topic "touches on" new content once its embedding clears this cosine-similarity bar
-// against the asset's best chunk — a fixed cutoff (rather than the search noise-floor
-// stats in candidates.ts) since a single new asset rarely has enough chunks for a
-// meaningful mean/stddev, and there's no query to rank candidates against here, just one
-// fixed embedding to test. Tune once real topics/content are in use.
 const TOPIC_MATCH_THRESHOLD = 0.6
 
 const cosineSimilarity = (a: number[], b: number[]): number => {
@@ -158,12 +133,9 @@ const cosineSimilarity = (a: number[], b: number[]): number => {
 
   for (let i = 0; i < a.length; i++) dot += a[i] * b[i]
 
-  // embeddings are already unit-normalised by createGeminiClient, so the dot product
-  // alone equals cosine similarity — no need to divide by magnitudes
   return dot
 }
 
-/** The asset's own chunk that best matches a topic's embedding. */
 const bestMatchingChunk = (
   topicEmbedding: number[],
   chunks: Array<{ id: number, embedding: number[] | null }>,
@@ -181,13 +153,6 @@ const bestMatchingChunk = (
   return best
 }
 
-/**
- * Check a newly-ready asset against every ready topic saved by a user on the same
- * account, and email each user whose topic newly matched. Runs as the final step of
- * process-url-asset.ts / process-file-asset.ts once chunks + embeddings exist. Matches
- * are recorded in topic_matches (unique on topic+asset) so retries/re-runs never send a
- * duplicate email — only topics that were actually newly inserted trigger a send.
- */
 export const matchTopics = async (step: Step, assetId: number): Promise<void> => {
   await step.run('match-topics', async () => {
     const newMatches = await withSession(async (db) => {
@@ -274,7 +239,6 @@ export const matchTopics = async (step: Step, assetId: number): Promise<void> =>
           html,
         })
       } catch (error) {
-        // a failed alert email should not fail the ingestion workflow
         console.error('Failed to send topic-matched email', error)
       }
     }

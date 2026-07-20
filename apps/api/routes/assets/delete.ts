@@ -3,7 +3,7 @@ import type { ApiHandler } from '@platform/components.context'
 import type { DeleteAssetRequest, OkResponse } from '@platform/components.nodevault.contracts'
 import { accounts, assets, vaults } from '@platform/components.nodevault.domain'
 import { createR2Client } from '@platform/integrations.cloudflare'
-import { aiClientForCleanup } from '../../ai.js'
+import { aiClientForCleanup } from '../../utils/ai/client.js'
 
 export const assetsDelete: ApiHandler<DeleteAssetRequest, OkResponse> = async (context) => {
   const accountId = context.user?.accountId

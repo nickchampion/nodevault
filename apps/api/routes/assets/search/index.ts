@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
 import type { SearchVaultRequest, SearchVaultResponse } from '@platform/components.nodevault.contracts'
 import { vaults } from '@platform/components.nodevault.domain'
-import { aiClientForAccount } from '../../../ai.js'
+import { aiClientForAccount } from '../../../utils/ai/client.js'
 import { resolveSearchStrategy } from './factory.js'
 
 export const assetsSearch: ApiHandler<SearchVaultRequest, SearchVaultResponse> = async (context) => {

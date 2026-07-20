@@ -4,8 +4,11 @@ import type { GcpCredentialsStatus, SetGcpCredentialsRequest } from '@platform/c
 import { accounts } from '@platform/components.nodevault.domain'
 import { createGeminiClient } from '@platform/integrations.gemini'
 import { createVertexSearchClient, dataStoreId } from '@platform/integrations.vertexsearch'
+import { serverConfiguration } from '@platform/components.configuration.server'
+import { encrypt } from '@platform/components.utils.server'
 import { accountGcpConnectedEvent, inngest } from '../../inngest/index.js'
-import { encryptGcpCredentials, invalidateGcpAccount, toGcpConfig } from '../../gcp.js'
+import { toGcpConfig } from '../../utils/ai/gcp.js'
+import { invalidateAiAccount } from '../../utils/ai/client.js'
 import { toGcpStatusDto } from './mappers.js'
 
 const MESSAGE_LIMIT = 400
@@ -70,7 +73,7 @@ export const accountSetGcpCredentials: ApiHandler<SetGcpCredentialsRequest, GcpC
     .set({
       gcpProjectId: projectId,
       gcpLocation: location,
-      gcpCredentials: encryptGcpCredentials(serviceAccountKey),
+      gcpCredentials: encrypt(serviceAccountKey, serverConfiguration.environment.key, serverConfiguration.environment.salt),
       gcpVerifiedAtUTC: new Date(),
       updatedAtUTC: new Date(),
     })
@@ -80,7 +83,7 @@ export const accountSetGcpCredentials: ApiHandler<SetGcpCredentialsRequest, GcpC
   // evict only once the new credentials are committed — a rollback must not leave the
   // cache cleared and then repopulated from the old row mid-transaction
   context.session.on('afterCommit', async () => {
-    await invalidateGcpAccount(accountId)
+    await invalidateAiAccount(accountId)
   })
 
   if (firstConnection) {

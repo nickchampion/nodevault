@@ -8,6 +8,15 @@ export const createVaultRequestSchema = z.object({
 
 export type CreateVaultRequest = z.infer<typeof createVaultRequestSchema>
 
+// applies both to the initial import and to each weekly sync run
+export const maxRssItems = 100
+
+export const createVaultFromRssRequestSchema = z.object({
+  feedUrl: z.url('Enter a valid RSS feed URL'),
+})
+
+export type CreateVaultFromRssRequest = z.infer<typeof createVaultFromRssRequestSchema>
+
 export const getVaultRequestSchema = z.object({
   vaultId: z.int().positive(),
 })
@@ -26,6 +35,8 @@ export const vaultDtoSchema = z.object({
   documentCount: z.int().nonnegative(),
   urlCount: z.int().nonnegative(),
   conversationCount: z.int().nonnegative(),
+  rssFeedUrl: z.string().nullable(),
+  rssLastPolledAtUTC: z.iso.datetime().nullable(),
   createdAtUTC: z.iso.datetime(),
 })
 
@@ -35,3 +46,9 @@ export const listVaultsResponseSchema = z.object({
 
 export type VaultDto = z.infer<typeof vaultDtoSchema>
 export type ListVaultsResponse = z.infer<typeof listVaultsResponseSchema>
+
+export const rssVaultSyncRequestedEventSchema = z.object({
+  vaultId: z.int().positive(),
+})
+
+export type RssVaultSyncRequestedEvent = z.infer<typeof rssVaultSyncRequestedEventSchema>

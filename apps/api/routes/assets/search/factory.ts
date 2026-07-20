@@ -1,7 +1,7 @@
 import type { SearchType } from '@platform/components.nodevault.contracts'
 import type { DatabaseClient } from '@platform/components.context'
 import type { SearchResultDto } from '@platform/components.nodevault.contracts'
-import type { AiClient } from '../../../ai.js'
+import type { AiClient } from '../../../utils/ai/client.js'
 import { combinedSearch } from './combined.js'
 import { keywordSearch } from './keyword.js'
 

@@ -1,5 +1,6 @@
 import { execute, protectedProcedure, router } from '@platform/components.api'
 import {
+  createVaultFromRssRequestSchema,
   createVaultRequestSchema,
   deleteVaultRequestSchema,
   getVaultRequestSchema,
@@ -8,6 +9,7 @@ import {
   vaultDtoSchema,
 } from '@platform/components.nodevault.contracts'
 import { vaultCreate } from './create.js'
+import { vaultCreateFromRss } from './create-from-rss.js'
 import { vaultDelete } from './delete.js'
 import { vaultGet } from './get.js'
 import { vaultsList } from './list.js'
@@ -26,6 +28,11 @@ export const vaultsRouter = router({
     .input(createVaultRequestSchema)
     .output(vaultDtoSchema)
     .mutation(execute(vaultCreate)),
+
+  createFromRss: protectedProcedure
+    .input(createVaultFromRssRequestSchema)
+    .output(vaultDtoSchema)
+    .mutation(execute(vaultCreateFromRss)),
 
   delete: protectedProcedure
     .input(deleteVaultRequestSchema)

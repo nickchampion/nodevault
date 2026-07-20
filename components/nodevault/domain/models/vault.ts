@@ -25,6 +25,10 @@ export const vaults = nodevault.table('vaults', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
   accountId: integer('account_id').notNull().references(() => accounts.id),
   name: text('name').notNull(),
+  // set when the vault was created from an RSS feed; the weekly sync workflow polls
+  // every vault with a non-null feed url for new items
+  rssFeedUrl: text('rss_feed_url'),
+  rssLastPolledAtUTC: timestamp('rss_last_polled_at', { withTimezone: true, mode: 'date' }),
   createdAtUTC: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, table => [
   index('vaults_account_id_idx').on(table.accountId),

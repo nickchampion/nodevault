@@ -4,7 +4,7 @@ import type { AssetDto, SubmitUrlAssetRequest } from '@platform/components.nodev
 import { AppError, assets, vaults } from '@platform/components.nodevault.domain'
 import { assertPublicHttpUrl } from '@platform/components.utils.server'
 import { assetUrlSubmittedEvent, inngest } from '../../inngest/index.js'
-import { aiClientForAccount } from '../../ai.js'
+import { aiClientForAccount } from '../../utils/ai/client.js'
 import { toAssetDto } from './mappers.js'
 
 export const assetsSubmitUrl: ApiHandler<SubmitUrlAssetRequest, AssetDto> = async (context) => {

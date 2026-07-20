@@ -78,6 +78,13 @@
       "when": 1784460805879,
       "tag": "0010_add-openai-provider",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1784473617769,
+      "tag": "0011_vault-rss-feed",
+      "breakpoints": true
     }
   ]
 }

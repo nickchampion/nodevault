@@ -2,9 +2,9 @@ import { eq, inArray, sql } from 'drizzle-orm'
 import { conversationMessages, conversations, assets } from '@platform/components.nodevault.domain'
 import type { ConversationMessage } from '@platform/components.nodevault.domain'
 import type { AskMode, CitationDto } from '@platform/components.nodevault.contracts'
-import type { AiClient } from '../ai.js'
-import { aiClientForAccount } from '../ai.js'
-import { withSession } from '../db.js'
+import type { AiClient } from '../utils/ai/client.js'
+import { aiClientForAccount } from '../utils/ai/client.js'
+import { withSession } from '../utils/db.js'
 import { hybridChunkCandidates } from '../routes/assets/search/candidates.js'
 import {
   answerPrompt, answerSystemPrompt, condensePrompt, managedAnswerSystemPrompt,
@@ -93,7 +93,6 @@ export const runAskPipeline = async ({
   }
   const generated = mode === 'managed' ? await generateManagedAnswer(args) : await generateLocalAnswer(args)
 
-  // client went away mid-generation: persist nothing further
   if (!generated || signal.aborted) return
 
   const [assistantMessage] = await withSession(async (db) => {
@@ -118,7 +117,6 @@ export const runAskPipeline = async ({
   writer.send({ type: 'done', messageId: assistantMessage.id })
 }
 
-/** Hand-rolled RAG: condense the question, retrieve pgvector chunks, ground the prompt manually. */
 const generateLocalAnswer = async ({
   ai, vaultId, history, question, writer, signal,
 }: GenerationArgs): Promise<Generated | null> => {
@@ -164,13 +162,6 @@ const generateLocalAnswer = async ({
   return { answer, citations }
 }
 
-/**
- * Managed retrieval: the conversation goes to the account's provider (Gemini + Vertex
- * AI Search, or OpenAI + a vector store) with a grounding/file_search tool scoped to
- * this vault — the model derives its own retrieval queries, so there is no condense or
- * retrieve step. Citations are rebuilt from the grounded asset ids the adapter reports
- * and enriched from the DB.
- */
 const generateManagedAnswer = async ({
   ai, vaultId, history, question, writer, signal,
 }: GenerationArgs): Promise<Generated | null> => {
@@ -198,8 +189,6 @@ const generateManagedAnswer = async ({
     throw error
   }
 
-  // grounding that retrieves nothing can stream an empty answer — fall back to an
-  // explicit refusal so the transcript never shows a blank assistant turn
   if (!answer.trim()) {
     answer = NO_SOURCES_ANSWER
     writer.send({ type: 'token', text: answer })

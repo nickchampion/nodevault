@@ -11,16 +11,13 @@ import { createOpenAiClient } from '@platform/integrations.openai'
 import type { OpenAiClient } from '@platform/integrations.openai'
 import { createVertexSearchClient } from '@platform/integrations.vertexsearch'
 import { accountOpenaiConnectedEvent, inngest } from '../client.js'
-import { withSession } from '../db.js'
-import { invalidateAiAccount } from '../../ai.js'
-import { platformGcpConfig } from '../../gcp.js'
+import { withSession } from '../../utils/db.js'
+import { invalidateAiAccount } from '../../utils/ai/client.js'
 
-/** The account's own (now-committed) OpenAI client + vector store id, or fail the run — there is nothing to migrate to without them. */
 const ownOpenAi = async (accountId: number): Promise<{ client: OpenAiClient, vectorStoreId: string }> => {
   const account = await withSession(async db => db.query.accounts.findFirst({ where: eq(accounts.id, accountId) }))
 
   if (!account || account.aiProvider !== 'openai' || !account.openaiApiKey || !account.openaiVectorStoreId) {
-    // switched back or credentials were removed between steps — retrying won't help
     throw new NonRetriableError(`Account ${accountId} has no OpenAI credentials to migrate to`)
   }
 
@@ -31,22 +28,10 @@ const ownOpenAi = async (accountId: number): Promise<{ client: OpenAiClient, vec
   return { client: createOpenAiClient({ apiKey }), vectorStoreId: account.openaiVectorStoreId }
 }
 
-/**
- * account/openai.connected → the one-way Gemini-trial → OpenAI switch. Re-embeds every
- * ready asset's existing chunks through OpenAI (chunk text itself is provider-agnostic
- * and untouched — only the vector needs rebuilding), re-mirrors the asset into the
- * account's new OpenAI vector store, then removes the trial-era Vertex document. Also
- * re-embeds saved topics, since topic-match embeddings are provider-specific too.
- * Clears accounts.openaiMigratingAtUTC on completion so Settings drops the "migrating"
- * banner and the access gate (hasAiAccess) opens back up. Every step is idempotent
- * (chunk/topic embedding overwrite is safe to repeat, upsertAssetFile replaces any
- * previous file, Vertex delete swallows not-found), so retries and re-runs are safe.
- */
 export const migrateToOpenai = inngest.createFunction(
   {
     id: 'migrate-to-openai',
     retries: 2,
-    // one migration per account at a time; keep it gentle on the fresh key's rate limits
     concurrency: { limit: 1, key: 'event.data.accountId' },
     throttle: { limit: 6, period: '1m' },
     triggers: [accountOpenaiConnectedEvent],
@@ -74,7 +59,6 @@ export const migrateToOpenai = inngest.createFunction(
         const source = await withSession(async (db) => {
           const row = await db.query.assets.findFirst({ where: eq(assets.id, assetId) })
 
-          // deleted while the migration was running — nothing to move
           if (!row) return null
 
           const chunks = await db
@@ -112,8 +96,7 @@ export const migrateToOpenai = inngest.createFunction(
           .set({ openaiFileId: fileId })
           .where(eq(assets.id, assetId)))
 
-        // remove the trial-era copy from the platform's Vertex data store (idempotent — not-found is fine)
-        await createVertexSearchClient(platformGcpConfig()).deleteAssetDocument(assetId)
+        await createVertexSearchClient(serverConfiguration.gemini).deleteAssetDocument(assetId)
 
         return 'migrated'
       })

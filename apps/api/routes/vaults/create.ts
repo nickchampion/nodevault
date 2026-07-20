@@ -2,7 +2,7 @@ import { and, eq, sql } from 'drizzle-orm'
 import type { ApiHandler } from '@platform/components.context'
 import type { CreateVaultRequest, VaultDto } from '@platform/components.nodevault.contracts'
 import { vaults } from '@platform/components.nodevault.domain'
-import { aiClientForAccount } from '../../ai.js'
+import { aiClientForAccount } from '../../utils/ai/client.js'
 import { toVaultDto } from './mappers.js'
 
 export const vaultCreate: ApiHandler<CreateVaultRequest, VaultDto> = async (context) => {

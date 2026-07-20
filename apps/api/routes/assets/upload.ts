@@ -5,7 +5,7 @@ import type { AssetDto, UploadFileAssetRequest } from '@platform/components.node
 import { assets, vaults } from '@platform/components.nodevault.domain'
 import { createR2Client } from '@platform/integrations.cloudflare'
 import { assetUploadedEvent, inngest } from '../../inngest/index.js'
-import { aiClientForAccount } from '../../ai.js'
+import { aiClientForAccount } from '../../utils/ai/client.js'
 import { toAssetDto } from './mappers.js'
 
 export const assetsUpload: ApiHandler<UploadFileAssetRequest, AssetDto> = async (context) => {

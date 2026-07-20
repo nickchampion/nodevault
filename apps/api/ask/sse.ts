@@ -6,11 +6,6 @@ export type SseWriter = {
   end: () => void
 }
 
-/**
- * Minimal server-sent-events writer over the raw Node response. Each event is framed as
- * `event: <type>` + `data: <json>` — the payload also carries the type, so the client
- * parser only needs the data line (validated against askStreamEventSchema).
- */
 export const createSseWriter = (res: ServerResponse): SseWriter => ({
   send: (event) => {
     if (res.writableEnded) return

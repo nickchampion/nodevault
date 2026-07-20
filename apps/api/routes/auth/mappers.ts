@@ -1,7 +1,7 @@
 import { toUtcIso } from '@platform/components.utils'
 import type { AccountDto, UserDto } from '@platform/components.nodevault.contracts'
 import type { Account, User } from '@platform/components.nodevault.domain'
-import { trialEndsAt } from '../../gcp.js'
+import { trialEndsAt } from '../../utils/ai/gcp.js'
 
 /**
  * Database rows never cross the API boundary: every response field is picked

@@ -6,8 +6,8 @@ import { createAuthInfoFromToken } from '@platform/components.utils.server'
 import { isExpired } from '@platform/components.utils'
 import { askRequestSchema } from '@platform/components.nodevault.contracts'
 import { accounts, conversations, vaults } from '@platform/components.nodevault.domain'
-import { withSession } from '../db.js'
-import { aiAccessDeniedMessage, hasAiAccess } from '../ai.js'
+import { withSession } from '../utils/db.js'
+import { aiAccessDeniedMessage, hasAiAccess } from '../utils/ai/client.js'
 import { runAskPipeline } from './pipeline.js'
 import { createSseWriter } from './sse.js'
 
@@ -28,13 +28,6 @@ const respondJson = (context: Koa.Context, status: number, body: Record<string, 
   context.body = body
 }
 
-/**
- * Serves POST /ask/stream — the RAG ask endpoint. It streams tokens over SSE, which the
- * single-Response tRPC lifecycle can't do, so it runs as raw Koa middleware (same
- * pattern as the Inngest handler): auth, validation, and ownership checks respond with
- * plain JSON before any stream bytes; after that the response is an SSE event stream.
- * OPTIONS falls through to the standard CORS preflight handling.
- */
 export const askMiddleware: Koa.Middleware = async (context, next) => {
   if (context.path !== '/ask/stream' || context.method !== 'POST') return next()
 
@@ -93,7 +86,6 @@ export const askMiddleware: Koa.Middleware = async (context, next) => {
 
   if (!owned) return respondJson(context, 404, { message: 'Not found' })
 
-  // fail before the stream opens — the client gets a plain JSON error it can surface
   if (!aiUsable) return respondJson(context, 400, { message: deniedMessage ?? 'AI provider not configured' })
 
   // from here the response is a stream — Koa must not write its own response
