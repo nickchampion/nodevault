@@ -101,12 +101,6 @@ export class PgSession implements Session {
     }
   }
 
-  /**
-   * Raise an event and invoke event listeners asyncronously
-   * @param event
-   * @param arg
-   * @returns
-   */
   private async emit<T extends keyof SessionEvents>(event: T): Promise<void> {
     const events = this.eventListeners[event]
 
@@ -155,8 +149,6 @@ export class PgSession implements Session {
     this.transactional = false
   }
 
-  // 23505 = unique violation: surface as a data conflict (409) with a readable message
-  // derived from the constraint name, e.g. users_email_unique -> "users email"
   private mapError(error: unknown): Error {
     const pgError = error as { code?: string, constraint?: string }
 

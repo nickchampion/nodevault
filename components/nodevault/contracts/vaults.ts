@@ -8,8 +8,7 @@ export const createVaultRequestSchema = z.object({
 
 export type CreateVaultRequest = z.infer<typeof createVaultRequestSchema>
 
-// applies both to the initial import and to each weekly sync run
-export const maxRssItems = 100
+export const maxRssItems = 20
 
 export const createVaultFromRssRequestSchema = z.object({
   feedUrl: z.url('Enter a valid RSS feed URL'),

@@ -1,34 +1,47 @@
 # NodeVault
 
-NodeVault is a personal knowledge vault: drop in files or point it at URLs, and it turns them into a searchable, private knowledge base. Content is ingested through durable background workflows — chunked, embedded, and stored as vectors in Postgres — so you can find things by *meaning*, not just keywords. The goal is a knowledge layer you can ask questions of (grounded answers with citations back to your own documents) and that your AI tools can query on your behalf.
+[www.nodevault.cloud](https://www.nodevault.cloud)
+
+NodeVault is a personal knowledge vault: drop in files, submit URLs, or point it at an RSS feed, and it turns them into a searchable, private knowledge base you can ask questions of — grounded answers with citations back to your own documents, plus standing alerts when newly-ingested content matches something you care about. Content is ingested through durable background workflows — chunked, embedded, and stored as vectors in Postgres — so retrieval works by *meaning*, not just keywords.
 
 **How it works today:**
 
 1. Sign in with a magic link (no passwords) — email delivery via Resend
-2. Create a **vault** and add content: upload a file or submit a URL
-3. An **Inngest workflow** picks the file up asynchronously: extracts text (PDF via `unpdf`, DOCX via `mammoth`), chunks it, generates Gemini embeddings, and writes vectors to **pgvector**
-4. Search the vault semantically — cosine similarity over chunks, scoped per account/vault in plain SQL
+2. Create a **vault** and add content: upload a file, submit a URL, or point it at an **RSS feed** for ongoing ingestion
+3. An **Inngest workflow** picks the content up asynchronously: extracts text (PDF via `unpdf`, DOCX via `mammoth`, articles via `@mozilla/readability`), chunks it, generates embeddings (Gemini or OpenAI, per account), and writes vectors to **pgvector**
+4. Search the vault with **hybrid retrieval** — Reciprocal Rank Fusion over vector similarity and Postgres full-text search
+5. **Ask your vault** questions in a streamed, cited conversation — either a hand-rolled RAG pipeline or fully managed grounding via Vertex AI Search / OpenAI file search
+6. Save a **topic** and get emailed the moment newly-ingested content matches it — no polling, it rides the same ingestion pipeline every asset already goes through
 
-## Roadmap
+## Capabilities
 
-Retrieval is the engine, not the product — the value is what gets composed on top of the vault. The near-term build list, roughly in order:
+What started as a roadmap is now the core of the product:
 
-- **Hybrid search** — combine similarity with Postgres full-text search in one query. Pure semantic search is notoriously weak on exact names, codes, and acronyms — precisely what people search their own documents for — and because the vectors already live in Postgres this is a single SQL query.
-- **Q&A with citations** — retrieve top-n chunks, hand them to an LLM, and return an answer with citations linking back to the source file/URL and chunk. The `chunkIndex` column already supports pulling neighbouring context. This is the step that turns a results list into "ask your vault" — a categorically different product.
-- **Synthesis** — per-vault digests, "what do my saved articles say about X".
-- **Saved queries** — save a query's embedding, then compare newly ingested chunks against it inside the existing Inngest pipeline: "alert me when anything I save matches this topic." The durable-workflow architecture makes this nearly free.
-- **Vault MCP Server** — expose retrieval as an MCP server so AI tools (Claude, Cursor, …) can query your vault directly. This reframes NodeVault from "a search app" to "your personal knowledge layer that every agent can use".
+- **Hybrid search** — pgvector cosine similarity and Postgres `ts_rank_cd` full-text search run as independent candidate sets, fused with Reciprocal Rank Fusion (RRF, k=60) in a single chained-CTE Drizzle query. The vector leg doesn't use a fixed similarity cutoff: a chunk only qualifies if it clears the *vault's own* mean + 1.5×stddev, since a fixed threshold like 0.5 lets unrelated chunks through in some vaults and starves results in others.
+- **Q&A with citations** — streamed over Server-Sent Events, with two selectable modes per account:
+  - *Local*: a hand-rolled RAG pipeline — follow-up questions are condensed into standalone queries against conversation history, the top-8 chunks come from the same hybrid search used by the UI, and the model is asked to cite sources inline (`[1]`, `[2]`).
+  - *Managed*: retrieval is handed off entirely to the provider's own grounding — Vertex AI Search for Gemini accounts, OpenAI `file_search` over a vector store otherwise — letting the model issue its own retrieval queries mid-conversation instead of one upfront fetch. Citations are reconstructed afterward from grounding metadata and resolved back to the source asset.
+  - Conversations and per-message citations are persisted, so a vault's Q&A history is itself browsable.
+- **Saved topics & alerts** — save a free-text topic, it's embedded asynchronously, and every asset ingestion runs a final match step against every account topic. Idempotency is enforced structurally (a unique index on `(topicId, assetId)` + `onConflictDoNothing`) rather than in application logic, so a topic alerts at most once per asset no matter how many retries or qualifying chunks are involved. Matches batch into a single email per user via a React Email template.
+- **RSS feed vaults** — create a vault directly from a feed URL; a weekly Inngest cron fans out one sync per RSS-backed vault, throttled and deduped against existing asset URLs, feeding new items through the exact same ingestion pipeline as a manually-submitted URL.
+- **Multi-provider AI, with live migration** — Gemini and OpenAI sit behind one `AiClient` interface (embeddings, streaming answers, managed grounding, index mirroring), selectable per account. OpenAI's embeddings are truncated to 768 dimensions (Matryoshka representation learning) to match Gemini's, so both providers share one `pgvector` column with zero schema changes. Switching provider triggers a concurrency-limited background workflow that re-embeds and re-indexes every asset and topic before cutting over — with an account-level flag gating AI access mid-migration so answers never generate against a half-migrated index.
+- **Bring-your-own-cloud grounding** — the Vertex AI Search data store is provisioned per account in the user's *own* GCP project, not a shared platform index, with an explicit verification step that turns "API not enabled" / "no permission" / "store missing" into actionable setup errors instead of opaque failures.
+- **SSRF-safe ingestion** — every outbound fetch triggered by user input (RSS feeds, submitted URLs) is checked against `assertPublicHttpUrl` before it hits the network.
+
+**Not yet built:** per-vault synthesis/digests ("what do my saved articles say about X"), and an MCP server exposing vault retrieval to external AI tools.
 
 ## Tech Stack
 
 | Layer | Tech |
 |-------|------|
 | Frontend | Next.js 15 (App Router) · React 19 · HeroUI v3 · Tailwind CSS 4 |
-| API | Node.js · Koa · **tRPC v11** · zod contracts |
-| Background jobs | **Inngest** — durable, step-based workflows |
+| API | Node.js · Koa · **tRPC v11** · zod contracts · Server-Sent Events for streamed Q&A |
+| Background jobs | **Inngest** — durable, step-based workflows (including cron polling) |
 | Database | Postgres (Neon in prod) · Drizzle ORM · **pgvector** |
-| Embeddings | Google Gemini (`@google/genai`) |
-| Email | Resend |
+| AI providers | Google Gemini (`@google/genai`) and OpenAI (`openai`), selectable per account, behind a shared provider interface |
+| Managed grounding | Google Vertex AI Search (`@google-cloud/discoveryengine`) · OpenAI `file_search` vector stores |
+| Content extraction | `unpdf` (PDF) · `mammoth` (DOCX) · `@mozilla/readability` + `jsdom` (articles) · `rss-parser` (feeds) |
+| Email | Resend · React Email templates |
 | Hosting | Frontend on Cloudflare Workers (OpenNext) · API on Fly.io · file storage on R2 |
 | Tooling | NX monorepo · pnpm · TypeScript · Vitest · tsx |
 
@@ -40,7 +53,7 @@ The API is a tRPC router hosted on Koa, but business logic lives in plain **ApiH
 export const authLogin: ApiHandler<LoginRequest, OkResponse> = async (context) => {
   const body = context.event.payload  // typed & zod-validated
   // ...
-  return context.event.response.ok()  // checked against the response contract
+  return context.event.response.ok(authTokens)  // checked against the response contract
 }
 ```
 
@@ -58,7 +71,7 @@ export const authRouter = router({
 The frontend imports the router **type only** (`@platform/apps.api`) and gets a fully typed client with zero code generation:
 
 ```typescript
-await api.vaults.create.mutate({ name })   // typed end-to-end
+await api.vaults.create.mutate({ name })
 ```
 
 Each mutating request runs inside a single Postgres transaction (unit of work) managed by middleware — handlers never touch transaction code; a thrown error or 4xx response rolls everything back.
@@ -81,21 +94,24 @@ Embeddings are stored in the same Postgres schema as everything else (Drizzle `v
 
 ```
 apps/
-  api/          Koa + tRPC API server (routes/ per domain) + Inngest functions
+  api/          Koa + tRPC API server (routes/ per domain), SSE ask/ pipeline, Inngest functions
   nodevault/    Next.js 15 frontend (Cloudflare Workers via OpenNext)
 components/
   api/          Koa host for tRPC, router/procedure helpers, execute() bridge
   configuration/ Config builder + server config (NODEVAULT env var)
   context/      Context, InboundEvent, Response, Session, structured logging
-  contracts/    Public API contracts — zod schemas + DTO types (client-safe)
-  domain/       Drizzle schema + inferred row types, AppError
+  nodevault/
+    contracts/  Public API contracts — zod schemas + DTO types (client-safe)
+    domain/     Drizzle schema + inferred row types, AppError
   postgres/     PgSession unit of work, pool factory, migrations
   utils/        Pure utilities (date, string, math)
-  utils-server/ Node-only utilities (crypto, auth tokens)
+  utils-server/ Node-only utilities (crypto, auth tokens, SSRF-safe URL fetching)
 integrations/
-  cloudflare/   R2 object storage client (uploaded file blobs)
-  gemini/       Google Gemini client (embeddings)
-  resend/       Transactional email client
+  cloudflare/    R2 object storage client (uploaded file blobs)
+  gemini/        Google Gemini client (embeddings, generation)
+  openai/        OpenAI client (embeddings, Responses API, vector stores)
+  vertexsearch/  Google Vertex AI Search (Discovery Engine) client
+  resend/        Transactional email client
 ```
 
 Three strict layers keep the boundaries clean: **storage** (Drizzle rows, server-only) → **mappers** (explicit field picking, `Date` → UTC ISO) → **contracts** (zod DTOs, the only thing the frontend imports).

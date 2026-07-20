@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Button, Spinner } from '@heroui/react'
+import { Button, Link, Spinner } from '@heroui/react'
 import { formatLocalDate } from '@platform/components.utils'
 import { FileText, Link2, Trash2 } from 'lucide-react'
 import type { AssetSource } from '@platform/components.nodevault.contracts'
@@ -175,7 +175,19 @@ export const AssetList = ({ vaultId, source }: { vaultId: number, source: AssetS
 
               <div className="min-w-0">
                 <p className="text-slate-900 dark:text-slate-100 font-medium truncate">
-                  {asset.name ?? asset.url ?? 'Untitled'}
+                  {asset.source === 'url' && (
+                    <Link
+                      href={asset.url!}
+                      target="blank"
+                      className="hidden sm:inline-flex"
+                    >
+                      {asset.name}
+                    </Link>
+                  )}
+
+                  {asset.source !== 'url' && (
+                    asset.name ?? 'Untitled'
+                  )}
                 </p>
 
                 <p className="text-sm text-slate-500 dark:text-slate-400 truncate">

@@ -130,7 +130,7 @@ export const GcpCredentialsCard = () => {
             </Card.Title>
 
             <Card.Description>
-              After your free 7-day trial, NodeVault runs on your own GCP project for embeddings, Gemini and Vertex AI Search
+              Once you have connected GCP, NodeVault runs on your own GCP project for embeddings, Gemini and Vertex AI Search
             </Card.Description>
           </div>
         </div>
