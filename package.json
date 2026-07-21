@@ -18,7 +18,8 @@
     "app": "pnpm run clean && nx reset && reset && nx serve @platform/apps.nodevault",
     "app:build": "nx build @platform/apps.nodevault",
     "app:cf": "./.platform/cloudflare/local.sh",
-    "inngest": "npx inngest-cli@latest dev -u http://api.nodevault.local:8002/api/inngest"
+    "inngest": "npx inngest-cli@latest dev -u http://api.nodevault.local:8002/api/inngest",
+    "eval:retrieval": "tsx apps/api/ask/eval/run.ts"
   },
   "private": true,
   "type": "module",

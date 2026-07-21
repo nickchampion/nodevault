@@ -8,8 +8,6 @@ export type AppConfig = {
   environment: Environment
 }
 
-// Per-environment baseline, resolved by the same build() used for the API's serverConfiguration —
-// see components/configuration/configuration.ts. No secrets here, so no key/salt/decrypt needed.
 const client = {
   api: {
     default: 'http://api.nodevault.local:8002',
@@ -22,8 +20,6 @@ const client = {
 }
 
 export const appConfig = (): AppConfig => {
-  // Read as a literal `process.env.NEXT_PUBLIC_*` access (not through build()'s env$ indirection)
-  // so Next.js can statically inline it into the client bundle.
   const environment: EnvironmentSettings = {
     environment: (process.env.NEXT_PUBLIC_ENVIRONMENT as Environment) || 'dev',
     key: '',

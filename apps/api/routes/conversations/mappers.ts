@@ -7,6 +7,7 @@ export const toConversationDto = (conversation: Conversation, vaultName: string)
   vaultId: conversation.vaultId,
   vaultName,
   title: conversation.title,
+  mode: conversation.mode,
   createdAtUTC: toUtcIso(conversation.createdAtUTC),
   updatedAtUTC: toUtcIso(conversation.updatedAtUTC),
 })

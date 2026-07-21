@@ -1,7 +1,7 @@
 import {
   index, integer, jsonb, text, timestamp,
 } from 'drizzle-orm/pg-core'
-import type { CitationDto, ConversationRole } from '@platform/components.nodevault.contracts'
+import type { AskMode, CitationDto, ConversationRole } from '@platform/components.nodevault.contracts'
 import { nodevault } from './account.js'
 import { vaults } from './vault.js'
 
@@ -9,6 +9,9 @@ export const conversations = nodevault.table('conversations', {
   id: integer('id').primaryKey().generatedAlwaysAsIdentity(),
   vaultId: integer('vault_id').notNull().references(() => vaults.id, { onDelete: 'cascade' }),
   title: text('title').notNull(),
+  // the retrieval stack the conversation was created in — used to reopen it on the right
+  // Q&A tab in the search UI. Existing rows default to the hand-rolled 'local' pipeline.
+  mode: text('mode').$type<AskMode>().notNull().default('local'),
   createdAtUTC: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAtUTC: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, table => [

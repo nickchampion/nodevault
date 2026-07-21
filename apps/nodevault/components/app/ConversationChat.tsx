@@ -4,23 +4,22 @@ import { useEffect, useRef, useState } from 'react'
 import {
   Button, Input, Label, Spinner, TextField, ToggleButton, ToggleButtonGroup, Tooltip,
 } from '@heroui/react'
-import {
-  ExternalLink, FileText, Link2, MessageCirclePlus, Send,
-} from 'lucide-react'
+import { MessageCirclePlus, Send } from 'lucide-react'
 import type { SubmitEvent } from 'react'
 import type { AskMode, CitationDto, ConversationDto } from '@platform/components.nodevault.contracts'
 import { api } from '../../lib/api'
 import { streamAsk } from '../../lib/ask'
+import { AssetResultCard } from './AssetResultCard'
 
 const askModes: { id: AskMode, label: string, description: string }[] = [
   {
     id: 'local',
-    label: 'Self-hosted',
-    description: 'Our own search, built from scratch: a hybrid pgvector lookup finds the closest-matching chunks and hands them to the model as context.',
+    label: 'Your provider',
+    description: "We find the most relevant passages in your vault with our own hybrid pgvector search, then hand them to your connected provider's model (Gemini or OpenAI) to write the answer.",
   },
   {
     id: 'managed',
-    label: 'Provider-managed',
+    label: 'Provider search',
     description: "Your connected provider's own managed search (Vertex AI Search for Google Cloud, file search for OpenAI) grounds its answer as it responds. Newly added content can take a few minutes to appear.",
   },
 ]
@@ -33,39 +32,20 @@ type ChatMessage = {
   pending?: boolean
 }
 
-const CitationChips = ({ citations }: { citations: CitationDto[] }) => (
+const CitationChips = ({ citations, vaultId }: { citations: CitationDto[], vaultId: number }) => (
   <div className="flex flex-wrap gap-2 mt-2">
     {citations.map(citation => (
-      <span
+      <AssetResultCard
         key={citation.ordinal}
-        className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 dark:border-slate-700 px-2.5 py-1 text-xs text-slate-600 dark:text-slate-300"
-      >
-        <span className="font-medium">
-          [
-          {citation.ordinal}
-          ]
-        </span>
-
-        {citation.source === 'file'
-          ? <FileText className="size-3.5 shrink-0" />
-          : <Link2 className="size-3.5 shrink-0" />}
-
-        <span className="max-w-48 truncate">
-          {citation.assetName ?? citation.assetUrl ?? 'Untitled'}
-        </span>
-
-        {citation.source === 'url' && citation.assetUrl && (
-          <a
-            href={citation.assetUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Open source in a new tab"
-            className="hover:text-slate-900 dark:hover:text-slate-100"
-          >
-            <ExternalLink className="size-3.5" />
-          </a>
-        )}
-      </span>
+        variant="compact"
+        vaultId={vaultId}
+        assetId={citation.assetId}
+        assetName={citation.assetName}
+        assetUrl={citation.assetUrl}
+        source={citation.source}
+        chunkIndex={citation.chunkIndex}
+        ordinal={citation.ordinal}
+      />
     ))}
   </div>
 )
@@ -80,7 +60,19 @@ type ConversationChatProperties = {
 
   /** Hide the reset button on pages dedicated to a single conversation. */
   showNewConversation?: boolean
+
+  /**
+   * Controls the answer engine externally. When provided, the internal mode toggle is
+   * hidden and the parent owns the mode (the unified search page). When absent, the
+   * component keeps its own mode state and renders the toggle (the Conversations page).
+   */
+  mode?: AskMode
+  onModeChange?: (mode: AskMode) => void
   onConversationLoadedAction?: (conversation: ConversationDto) => void
+
+  /** Fired when the user resets to a fresh conversation — lets the parent drop any
+   * conversation deep-link from the URL. */
+  onNewConversationAction?: () => void
 }
 
 /**
@@ -89,12 +81,16 @@ type ConversationChatProperties = {
  * account Conversations page (continuing a specific one).
  */
 export const ConversationChat = ({
-  vaultId, initialConversationId, showNewConversation = true, onConversationLoadedAction,
+  vaultId, initialConversationId, showNewConversation = true,
+  mode: controlledMode, onModeChange, onConversationLoadedAction, onNewConversationAction,
 }: ConversationChatProperties) => {
   const [activeVaultId, setActiveVaultId] = useState<number | null>(vaultId ?? null)
   const [conversationId, setConversationId] = useState<number | null>(null)
   const [messages, setMessages] = useState<ChatMessage[]>([])
-  const [mode, setMode] = useState<AskMode>('local')
+  const [internalMode, setInternalMode] = useState<AskMode>('local')
+  const controlled = controlledMode !== undefined
+  const mode = controlledMode ?? internalMode
+  const setMode = onModeChange ?? setInternalMode
   const [question, setQuestion] = useState('')
   const [loading, setLoading] = useState(initialConversationId !== undefined)
   const [streaming, setStreaming] = useState(false)
@@ -248,42 +244,47 @@ export const ConversationChat = ({
     setConversationId(null)
     setMessages([])
     setError(null)
+    onNewConversationAction?.()
   }
 
   return (
     <div>
       <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-200 dark:border-slate-800">
-        <ToggleButtonGroup
-          selectionMode="single"
-          disallowEmptySelection
-          selectedKeys={new Set([mode])}
-          onSelectionChange={(keys) => {
-            const [key] = [...keys]
+        {controlled
+          ? <div />
+          : (
+            <ToggleButtonGroup
+              selectionMode="single"
+              disallowEmptySelection
+              selectedKeys={new Set([mode])}
+              onSelectionChange={(keys) => {
+                const [key] = [...keys]
 
-            if (key) setMode(key as AskMode)
-          }}
-          aria-label="Answer engine"
-        >
-          {askModes.map(askMode => (
-            <Tooltip.Root
-              key={askMode.id}
-              delay={200}
+                if (key) setMode(key as AskMode)
+              }}
+              aria-label="Answer engine"
             >
-              <Tooltip.Trigger>
-                <ToggleButton
-                  id={askMode.id}
-                  className="mr-2"
+              {askModes.map(askMode => (
+                <Tooltip.Root
+                  key={askMode.id}
+                  delay={200}
                 >
-                  {askMode.label}
-                </ToggleButton>
-              </Tooltip.Trigger>
+                  <Tooltip.Trigger>
+                    <ToggleButton
+                      id={askMode.id}
+                      className="mr-2"
+                    >
+                      {askMode.label}
+                    </ToggleButton>
+                  </Tooltip.Trigger>
 
-              <Tooltip.Content className="break-normal">
-                {askMode.description}
-              </Tooltip.Content>
-            </Tooltip.Root>
-          ))}
-        </ToggleButtonGroup>
+                  <Tooltip.Content className="break-normal">
+                    {askMode.description}
+                  </Tooltip.Content>
+                </Tooltip.Root>
+              ))}
+            </ToggleButtonGroup>
+          )}
 
         {showNewConversation && (
           <Button
@@ -326,7 +327,10 @@ export const ConversationChat = ({
                   : message.content}
 
                 {message.role === 'assistant' && !message.pending && message.citations.length > 0 && (
-                  <CitationChips citations={message.citations} />
+                  <CitationChips
+                    citations={message.citations}
+                    vaultId={activeVaultId ?? 0}
+                  />
                 )}
               </div>
             </div>

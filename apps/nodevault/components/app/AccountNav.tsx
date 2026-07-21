@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  Bell, MessagesSquare, Settings, Vault,
+  Bell, MessagesSquare, Search, Settings, Vault,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { useAuth } from '../../lib/auth'
@@ -20,8 +20,9 @@ type AccountNavItem = {
 // future account pages join this list
 const items: AccountNavItem[] = [
   {
-    href: '/account', label: 'Vaults', icon: Vault, exact: true,
+    href: '/account', label: 'Search', icon: Search, exact: true,
   },
+  { href: '/account/vaults', label: 'Vaults', icon: Vault },
   { href: '/account/conversations', label: 'Conversations', icon: MessagesSquare },
   { href: '/account/alerts', label: 'Alerts', icon: Bell },
   { href: '/account/settings', label: 'Settings', icon: Settings },

@@ -83,11 +83,11 @@ export const VaultView = ({ vaultId }: { vaultId: number }) => {
       <Container className="py-12">
         <div className="space-y-6">
           <Link
-            href="/account"
+            href="/account/vaults"
             className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-sky-600 dark:hover:text-sky-400 transition-colors"
           >
             <ArrowLeft className="size-4" />
-            Back to account home
+            Back to vaults
           </Link>
 
           {loading && (

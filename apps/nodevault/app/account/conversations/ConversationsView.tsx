@@ -257,7 +257,7 @@ export const ConversationsView = () => {
                         >
                           <div className="min-w-0">
                             <Link
-                              href={`/account/conversations/${conversation.id}`}
+                              href={`/account?conversationId=${conversation.id}`}
                               className="block text-slate-900 dark:text-slate-100 font-medium hover:text-sky-600 dark:hover:text-sky-400 transition-colors truncate"
                             >
                               {conversation.title}
@@ -278,7 +278,7 @@ export const ConversationsView = () => {
 
                           <div className="flex items-center gap-4 shrink-0">
                             <LinkButton
-                              href={`/account/conversations/${conversation.id}`}
+                              href={`/account?conversationId=${conversation.id}`}
                               size="sm"
                               className="hidden sm:inline-flex"
                             >

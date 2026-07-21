@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   Button, Card, Input, Label, Tabs, TextField,
 } from '@heroui/react'
@@ -8,9 +8,7 @@ import { contentTypeForFileName, maxUploadBytes } from '@platform/components.nod
 import { Link2, Upload } from 'lucide-react'
 import type { SubmitEvent } from 'react'
 import { api } from '../../../../lib/api'
-import { ConversationChat } from '../../../../components/app/ConversationChat'
 import { AssetList } from './AssetList'
-import { SearchPanel } from './SearchPanel'
 
 const readAsBase64 = (file: File) => new Promise<string>((resolve, reject) => {
   const reader = new FileReader()
@@ -190,18 +188,8 @@ export const VaultTabs = ({ vaultId, onAssetChangeAction }: { vaultId: number, o
   return (
     <Card>
       <Card.Content>
-        <Tabs defaultSelectedKey="search">
+        <Tabs defaultSelectedKey="upload">
           <Tabs.List aria-label="Vault contents">
-            <Tabs.Tab id="search">
-              Search
-              <Tabs.Indicator />
-            </Tabs.Tab>
-
-            <Tabs.Tab id="ask">
-              Ask
-              <Tabs.Indicator />
-            </Tabs.Tab>
-
             <Tabs.Tab id="upload">
               Vault files
               <Tabs.Indicator />
@@ -212,25 +200,6 @@ export const VaultTabs = ({ vaultId, onAssetChangeAction }: { vaultId: number, o
               <Tabs.Indicator />
             </Tabs.Tab>
           </Tabs.List>
-
-          <Tabs.Panel
-            id="search"
-            className="pt-4"
-          >
-            <Suspense>
-              <SearchPanel vaultId={vaultId} />
-            </Suspense>
-          </Tabs.Panel>
-
-          <Tabs.Panel
-            id="ask"
-            className="pt-4"
-          >
-            <ConversationChat
-              vaultId={vaultId}
-              initialConversationId="latest"
-            />
-          </Tabs.Panel>
 
           <Tabs.Panel
             id="upload"

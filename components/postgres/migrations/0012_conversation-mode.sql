@@ -1,0 +1,1 @@
+ALTER TABLE "nodevault"."conversations" ADD COLUMN "mode" text DEFAULT 'local' NOT NULL;

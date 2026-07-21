@@ -31,11 +31,22 @@ export const conversationMessageDtoSchema = z.object({
 
 export type ConversationMessageDto = z.infer<typeof conversationMessageDtoSchema>
 
+// which retrieval stack answers the question: 'local' is the hand-rolled RAG pipeline
+// (pgvector hybrid retrieval + prompt stuffing), 'managed' grounds generation on the
+// account's managed retrieval store — Vertex AI Search for Gemini accounts, an OpenAI
+// vector store (file_search) for OpenAI accounts
+export const askModeSchema = z.enum(['local', 'managed'])
+
+export type AskMode = z.infer<typeof askModeSchema>
+
 export const conversationDtoSchema = z.object({
   id: z.int().positive(),
   vaultId: z.int().positive(),
   vaultName: z.string(),
   title: z.string(),
+  // the retrieval mode the conversation was created in — the search page opens it on
+  // the matching Q&A tab
+  mode: askModeSchema,
   createdAtUTC: z.iso.datetime(),
   updatedAtUTC: z.iso.datetime(),
 })
@@ -81,14 +92,6 @@ export type GetConversationResponse = z.infer<typeof getConversationResponseSche
 export const deleteConversationRequestSchema = getConversationRequestSchema
 
 export type DeleteConversationRequest = z.infer<typeof deleteConversationRequestSchema>
-
-// which retrieval stack answers the question: 'local' is the hand-rolled RAG pipeline
-// (pgvector hybrid retrieval + prompt stuffing), 'managed' grounds generation on the
-// account's managed retrieval store — Vertex AI Search for Gemini accounts, an OpenAI
-// vector store (file_search) for OpenAI accounts
-export const askModeSchema = z.enum(['local', 'managed'])
-
-export type AskMode = z.infer<typeof askModeSchema>
 
 // the streaming ask request — validated manually by the Koa SSE route, not a tRPC procedure
 export const askRequestSchema = z.object({

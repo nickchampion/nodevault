@@ -59,7 +59,7 @@ export const runAskPipeline = async ({
       ? [existing]
       : await db
         .insert(conversations)
-        .values({ vaultId, title: question.slice(0, TITLE_MAX_LENGTH) })
+        .values({ vaultId, title: question.slice(0, TITLE_MAX_LENGTH), mode })
         .returning()
 
     const allMessages = existing
