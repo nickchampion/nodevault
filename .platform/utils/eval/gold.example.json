@@ -1,0 +1,17 @@
+{
+  "k": 8,
+  "cases": [
+    {
+      "question": "How do I rotate my signing keys?",
+      "vaultId": 1,
+      "relevantAssetIds": [12],
+      "notes": "answer lives in the security policy doc — phrased as 'key material is replaced on a 90-day cycle', so the wording does not match the question"
+    },
+    {
+      "question": "What is the retention period for audit logs?",
+      "vaultId": 1,
+      "relevantAssetIds": [12, 18],
+      "notes": "covered in both the security policy and the compliance FAQ"
+    }
+  ]
+}

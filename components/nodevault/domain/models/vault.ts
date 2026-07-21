@@ -64,11 +64,18 @@ export const assetChunks = nodevault.table('asset_chunks', {
   assetId: integer('asset_id').notNull().references(() => assets.id, { onDelete: 'cascade' }),
   chunkIndex: integer('chunk_index').notNull(),
   text: text('text').notNull(),
+  // Contextual Retrieval: a short LLM-generated blurb situating this chunk within its parent
+  // document, prepended to the text before embedding and folded into search_vector. Improves
+  // retrieval when a chunk is ambiguous out of context. Null for chunks ingested before the
+  // feature (or when generation was skipped/failed) — retrieval falls back to text alone.
+  context: text('context'),
   // null until the embedding workflow step has processed the chunk
   embedding: vector('embedding', { dimensions: 768 }),
-  // generated from `text` for Postgres full-text search — catches exact names/codes/acronyms that embeddings blur
+  // generated for Postgres full-text search — catches exact names/codes/acronyms that embeddings
+  // blur. Includes `context` (contextual BM25) so the keyword arm benefits from the same situating
+  // text the vector arm is embedded with.
   searchVector: tsvector('search_vector').notNull().generatedAlwaysAs(
-    (): SQL => sql`to_tsvector('english', ${assetChunks.text})`,
+    (): SQL => sql`to_tsvector('english', coalesce(${assetChunks.context} || ' ', '') || ${assetChunks.text})`,
   ),
   createdAtUTC: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, table => [

@@ -21,6 +21,10 @@ export const generationModel = 'gemini-2.5-flash'
 // small/fast model for utility calls (query condensation) — quality matters less than latency
 export const condensationModel = 'gemini-2.5-flash-lite'
 
+// TTL for the per-document explicit cache used by Contextual Retrieval — long enough to
+// outlast the run of chunk calls for one asset, short enough that storage cost is trivial
+export const contextCacheTtl = '600s'
+
 // 768 keeps vectors comfortably under pgvector's 2000-dimension HNSW index limit
 export const embeddingDimensions = 768
 
@@ -109,6 +113,63 @@ export const createGeminiClient = ({ project, location, credentials }: GcpClient
       })
 
       return response.text ?? ''
+    },
+
+    /**
+     * Contextual Retrieval context generation with explicit prompt caching. The document
+     * preamble is written once to a cached-content resource; each chunk call then references
+     * the cache and sends only its own instruction, so the (large, identical) document tokens
+     * are billed once for the whole asset instead of once per chunk. Caching is best-effort:
+     * documents below the model's cacheable-token minimum (or a region that rejects the cache)
+     * fall back to sending the full preamble+instruction inline. Per-chunk failures yield null.
+     */
+    generateChunkContexts: async (documentPreamble: string, chunkInstructions: string[]): Promise<(string | null)[]> => {
+      if (chunkInstructions.length === 0) return []
+
+      const config = { temperature: 0, thinkingConfig: { thinkingBudget: 0 } }
+
+      let cacheName: string | undefined
+
+      try {
+        const cache = await generationAi.caches.create({
+          model: condensationModel,
+          config: { contents: documentPreamble, ttl: contextCacheTtl },
+        })
+
+        cacheName = cache.name
+      } catch {
+        // document too small to cache, or caching unavailable on this endpoint — inline instead
+      }
+
+      try {
+        const contexts: (string | null)[] = []
+
+        for (const instruction of chunkInstructions) {
+          try {
+            const response = await generationAi.models.generateContent({
+              model: condensationModel,
+              contents: cacheName ? instruction : `${documentPreamble}\n\n${instruction}`,
+              config: cacheName ? { ...config, cachedContent: cacheName } : config,
+            })
+
+            const text = response.text?.trim()
+
+            contexts.push(text || null)
+          } catch {
+            contexts.push(null)
+          }
+        }
+
+        return contexts
+      } finally {
+        if (cacheName) {
+          try {
+            await generationAi.caches.delete({ name: cacheName })
+          } catch {
+            // best-effort cleanup — the cache expires on its TTL regardless
+          }
+        }
+      }
     },
 
     // multi-turn generation grounded on a Vertex AI Search data store: the model derives

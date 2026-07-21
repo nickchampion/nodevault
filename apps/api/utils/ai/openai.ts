@@ -35,6 +35,7 @@ const buildOpenAiClient = (db: DatabaseClient, openai: OpenAiConfig): AiClient =
     embedChunks: client.embedChunks,
     embedQuery: client.embedQuery,
     generateText: client.generateText,
+    generateChunkContexts: client.generateChunkContexts,
     generateAnswerStream: client.generateAnswerStream,
 
     generateManagedAnswerStream: async function* (systemInstruction, history, question, vaultId, signal) {

@@ -12,8 +12,50 @@ import { createResendClient } from '@platform/integrations.resend'
 import { inngest } from '../client.js'
 import { withSession } from '../../utils/db.js'
 import { aiClientForAsset, aiClientForVault } from '../../utils/ai/client.js'
+import type { AiClient } from '../../utils/ai/client.js'
+import { chunkContextInstruction, documentContextPreamble } from '../../ask/prompts.js'
 
 type Step = GetStepTools<typeof inngest>
+
+/**
+ * Contextual Retrieval master switch. When off, chunks embed from their raw text (context
+ * stays null) — the retrieval side transparently falls back. Off is also the correct baseline
+ * to record in the eval harness before turning it on and re-ingesting.
+ */
+export const CONTEXTUAL_CHUNKS_ENABLED = true
+
+// how many chunks get a context blurb per step — one LLM call each, so keep batches modest to
+// bound step duration and stay under the account's per-minute generation limits
+const CONTEXT_BATCH_SIZE = 8
+
+// characters of the parent document fed to the context model; a full book per chunk would be
+// wasteful — the model only needs enough surrounding material to situate the chunk
+const CONTEXT_DOCUMENT_CHAR_LIMIT = 12_000
+
+/**
+ * The text that actually gets embedded / full-text indexed for a chunk: its situating context
+ * (when present) prepended to the chunk body. Shared by ingestion and the backfill so both
+ * embed exactly what search_vector is generated from. The answer prompt still shows the raw
+ * chunk text — context only steers retrieval.
+ */
+export const embeddingInput = (text: string, context: string | null): string => (context ? `${context}\n\n${text}` : text)
+
+/**
+ * Generate a one/two-sentence situating context for each chunk against its parent document.
+ * The document preamble is shared across the batch and prompt-cached by the provider, so the
+ * (large, identical) document tokens are billed once rather than once per chunk. A failed
+ * chunk comes back null and simply embeds from its raw text.
+ */
+export const buildChunkContexts = async (
+  ai: AiClient,
+  document: string,
+  chunks: Array<{ id: number, text: string }>,
+): Promise<Array<{ id: number, context: string | null }>> => {
+  const preamble = documentContextPreamble(document.slice(0, CONTEXT_DOCUMENT_CHAR_LIMIT))
+  const contexts = await ai.generateChunkContexts(preamble, chunks.map(chunk => chunkContextInstruction(chunk.text)))
+
+  return chunks.map((chunk, index) => ({ id: chunk.id, context: contexts[index] ?? null }))
+}
 
 export const loadAndMarkProcessing = <T>(
   step: Step,
@@ -50,6 +92,45 @@ export const storeChunks = async (step: Step, assetId: number, content: string):
   return chunks.length
 })
 
+/**
+ * Contextual Retrieval, ingestion path: give each chunk a short blurb situating it within the
+ * full document (passed straight through from extraction), stored in asset_chunks.context.
+ * Runs before embedChunks so embeddings (and the generated search_vector) pick the context up.
+ * A no-op when the feature is off. Chunks are addressed by their contiguous chunkIndex range.
+ */
+export const contextualiseChunks = async (step: Step, assetId: number, document: string, chunkCount: number): Promise<void> => {
+  if (!CONTEXTUAL_CHUNKS_ENABLED) return
+
+  const batches = Math.ceil(chunkCount / CONTEXT_BATCH_SIZE)
+
+  for (let batch = 0; batch < batches; batch++) {
+    await step.run(`contextualise-batch-${batch}`, async () => {
+      const start = batch * CONTEXT_BATCH_SIZE
+
+      const rows = await withSession(async db => db
+        .select({ id: assetChunks.id, text: assetChunks.text })
+        .from(assetChunks)
+        .where(and(
+          eq(assetChunks.assetId, assetId),
+          gte(assetChunks.chunkIndex, start),
+          lt(assetChunks.chunkIndex, start + CONTEXT_BATCH_SIZE),
+        ))
+        .orderBy(assetChunks.chunkIndex))
+
+      if (rows.length === 0) return
+
+      const ai = await withSession(async db => aiClientForAsset(db, assetId))
+      const contexts = await buildChunkContexts(ai, document, rows)
+
+      await withSession(async (db) => {
+        for (const { id, context } of contexts) {
+          await db.update(assetChunks).set({ context }).where(eq(assetChunks.id, id))
+        }
+      })
+    })
+  }
+}
+
 export const embedChunks = async (step: Step, assetId: number, chunkCount: number): Promise<void> => {
   const batches = Math.ceil(chunkCount / embeddingBatchSize)
 
@@ -58,7 +139,7 @@ export const embedChunks = async (step: Step, assetId: number, chunkCount: numbe
       const start = batch * embeddingBatchSize
 
       const rows = await withSession(async db => db
-        .select({ id: assetChunks.id, text: assetChunks.text })
+        .select({ id: assetChunks.id, text: assetChunks.text, context: assetChunks.context })
         .from(assetChunks)
         .where(and(
           eq(assetChunks.assetId, assetId),
@@ -70,7 +151,7 @@ export const embedChunks = async (step: Step, assetId: number, chunkCount: numbe
       if (rows.length === 0) return
 
       const ai = await withSession(async db => aiClientForAsset(db, assetId))
-      const embeddings = await ai.embedChunks(rows.map(row => row.text))
+      const embeddings = await ai.embedChunks(rows.map(row => embeddingInput(row.text, row.context)))
 
       await withSession(async (db) => {
         for (const [index, row] of rows.entries()) {

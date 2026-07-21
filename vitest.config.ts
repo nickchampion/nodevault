@@ -57,6 +57,15 @@ export default defineConfig({
       {
         resolve: { alias },
         test: {
+          name: { label: 'utils', color: 'cyan' },
+          include: ['.platform/utils/**/*.spec.ts'],
+          globals: true,
+          environment: 'node',
+        },
+      },
+      {
+        resolve: { alias },
+        test: {
           name: { label: 'nodevault', color: 'magenta' },
           include: ['apps/nodevault/**/*.spec.ts'],
           globals: true,

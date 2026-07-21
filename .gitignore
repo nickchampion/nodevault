@@ -69,3 +69,5 @@ next-env.d.ts
 .nx/polygraph
 .claude/worktrees
 .claude/settings.local.json
+# retrieval eval gold set — vault-specific, not shared
+.platform/utils/eval/gold.json

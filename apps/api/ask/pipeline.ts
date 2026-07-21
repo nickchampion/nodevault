@@ -9,6 +9,7 @@ import { hybridChunkCandidates } from '../routes/assets/search/candidates.js'
 import {
   answerPrompt, answerSystemPrompt, condensePrompt, managedAnswerSystemPrompt,
 } from './prompts.js'
+import { embedForRetrieval, HYDE_ENABLED } from './retrieval.js'
 import type { SseWriter } from './sse.js'
 
 const TITLE_MAX_LENGTH = 80
@@ -122,7 +123,8 @@ const generateLocalAnswer = async ({
 }: GenerationArgs): Promise<Generated | null> => {
   const condensed = await condenseQuestion(ai, history, question)
 
-  const queryEmbedding = await ai.embedQuery(condensed)
+  // HyDE embeds a hypothetical answer for the vector arm; the keyword arm keeps `condensed`
+  const queryEmbedding = await embedForRetrieval(ai, condensed, HYDE_ENABLED)
   const chunks = await withSession(async db => hybridChunkCandidates(db, vaultId, condensed, queryEmbedding, RAG_CHUNK_LIMIT))
 
   const citations: CitationDto[] = chunks.map((chunk, index) => ({

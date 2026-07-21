@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto'
 import OpenAI, { toFile } from 'openai'
 import type {
   ResponseInput, ResponseInputItem, ResponseOutputItem, ResponseOutputMessage,
@@ -119,6 +120,39 @@ export const createOpenAiClient = ({ apiKey }: OpenAiClientConfig) => {
       })
 
       return response.output_text ?? ''
+    },
+
+    /**
+     * Contextual Retrieval context generation. OpenAI caches identical prompt prefixes
+     * automatically (prefixes over ~1024 tokens), and the document preamble leads every chunk's
+     * prompt, so after the first call the document tokens are served from cache at a discount.
+     * A `prompt_cache_key` derived from the document routes the whole batch to the same cache to
+     * maximise the hit rate. Per-chunk failures yield null.
+     */
+    generateChunkContexts: async (documentPreamble: string, chunkInstructions: string[]): Promise<(string | null)[]> => {
+      if (chunkInstructions.length === 0) return []
+
+      const cacheKey = `ctx-${createHash('sha256').update(documentPreamble).digest('hex').slice(0, 32)}`
+      const contexts: (string | null)[] = []
+
+      for (const instruction of chunkInstructions) {
+        try {
+          const response = await client.responses.create({
+            model: condensationModel,
+            input: `${documentPreamble}\n\n${instruction}`,
+            temperature: 0,
+            prompt_cache_key: cacheKey,
+          })
+
+          const text = response.output_text?.trim()
+
+          contexts.push(text || null)
+        } catch {
+          contexts.push(null)
+        }
+      }
+
+      return contexts
     },
 
     generateAnswerStream: async function* (systemInstruction: string, prompt: string, signal?: AbortSignal): AsyncGenerator<string> {

@@ -24,6 +24,14 @@ export type AiClient = {
   embedChunks: (texts: string[]) => Promise<number[][]>
   embedQuery: (text: string) => Promise<number[]>
   generateText: (prompt: string) => Promise<string>
+
+  /**
+   * Contextual Retrieval: generate a situating context for each chunk of one document. The
+   * `documentPreamble` is identical for every chunk, so providers prompt-cache it and re-bill
+   * only each `chunkInstruction`. Returns one context per instruction, aligned by index, with
+   * null where an individual chunk failed to generate.
+   */
+  generateChunkContexts: (documentPreamble: string, chunkInstructions: string[]) => Promise<(string | null)[]>
   generateAnswerStream: (systemInstruction: string, prompt: string, signal?: AbortSignal) => AsyncGenerator<string>
   generateManagedAnswerStream: (
     systemInstruction: string, history: ConversationMessage[], question: string, vaultId: number, signal?: AbortSignal,

@@ -42,6 +42,7 @@ const buildGeminiClient = (gcp: GcpClientConfig): AiClient => {
     embedChunks: gemini.embedChunks,
     embedQuery: gemini.embedQuery,
     generateText: gemini.generateText,
+    generateChunkContexts: gemini.generateChunkContexts,
     generateAnswerStream: gemini.generateAnswerStream,
 
     generateManagedAnswerStream: async function* (systemInstruction, history, question, vaultId, signal) {

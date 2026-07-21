@@ -4,7 +4,7 @@ import { Readability } from '@mozilla/readability'
 import { assertPublicHttpUrl } from '@platform/components.utils.server'
 import { assetUrlSubmittedEvent, inngest } from '../client.js'
 import {
-  embedChunks, loadAndMarkProcessing, markFailed, markReady, matchTopics, mirrorToManagedIndex, storeChunks,
+  contextualiseChunks, embedChunks, loadAndMarkProcessing, markFailed, markReady, matchTopics, mirrorToManagedIndex, storeChunks,
 } from './shared.js'
 
 const fetchTimeoutMs = 15_000
@@ -59,6 +59,8 @@ export const processUrlAsset = inngest.createFunction(
     })
 
     const chunkCount = await storeChunks(step, assetId, content)
+
+    await contextualiseChunks(step, assetId, content, chunkCount)
 
     await embedChunks(step, assetId, chunkCount)
 
