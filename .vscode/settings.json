@@ -32,7 +32,7 @@
     "*.tsx": "$(capture).ts",
     "dockerfile": ".dockerignore, dockerfile*",
     "project.json": "open-next.config.ts,postcss.config.mjs,next-env.d.ts,wrangler.jsonc,fly.toml,vitest.config.ts, vite.config.ts, prettier*, tsconfig.*, .prettier*, eslint.*, .eslint.*, next.config.ts, css.d.ts, pnpm-lock.yaml",
-    "package.json": ".neon,skills-lock.json,.mcp.json,drizzle.config.ts,drizzle.neon.config.ts,CLAUDE.md,components.d.ts, version.json, wrangler.toml, .env, project.json, nx.json, readme.mdx, overrides.json, vitest.config.ts, .nvmrc, .editorconfig, .gitignore, eslint*, .npm*, .pnpm*, .prettier*, .vscode*, package-lock.json, pnpm*, prettier*, tsconfig.*",
+    "package.json": "AGENTS.md,.neon,skills-lock.json,.mcp.json,drizzle.config.ts,drizzle.neon.config.ts,CLAUDE.md,components.d.ts, version.json, wrangler.toml, .env, project.json, nx.json, readme.mdx, overrides.json, vitest.config.ts, .nvmrc, .editorconfig, .gitignore, eslint*, .npm*, .pnpm*, .prettier*, .vscode*, package-lock.json, pnpm*, prettier*, tsconfig.*",
     "readme.md": "authors, backers.md, changelog*.md, code_of_conduct.md, readme*, security.md, sponsors.md"
   },
   "search.exclude": {
