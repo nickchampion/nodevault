@@ -3,7 +3,8 @@ import { conversationMessages, conversations, assets } from '@platform/component
 import type { ConversationMessage } from '@platform/components.nodevault.domain'
 import type { AskMode, CitationDto } from '@platform/components.nodevault.contracts'
 import type { AiClient } from '../utils/ai/client.js'
-import { aiClientForAccount } from '../utils/ai/client.js'
+import { aiClientForAccount, openRouterCredentialsForAccount } from '../utils/ai/client.js'
+import { generateOpenRouterAnswerStream } from '../utils/ai/openrouter.js'
 import { withSession } from '../utils/db.js'
 import { hybridChunkCandidates } from '../routes/assets/search/candidates.js'
 import {
@@ -23,9 +24,15 @@ export type AskPipelineArgs = {
   conversationId?: number
   question: string
   mode: AskMode
+  // the OpenRouter model id — present only for mode 'openrouter' (validated upstream)
+  model?: string
   writer: SseWriter
   signal: AbortSignal
 }
+
+// swaps AiClient.generateAnswerStream in the local RAG path — used by openrouter mode to
+// stream the answer from the chosen model while retrieval still runs on the base provider
+type AnswerGenerator = (systemInstruction: string, prompt: string, signal?: AbortSignal) => AsyncGenerator<string>
 
 type GenerationArgs = {
   ai: AiClient
@@ -34,6 +41,8 @@ type GenerationArgs = {
   question: string
   writer: SseWriter
   signal: AbortSignal
+  // overrides the answer-generation step; falls back to ai.generateAnswerStream when absent
+  generate?: AnswerGenerator
 }
 
 type Generated = { answer: string, citations: CitationDto[] }
@@ -47,9 +56,18 @@ type Generated = { answer: string, citations: CitationDto[] }
  * ownership-checked by the middleware.
  */
 export const runAskPipeline = async ({
-  accountId, vaultId, conversationId, question, mode, writer, signal,
+  accountId, vaultId, conversationId, question, mode, model, writer, signal,
 }: AskPipelineArgs): Promise<void> => {
   const ai = await withSession(async db => aiClientForAccount(db, accountId))
+
+  // openrouter mode keeps the base provider for retrieval but streams the answer from the
+  // chosen OpenRouter model — build that override up front so a bad key fails before we persist
+  const generate = mode === 'openrouter' && model
+    ? generateOpenRouterAnswerStream(
+      await withSession(async db => openRouterCredentialsForAccount(db, accountId)),
+      model,
+    )
+    : undefined
 
   const { conversation, userMessage, history } = await withSession(async (db) => {
     const existing = conversationId
@@ -60,7 +78,9 @@ export const runAskPipeline = async ({
       ? [existing]
       : await db
         .insert(conversations)
-        .values({ vaultId, title: question.slice(0, TITLE_MAX_LENGTH), mode })
+        .values({
+          vaultId, title: question.slice(0, TITLE_MAX_LENGTH), mode, model: mode === 'openrouter' ? model : null,
+        })
         .returning()
 
     const allMessages = existing
@@ -90,7 +110,7 @@ export const runAskPipeline = async ({
   if (signal.aborted) return
 
   const args: GenerationArgs = {
-    ai, vaultId, history, question, writer, signal,
+    ai, vaultId, history, question, writer, signal, generate,
   }
   const generated = mode === 'managed' ? await generateManagedAnswer(args) : await generateLocalAnswer(args)
 
@@ -119,7 +139,7 @@ export const runAskPipeline = async ({
 }
 
 const generateLocalAnswer = async ({
-  ai, vaultId, history, question, writer, signal,
+  ai, vaultId, history, question, writer, signal, generate,
 }: GenerationArgs): Promise<Generated | null> => {
   const condensed = await condenseQuestion(ai, history, question)
 
@@ -149,7 +169,8 @@ const generateLocalAnswer = async ({
   let answer = ''
 
   try {
-    const stream = ai.generateAnswerStream(answerSystemPrompt, answerPrompt(chunks, history, question), signal)
+    const answerStream = generate ?? ai.generateAnswerStream
+    const stream = answerStream(answerSystemPrompt, answerPrompt(chunks, history, question), signal)
 
     for await (const text of stream) {
       answer += text

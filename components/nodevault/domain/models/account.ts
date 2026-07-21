@@ -39,6 +39,12 @@ export const accounts = nodevault.table('accounts', {
   // set when the Gemini-trial → OpenAI switch fires, cleared once migrate-to-openai
   // finishes re-embedding/re-mirroring existing content — drives the Settings "migrating" banner
   openaiMigratingAtUTC: timestamp('openai_migrating_at', { withTimezone: true, mode: 'date' }),
+  // bring-your-own-OpenRouter: an *additive* generation override, independent of aiProvider.
+  // OpenRouter has no embeddings, so the base provider (Gemini/OpenAI) still handles
+  // ingestion + retrieval; this key only swaps the final answer LLM in the local RAG path.
+  // Encrypted at rest like the other credentials, decrypted server-side only.
+  openrouterApiKey: text('openrouter_api_key'),
+  openrouterVerifiedAtUTC: timestamp('openrouter_verified_at', { withTimezone: true, mode: 'date' }),
   createdAtUTC: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAtUTC: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 })

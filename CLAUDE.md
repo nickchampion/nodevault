@@ -228,6 +228,10 @@ All dates persisted and sent over the API are UTC ISO strings (`Z` suffix). Conv
 - `verbatimModuleSyntax` is enabled — use `import type` for type-only imports
 - `module: preserve` + `moduleResolution: Bundler` — always use `.js` extensions in relative imports even for `.ts` source files
 
+## Comments
+
+Do not add comments to your code unless explicitly asked to
+
 
 <!-- nx configuration start-->
 <!-- Leave the start & end comments to automatically receive updates. -->

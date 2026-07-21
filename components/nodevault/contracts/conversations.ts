@@ -34,8 +34,9 @@ export type ConversationMessageDto = z.infer<typeof conversationMessageDtoSchema
 // which retrieval stack answers the question: 'local' is the hand-rolled RAG pipeline
 // (pgvector hybrid retrieval + prompt stuffing), 'managed' grounds generation on the
 // account's managed retrieval store — Vertex AI Search for Gemini accounts, an OpenAI
-// vector store (file_search) for OpenAI accounts
-export const askModeSchema = z.enum(['local', 'managed'])
+// vector store (file_search) for OpenAI accounts. 'openrouter' reuses the local retrieval
+// stack but streams the answer from a user-chosen OpenRouter model instead of the base provider.
+export const askModeSchema = z.enum(['local', 'managed', 'openrouter'])
 
 export type AskMode = z.infer<typeof askModeSchema>
 
@@ -47,6 +48,9 @@ export const conversationDtoSchema = z.object({
   // the retrieval mode the conversation was created in — the search page opens it on
   // the matching Q&A tab
   mode: askModeSchema,
+  // the OpenRouter model that answered (mode === 'openrouter'); null otherwise — seeds
+  // the model picker when the conversation is reopened
+  model: z.string().nullable(),
   createdAtUTC: z.iso.datetime(),
   updatedAtUTC: z.iso.datetime(),
 })
@@ -100,7 +104,12 @@ export const askRequestSchema = z.object({
   conversationId: z.int().positive().optional(),
   question: z.string().trim().min(1, 'Enter a question').max(2000),
   mode: askModeSchema.default('local'),
-})
+  // the OpenRouter model id — required when mode === 'openrouter', ignored otherwise
+  model: z.string().trim().min(1).optional(),
+}).refine(
+  request => request.mode !== 'openrouter' || Boolean(request.model),
+  { message: 'Choose an OpenRouter model', path: ['model'] },
+)
 
 export type AskRequest = z.infer<typeof askRequestSchema>
 

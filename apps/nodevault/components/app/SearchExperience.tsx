@@ -9,14 +9,15 @@ import type { AskMode, SearchType } from '@platform/components.nodevault.contrac
 import type { inferRouterOutputs } from '@trpc/server'
 import type { AppRouter } from '@platform/apps.api'
 import { api } from '../../lib/api'
+import { useAuth } from '../../lib/auth'
 import { LinkButton } from '../ui/LinkButton'
 import { SearchPanel } from './SearchPanel'
 import { ConversationChat } from './ConversationChat'
 
 type VaultDto = inferRouterOutputs<AppRouter>['vaults']['list']['vaults'][number]
 
-// the four modes the search page exposes, unified into one selector — the first two run
-// a one-shot search (api.assets.search), the last two stream a grounded answer (streamAsk)
+// the modes the search page exposes, unified into one selector — the first two run a
+// one-shot search (api.assets.search), the rest stream a grounded answer (streamAsk)
 type SearchMode = SearchType | AskMode
 
 const modes: { id: SearchMode, kind: 'search' | 'ask', label: string, description: string }[] = [
@@ -44,6 +45,12 @@ const modes: { id: SearchMode, kind: 'search' | 'ask', label: string, descriptio
     label: 'Q&A · Provider search',
     description: "Your connected provider's own managed search (Vertex AI Search for Google Cloud, file search for OpenAI) grounds its answer as it responds. Newly added content can take a few minutes to appear.",
   },
+  {
+    id: 'openrouter',
+    kind: 'ask',
+    label: 'Q&A · OpenRouter',
+    description: 'Same hybrid pgvector search as "Your provider", but you pick any model on OpenRouter to write the answer. Requires an OpenRouter API key connected in Settings.',
+  },
 ]
 
 // a conversation to preload into one of the Q&A tabs on mount (from ?conversationId)
@@ -61,6 +68,8 @@ export const SearchExperience = () => {
   const searchParams = useSearchParams()
   const router = useRouter()
   const pathname = usePathname()
+  const { session } = useAuth()
+  const openrouterConfigured = Boolean(session?.account.openrouterConfigured)
 
   const [vaults, setVaults] = useState<VaultDto[] | null>(null)
   const [selectedVaultId, setSelectedVaultId] = useState<number | null>(null)
@@ -290,6 +299,40 @@ export const SearchExperience = () => {
                 initialConversationId={askInitial('managed')}
                 onNewConversationAction={clearConversationDeepLink}
               />
+            </div>
+
+            {/* the OpenRouter mode is always offered; without a key it prompts for one
+                rather than rendering the chat */}
+            <div className={activeMode.id === 'openrouter' ? '' : 'hidden'}>
+              {openrouterConfigured
+                ? (
+                  <ConversationChat
+                    key={`openrouter-${selectedVaultId}`}
+                    vaultId={selectedVaultId}
+                    mode="openrouter"
+                    initialConversationId={askInitial('openrouter')}
+                    onNewConversationAction={clearConversationDeepLink}
+                  />
+                )
+                : (
+                  <div className="flex flex-col items-center text-center gap-4 py-10">
+                    <div className="space-y-1 max-w-lg">
+                      <p className="text-lg font-medium text-slate-900 dark:text-slate-100">
+                        Connect OpenRouter to use this mode
+                      </p>
+
+                      <p className="text-slate-500 dark:text-slate-400">
+                        Add an OpenRouter API key to answer questions with any model on OpenRouter.
+                        Retrieval still runs on your connected provider — this only changes the model
+                        that writes the answer.
+                      </p>
+                    </div>
+
+                    <LinkButton href="/account/settings">
+                      Add an OpenRouter API key
+                    </LinkButton>
+                  </div>
+                )}
             </div>
           </>
         )}

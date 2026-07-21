@@ -5,9 +5,12 @@ import { InboundEvent } from '@platform/components.context'
 import { createAuthInfoFromToken } from '@platform/components.utils.server'
 import { isExpired } from '@platform/components.utils'
 import { askRequestSchema } from '@platform/components.nodevault.contracts'
-import { accounts, conversations, vaults } from '@platform/components.nodevault.domain'
+import {
+  AppError, accounts, conversations, vaults,
+} from '@platform/components.nodevault.domain'
 import { withSession } from '../utils/db.js'
 import { aiAccessDeniedMessage, hasAiAccess } from '../utils/ai/client.js'
+import { hasOpenRouterAccess } from '../utils/ai/openrouter.js'
 import { runAskPipeline } from './pipeline.js'
 import { createSseWriter } from './sse.js'
 
@@ -59,34 +62,51 @@ export const askMiddleware: Koa.Middleware = async (context, next) => {
   }
 
   const {
-    vaultId, conversationId, question, mode,
+    vaultId, conversationId, question, mode, model,
   } = parsed.data
 
-  const { owned, aiUsable, deniedMessage } = await withSession(async (db) => {
+  const {
+    owned, aiUsable, deniedMessage, openrouterUsable,
+  } = await withSession(async (db) => {
     const vault = await db.query.vaults.findFirst({
       columns: { id: true },
       where: and(eq(vaults.id, vaultId), eq(vaults.accountId, user.accountId!)),
     })
 
-    if (!vault) return { owned: false, aiUsable: false, deniedMessage: null }
+    if (!vault) return {
+      owned: false, aiUsable: false, deniedMessage: null, openrouterUsable: false,
+    }
 
     const account = await db.query.accounts.findFirst({ where: eq(accounts.id, user.accountId!) })
     const usable = Boolean(account && hasAiAccess(account))
     const message = account ? aiAccessDeniedMessage(account) : null
+    const openrouter = Boolean(account && hasOpenRouterAccess(account))
 
-    if (!conversationId) return { owned: true, aiUsable: usable, deniedMessage: message }
+    if (!conversationId) {
+      return {
+        owned: true, aiUsable: usable, deniedMessage: message, openrouterUsable: openrouter,
+      }
+    }
 
     const conversation = await db.query.conversations.findFirst({
       columns: { id: true },
       where: and(eq(conversations.id, conversationId), eq(conversations.vaultId, vaultId)),
     })
 
-    return { owned: Boolean(conversation), aiUsable: usable, deniedMessage: message }
+    return {
+      owned: Boolean(conversation), aiUsable: usable, deniedMessage: message, openrouterUsable: openrouter,
+    }
   })
 
   if (!owned) return respondJson(context, 404, { message: 'Not found' })
 
+  // retrieval always runs on the base provider, so it must be usable in every mode
   if (!aiUsable) return respondJson(context, 400, { message: deniedMessage ?? 'AI provider not configured' })
+
+  // openrouter mode additionally needs a verified OpenRouter key (the model is enforced by the schema)
+  if (mode === 'openrouter' && !openrouterUsable) {
+    return respondJson(context, 400, { message: 'Add an OpenRouter API key in Settings to use this mode.' })
+  }
 
   // from here the response is a stream — Koa must not write its own response
   context.respond = false
@@ -117,11 +137,15 @@ export const askMiddleware: Koa.Middleware = async (context, next) => {
 
   try {
     await runAskPipeline({
-      accountId: user.accountId!, vaultId, conversationId, question, mode, writer, signal: abort.signal,
+      accountId: user.accountId!, vaultId, conversationId, question, mode, model, writer, signal: abort.signal,
     })
   } catch (error) {
     console.error('ask pipeline failed:', error)
-    writer.send({ type: 'error', message: 'Something went wrong generating the answer' })
+    // AppError messages are curated + user-facing (e.g. an OpenRouter rate-limit notice);
+    // anything else stays behind a generic message so raw internals never reach the client
+    const message = error instanceof AppError ? error.message : 'Something went wrong generating the answer'
+
+    writer.send({ type: 'error', message })
   } finally {
     writer.end()
   }

@@ -48,6 +48,8 @@ export type StreamAskArgs = {
   conversationId?: number
   question: string
   mode: AskMode
+  // the OpenRouter model id — required when mode is 'openrouter', ignored otherwise
+  model?: string
   signal: AbortSignal
   onEvent: (event: AskStreamEvent) => void
 }
@@ -58,7 +60,7 @@ export type StreamAskArgs = {
  * and EventSource can neither POST nor send the Authorization header.
  */
 export const streamAsk = async ({
-  vaultId, conversationId, question, mode, signal, onEvent,
+  vaultId, conversationId, question, mode, model, signal, onEvent,
 }: StreamAskArgs): Promise<void> => {
   const config = appConfig()
   const session = getSession()
@@ -71,7 +73,7 @@ export const streamAsk = async ({
       ...(session?.tokens.access && { authorization: `Bearer ${session.tokens.access}` }),
     },
     body: JSON.stringify({
-      vaultId, conversationId, question, mode,
+      vaultId, conversationId, question, mode, model,
     }),
   })
 

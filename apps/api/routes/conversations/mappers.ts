@@ -8,6 +8,7 @@ export const toConversationDto = (conversation: Conversation, vaultName: string)
   vaultName,
   title: conversation.title,
   mode: conversation.mode,
+  model: conversation.model,
   createdAtUTC: toUtcIso(conversation.createdAtUTC),
   updatedAtUTC: toUtcIso(conversation.updatedAtUTC),
 })

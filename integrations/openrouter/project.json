@@ -1,0 +1,20 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "name": "@platform/integrations.openrouter",
+  "sourceRoot": "integrations/openrouter",
+  "projectType": "library",
+  "targets": {
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": [
+        "{options.outputFile}"
+      ],
+      "options": {
+        "lintFilePatterns": [
+          "integrations/openrouter/**/*.ts"
+        ]
+      }
+    }
+  },
+  "tags": []
+}

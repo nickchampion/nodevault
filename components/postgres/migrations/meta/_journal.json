@@ -99,6 +99,13 @@
       "when": 1784630376509,
       "tag": "0013_chunk-context",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1784632651005,
+      "tag": "0014_openrouter-support",
+      "breakpoints": true
     }
   ]
 }

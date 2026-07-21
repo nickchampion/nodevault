@@ -2,11 +2,15 @@
 
 import { useEffect, useRef, useState } from 'react'
 import {
-  Button, Input, Label, Spinner, TextField, ToggleButton, ToggleButtonGroup, Tooltip,
+  Button, ComboBox, Input, Label, ListBox, Spinner, TextField, ToggleButton, ToggleButtonGroup, Tooltip,
 } from '@heroui/react'
-import { MessageCirclePlus, Send } from 'lucide-react'
+import {
+  DollarSign, Gift, MessageCirclePlus, Send,
+} from 'lucide-react'
 import type { SubmitEvent } from 'react'
-import type { AskMode, CitationDto, ConversationDto } from '@platform/components.nodevault.contracts'
+import type {
+  AskMode, CitationDto, ConversationDto, OpenRouterModelDto,
+} from '@platform/components.nodevault.contracts'
 import { api } from '../../lib/api'
 import { streamAsk } from '../../lib/ask'
 import { AssetResultCard } from './AssetResultCard'
@@ -31,6 +35,29 @@ type ChatMessage = {
   // still streaming — shows the thinking spinner until the first token lands
   pending?: boolean
 }
+
+// OpenRouter flags a free model by pricing both prompt and completion at "0"; an unknown
+// (null) price is treated as paid rather than free
+const isFreeModel = (model: OpenRouterModelDto): boolean => (
+  model.promptPrice !== null && model.completionPrice !== null
+  && Number(model.promptPrice) === 0 && Number(model.completionPrice) === 0
+)
+
+// one row in the model combo box: name on the left, a free/paid indicator on the right
+const ModelOption = ({ model }: { model: OpenRouterModelDto }) => (
+  <div className="flex items-center justify-between gap-3 w-full">
+    <span className="truncate">{model.name}</span>
+
+    {isFreeModel(model)
+      ? (
+        <span className="flex items-center gap-1 text-xs font-medium text-emerald-600 dark:text-emerald-400 shrink-0">
+          <Gift className="size-3.5" />
+          Free
+        </span>
+      )
+      : <DollarSign className="size-3.5 text-slate-400 shrink-0" />}
+  </div>
+)
 
 const CitationChips = ({ citations, vaultId }: { citations: CitationDto[], vaultId: number }) => (
   <div className="flex flex-wrap gap-2 mt-2">
@@ -96,6 +123,11 @@ export const ConversationChat = ({
   const [streaming, setStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // openrouter mode picks the answer model per conversation — the catalogue is fetched
+  // lazily the first time this mode is shown (server-cached for 10 min)
+  const [models, setModels] = useState<OpenRouterModelDto[] | null>(null)
+  const [selectedModel, setSelectedModel] = useState<string | null>(null)
+
   const abortRef = useRef<AbortController | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
@@ -128,6 +160,10 @@ export const ConversationChat = ({
 
         setConversationId(conversation.id)
         setActiveVaultId(conversation.vaultId)
+
+        // restore the model the conversation was answered with so follow-ups reuse it
+        if (conversation.model) setSelectedModel(conversation.model)
+
         setMessages(loaded.map(message => ({
           role: message.role,
           content: message.content,
@@ -155,6 +191,32 @@ export const ConversationChat = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vaultId, initialConversationId])
 
+  // load the OpenRouter catalogue the first time the mode is active; the picker stays empty
+  // until the user explicitly chooses (unless a resumed conversation already seeded a model)
+  useEffect(() => {
+    if (mode !== 'openrouter' || models !== null) return
+
+    let cancelled = false
+
+    const load = async () => {
+      try {
+        const { models: loaded } = await api.account.openrouterModels.query()
+
+        if (cancelled) return
+
+        setModels(loaded)
+      } catch {
+        if (!cancelled) setModels([])
+      }
+    }
+
+    void load()
+
+    return () => {
+      cancelled = true
+    }
+  }, [mode, models])
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [messages])
@@ -171,6 +233,12 @@ export const ConversationChat = ({
     const trimmed = question.trim()
 
     if (!trimmed || streaming || activeVaultId === null) return
+
+    if (mode === 'openrouter' && !selectedModel) {
+      setError('Choose an OpenRouter model first.')
+
+      return
+    }
 
     setQuestion('')
     setError(null)
@@ -195,6 +263,7 @@ export const ConversationChat = ({
         conversationId: conversationId ?? undefined,
         question: trimmed,
         mode,
+        model: mode === 'openrouter' ? selectedModel ?? undefined : undefined,
         signal: abort.signal,
         onEvent: (streamEvent) => {
           switch (streamEvent.type) {
@@ -237,6 +306,9 @@ export const ConversationChat = ({
       setMessages(current => current.filter((message, index) => (
         index !== current.length - 1 || message.role !== 'assistant' || message.content.length > 0
       )))
+      // put the question back so it can be re-asked (e.g. after a different model is picked),
+      // unless the user has already started typing a new one
+      setQuestion(current => current || trimmed)
     }
   }
 
@@ -250,41 +322,73 @@ export const ConversationChat = ({
   return (
     <div>
       <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-200 dark:border-slate-800">
-        {controlled
-          ? <div />
-          : (
-            <ToggleButtonGroup
-              selectionMode="single"
-              disallowEmptySelection
-              selectedKeys={new Set([mode])}
-              onSelectionChange={(keys) => {
-                const [key] = [...keys]
-
-                if (key) setMode(key as AskMode)
-              }}
-              aria-label="Answer engine"
+        {mode === 'openrouter'
+          ? (
+            <ComboBox
+              aria-label="OpenRouter model"
+              className="w-72 max-w-full"
+              // locked once the conversation is under way, but re-enabled while an error is
+              // showing so the user can switch models and retry the same question
+              isDisabled={models === null || streaming || (messages.length > 0 && !error)}
+              selectedKey={selectedModel}
+              onSelectionChange={key => setSelectedModel(key === null ? null : String(key))}
             >
-              {askModes.map(askMode => (
-                <Tooltip.Root
-                  key={askMode.id}
-                  delay={200}
-                >
-                  <Tooltip.Trigger>
-                    <ToggleButton
-                      id={askMode.id}
-                      className="mr-2"
-                    >
-                      {askMode.label}
-                    </ToggleButton>
-                  </Tooltip.Trigger>
+              <ComboBox.InputGroup>
+                <Input placeholder={models === null ? 'Loading models…' : 'Search models…'} />
 
-                  <Tooltip.Content className="break-normal">
-                    {askMode.description}
-                  </Tooltip.Content>
-                </Tooltip.Root>
-              ))}
-            </ToggleButtonGroup>
-          )}
+                <ComboBox.Trigger />
+              </ComboBox.InputGroup>
+
+              <ComboBox.Popover>
+                <ListBox>
+                  {(models ?? []).map(model => (
+                    <ListBox.Item
+                      key={model.id}
+                      id={model.id}
+                      textValue={model.name}
+                    >
+                      <ModelOption model={model} />
+                    </ListBox.Item>
+                  ))}
+                </ListBox>
+              </ComboBox.Popover>
+            </ComboBox>
+          )
+          : controlled
+            ? <div />
+            : (
+              <ToggleButtonGroup
+                selectionMode="single"
+                disallowEmptySelection
+                selectedKeys={new Set([mode])}
+                onSelectionChange={(keys) => {
+                  const [key] = [...keys]
+
+                  if (key) setMode(key as AskMode)
+                }}
+                aria-label="Answer engine"
+              >
+                {askModes.map(askMode => (
+                  <Tooltip.Root
+                    key={askMode.id}
+                    delay={200}
+                  >
+                    <Tooltip.Trigger>
+                      <ToggleButton
+                        id={askMode.id}
+                        className="mr-2"
+                      >
+                        {askMode.label}
+                      </ToggleButton>
+                    </Tooltip.Trigger>
+
+                    <Tooltip.Content className="break-normal">
+                      {askMode.description}
+                    </Tooltip.Content>
+                  </Tooltip.Root>
+                ))}
+              </ToggleButtonGroup>
+            )}
 
         {showNewConversation && (
           <Button
@@ -358,7 +462,11 @@ export const ConversationChat = ({
 
           <Button
             type="submit"
-            isDisabled={!question.trim() || streaming || loading || activeVaultId === null}
+            // openrouter mode can't ask until a model has been chosen
+            isDisabled={
+              !question.trim() || streaming || loading || activeVaultId === null
+              || (mode === 'openrouter' && !selectedModel)
+            }
             isPending={streaming}
           >
             <Send className="size-4" />

@@ -12,6 +12,9 @@ export const conversations = nodevault.table('conversations', {
   // the retrieval stack the conversation was created in — used to reopen it on the right
   // Q&A tab in the search UI. Existing rows default to the hand-rolled 'local' pipeline.
   mode: text('mode').$type<AskMode>().notNull().default('local'),
+  // the OpenRouter model that answered this conversation (mode === 'openrouter'); null for
+  // local/managed modes which use the account's base provider. Restores the model on reopen.
+  model: text('model'),
   createdAtUTC: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAtUTC: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, table => [

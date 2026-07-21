@@ -30,5 +30,6 @@ export const toAccountDto = (account: Account): AccountDto => ({
   gcpTrialEndsAtUTC: toUtcIso(trialEndsAt(account)),
   openaiConfigured: Boolean(account.openaiApiKey && account.openaiVerifiedAtUTC),
   openaiMigrating: Boolean(account.openaiMigratingAtUTC),
+  openrouterConfigured: Boolean(account.openrouterApiKey && account.openrouterVerifiedAtUTC),
   createdAtUTC: toUtcIso(account.createdAtUTC),
 })

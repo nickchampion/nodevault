@@ -1,6 +1,6 @@
 import {
-  ArrowRight, BellRing, BookOpenText, Cloud, FileText, Link2, LogIn, MessageCircleQuestion,
-  ScanSearch, ShieldCheck, Sparkles,
+  ArrowRight, BellRing, BookOpenText, Cloud, FileText, Gift, Link2, LogIn, MessageCircleQuestion,
+  Router, ScanSearch, ShieldCheck, Sparkles,
 } from 'lucide-react'
 import { Container } from '../components/ui/Container'
 import { LinkButton } from '../components/ui/LinkButton'
@@ -131,7 +131,8 @@ export default function HomePage() {
             <p className="text-slate-600 dark:text-slate-300 text-lg leading-relaxed">
               NodeVault doesn&apos;t lock you into one AI vendor. Choose Google Cloud or OpenAI
               when you connect your account, and every embedding, search and answer runs on
-              your own credentials from there on.
+              your own credentials from there on — or bring an OpenRouter key to answer with any
+              model you like.
             </p>
           </div>
 
@@ -166,6 +167,42 @@ export default function HomePage() {
                 <p className="text-sm text-slate-500 dark:text-slate-400 leading-snug">
                   Bring your own OpenAI API key — no trial required, and nothing to migrate
                   away from later.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* additive OpenRouter option — answers only, retrieval stays on the base provider */}
+          <div className="max-w-2xl mx-auto mt-5">
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-indigo-200/70 dark:border-indigo-900/50 flex items-start gap-4">
+              <div className="flex items-center justify-center size-10 rounded-lg bg-indigo-500/10 shrink-0">
+                <Router className="size-5 text-indigo-600 dark:text-indigo-400" />
+              </div>
+
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="font-semibold text-slate-900 dark:text-white text-sm">
+                    Answer with any model — powered by OpenRouter
+                  </h3>
+
+                  <span className="inline-flex items-center gap-1 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide">
+                    <Sparkles className="size-3" />
+                    New
+                  </span>
+                </div>
+
+                <p className="text-sm text-slate-500 dark:text-slate-400 leading-snug">
+                  Add your own OpenRouter key and pick any model — Claude, GPT, Llama, Gemini and
+                  hundreds more, including
+                  {' '}
+                  <span className="inline-flex items-center gap-1 font-medium text-emerald-600 dark:text-emerald-400">
+                    <Gift className="size-3.5" />
+                    free
+                  </span>
+                  {' '}
+                  ones — to write your answers. Your provider still handles the search over your
+                  documents; OpenRouter only changes the model that writes the reply, chosen per
+                  conversation with a searchable picker.
                 </p>
               </div>
             </div>

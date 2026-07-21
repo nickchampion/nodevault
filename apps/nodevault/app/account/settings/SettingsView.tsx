@@ -13,16 +13,14 @@ import { Container } from '../../../components/ui/Container'
 import { EditProfileForm } from './EditProfileForm'
 import { GcpCredentialsCard } from './GcpCredentialsCard'
 import { OpenAiCredentialsCard } from './OpenAiCredentialsCard'
+import { OpenRouterCredentialsCard } from './OpenRouterCredentialsCard'
 import { ProviderChoice } from './ProviderChoice'
 
 export const SettingsView = () => {
   const router = useRouter()
   const { session } = useAuth()
-  // which provider's form to show before anything is actually connected — purely local
-  // until the chosen card's form is submitted, so a reload just asks again
   const [chosenProvider, setChosenProvider] = useState<AiProvider | null>(null)
 
-  // authenticated-only page
   useEffect(() => {
     if (!isSessionValid(getSession())) {
       router.replace('/auth/login')
@@ -86,31 +84,34 @@ export const SettingsView = () => {
             )
         )}
 
-        {/* side by side on wide screens; the cards stack on smaller ones */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-          <Card>
-            <Card.Header>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center size-10 rounded-lg bg-sky-500/10 shrink-0">
-                  <UserRound className="size-5 text-sky-600 dark:text-sky-400" />
+          <div className="space-y-6">
+            <Card>
+              <Card.Header>
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-center size-10 rounded-lg bg-sky-500/10 shrink-0">
+                    <UserRound className="size-5 text-sky-600 dark:text-sky-400" />
+                  </div>
+
+                  <div>
+                    <Card.Title>
+                      Personal information
+                    </Card.Title>
+
+                    <Card.Description>
+                      Your name, email and phone number
+                    </Card.Description>
+                  </div>
                 </div>
+              </Card.Header>
 
-                <div>
-                  <Card.Title>
-                    Personal information
-                  </Card.Title>
+              <Card.Content>
+                <EditProfileForm />
+              </Card.Content>
+            </Card>
 
-                  <Card.Description>
-                    Your name, email and phone number
-                  </Card.Description>
-                </div>
-              </div>
-            </Card.Header>
-
-            <Card.Content>
-              <EditProfileForm />
-            </Card.Content>
-          </Card>
+            {providerCommitted && <OpenRouterCredentialsCard />}
+          </div>
 
           <div className="space-y-3">
             {!providerCommitted && activeProvider && (

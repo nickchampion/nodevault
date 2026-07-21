@@ -1,13 +1,17 @@
 import { execute, protectedProcedure, router } from '@platform/components.api'
 import {
-  gcpCredentialsStatusSchema, openaiCredentialsStatusSchema, setGcpCredentialsRequestSchema, setOpenAiKeyRequestSchema,
-  updateProfileRequestSchema, userDtoSchema,
+  gcpCredentialsStatusSchema, openaiCredentialsStatusSchema, openRouterCredentialsStatusSchema,
+  openRouterModelsResponseSchema, setGcpCredentialsRequestSchema, setOpenAiKeyRequestSchema,
+  setOpenRouterKeyRequestSchema, updateProfileRequestSchema, userDtoSchema,
 } from '@platform/components.nodevault.contracts'
 import { accountUpdateProfile } from './update-profile.js'
 import { accountGcpStatus } from './gcp-status.js'
 import { accountOpenaiStatus } from './openai-status.js'
+import { accountOpenRouterModels } from './openrouter-models.js'
+import { accountOpenRouterStatus } from './openrouter-status.js'
 import { accountSetGcpCredentials } from './set-gcp-credentials.js'
 import { accountSetOpenAiKey } from './set-openai-key.js'
+import { accountSetOpenRouterKey } from './set-openrouter-key.js'
 
 export const accountRouter = router({
   updateProfile: protectedProcedure
@@ -32,4 +36,17 @@ export const accountRouter = router({
     .input(setOpenAiKeyRequestSchema)
     .output(openaiCredentialsStatusSchema)
     .mutation(execute(accountSetOpenAiKey)),
+
+  openrouterStatus: protectedProcedure
+    .output(openRouterCredentialsStatusSchema)
+    .query(execute(accountOpenRouterStatus)),
+
+  setOpenrouterKey: protectedProcedure
+    .input(setOpenRouterKeyRequestSchema)
+    .output(openRouterCredentialsStatusSchema)
+    .mutation(execute(accountSetOpenRouterKey)),
+
+  openrouterModels: protectedProcedure
+    .output(openRouterModelsResponseSchema)
+    .query(execute(accountOpenRouterModels)),
 })

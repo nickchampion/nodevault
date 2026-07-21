@@ -59,6 +59,7 @@ const aiAccountCacheKey = (accountId: number) => `ai:account:${accountId}`
 type AiAccountColumns = Pick<Account,
   'aiProvider' | 'gcpProjectId' | 'gcpLocation' | 'gcpCredentials' | 'gcpVerifiedAtUTC' | 'createdAtUTC'
   | 'openaiApiKey' | 'openaiVerifiedAtUTC' | 'openaiVectorStoreId' | 'openaiMigratingAtUTC'
+  | 'openrouterApiKey' | 'openrouterVerifiedAtUTC'
 >
 
 export const invalidateAiAccount = async (accountId: number): Promise<void> => cache.del(aiAccountCacheKey(accountId))
@@ -79,6 +80,8 @@ const loadAiAccount = async (db: DatabaseClient, accountId: number): Promise<AiA
           openaiVerifiedAtUTC: true,
           openaiVectorStoreId: true,
           openaiMigratingAtUTC: true,
+          openrouterApiKey: true,
+          openrouterVerifiedAtUTC: true,
         },
         where: eq(accounts.id, accountId),
       })
@@ -96,6 +99,24 @@ const loadAiAccount = async (db: DatabaseClient, accountId: number): Promise<AiA
     createdAtUTC: new Date(cached.createdAtUTC),
     openaiVerifiedAtUTC: cached.openaiVerifiedAtUTC ? new Date(cached.openaiVerifiedAtUTC) : null,
     openaiMigratingAtUTC: cached.openaiMigratingAtUTC ? new Date(cached.openaiMigratingAtUTC) : null,
+    openrouterVerifiedAtUTC: cached.openrouterVerifiedAtUTC ? new Date(cached.openrouterVerifiedAtUTC) : null,
+  }
+}
+
+/**
+ * The account's OpenRouter credentials (encrypted key + verification), served from the same
+ * 15-min cache as the base-provider config. Consumed by the ask pipeline's openrouter mode to
+ * build the generation override — retrieval still runs on the base provider's client.
+ */
+export const openRouterCredentialsForAccount = async (
+  db: DatabaseClient,
+  accountId: number,
+): Promise<Pick<Account, 'openrouterApiKey' | 'openrouterVerifiedAtUTC'>> => {
+  const account = await loadAiAccount(db, accountId)
+
+  return {
+    openrouterApiKey: account.openrouterApiKey,
+    openrouterVerifiedAtUTC: account.openrouterVerifiedAtUTC,
   }
 }
 

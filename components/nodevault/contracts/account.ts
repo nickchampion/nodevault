@@ -94,3 +94,37 @@ export const accountOpenaiConnectedEventSchema = z.object({
 export type SetOpenAiKeyRequest = z.infer<typeof setOpenAiKeyRequestSchema>
 export type OpenAiCredentialsStatus = z.infer<typeof openaiCredentialsStatusSchema>
 export type AccountOpenaiConnectedEvent = z.infer<typeof accountOpenaiConnectedEventSchema>
+
+/**
+ * Bring-your-own-OpenRouter: an *additive* generation override on top of the account's
+ * base provider (Gemini/OpenAI), which still does embeddings + retrieval. Requires a base
+ * provider to already be connected. The key is write-only — encrypted before storage and
+ * never returned; status responses carry metadata only.
+ */
+export const setOpenRouterKeyRequestSchema = z.object({
+  apiKey: z.string().min(1, 'Paste your OpenRouter API key'),
+})
+
+/** Safe-to-display credential state — never includes any part of the stored key. */
+export const openRouterCredentialsStatusSchema = z.object({
+  configured: z.boolean(),
+  verifiedAtUTC: z.iso.datetime().nullable(),
+})
+
+/** A single OpenRouter model, as surfaced to the model picker. */
+export const openRouterModelDtoSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  contextLength: z.number().nullable(),
+  promptPrice: z.string().nullable(),
+  completionPrice: z.string().nullable(),
+})
+
+export const openRouterModelsResponseSchema = z.object({
+  models: z.array(openRouterModelDtoSchema),
+})
+
+export type SetOpenRouterKeyRequest = z.infer<typeof setOpenRouterKeyRequestSchema>
+export type OpenRouterCredentialsStatus = z.infer<typeof openRouterCredentialsStatusSchema>
+export type OpenRouterModelDto = z.infer<typeof openRouterModelDtoSchema>
+export type OpenRouterModelsResponse = z.infer<typeof openRouterModelsResponseSchema>

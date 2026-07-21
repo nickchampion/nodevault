@@ -51,6 +51,9 @@ export const accountDtoSchema = z.object({
   // true while migrate-to-openai is re-embedding/re-mirroring pre-switch vault content —
   // vault features are blocked until it clears, even though openaiConfigured is already true
   openaiMigrating: z.boolean(),
+  // whether the account has connected (and verified) an OpenRouter key — additive to the
+  // base provider, unlocks the "Q&A · OpenRouter" mode regardless of aiProvider
+  openrouterConfigured: z.boolean(),
   createdAtUTC: z.iso.datetime(),
 })
 
